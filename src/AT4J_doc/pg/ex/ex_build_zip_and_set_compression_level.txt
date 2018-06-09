@@ -1,0 +1,21 @@
+// Build the Zip file "myArchive.zip" in the directory targetDir. Use the best
+// possible (deflate) compression.
+org.entityfs.RandomlyAccessibleFile zipFile = org.entityfs.util.Directories.newFile(targetDir, "myArchive.zip");
+
+// Configure the global Zip builder settings.
+
+org.at4j.zip.builder.ZipBuilderSettings settings = new org.at4j.zip.builder.ZipBuilderSettings().
+  //
+  // Set maximum compression level for the default file compression method
+  // (deflate)
+  setCompressionLevel(org.at4j.comp.CompressionLevel.BEST);
+
+// Create the Zip builder
+org.at4j.zip.builder.ZipBuilder zb = new org.at4j.zip.builder.ZipBuilder(zipFile, settings);
+
+// Add the directory hierarchy under the directory src to the location /source
+// in the archive.
+zb.addRecursively(src, new org.entityfs.el.AbsoluteLocation("/source"));
+
+// Close the builder to finish writing the archive.
+zb.close();

@@ -1,0 +1,66 @@
+// Build the Tar file "myArchive.tar" in the directory targetDir.
+org.entityfs.RandomlyAccessibleFile tarFile = org.entityfs.util.Directories.newFile(targetDir, "myArchive.tar");
+
+// Configure global Tar builder settings.
+org.at4j.tar.builder.TarBuilderSettings settings = new org.at4j.tar.builder.TarBuilderSettings().
+  //
+  // Make files and directories owned by the user rmoore (1234), group bonds 
+  // (4321).
+  //
+  // The settings object we create here will be combined with the default
+  // default settings, which means that we only have to set the properties that
+  // we want to change from the default values. 
+  setDefaultFileEntrySettings(
+    new org.at4j.tar.builder.TarEntrySettings().
+      setOwnerUid(1234).
+      setOwnerUserName("rmoore").
+      setOwnerGid(4321).
+      setOwnerGroupName("bonds")).
+  setDefaultDirectoryEntrySettings(
+    new org.at4j.tar.builder.TarEntrySettings().
+      setOwnerUid(1234).
+      setOwnerUserName("rmoore").
+      setOwnerGid(4321).
+      setOwnerGroupName("bonds")).
+  //
+  // Use a Tar entry strategy that will create a Posix.1-2001-compatible
+  // archive
+  setEntryStrategy(
+    // Encode file names using UTF-8
+    new org.at4j.tar.builder.PaxTarEntryStrategy(java.nio.charset.Charset.forName("utf8")));
+
+// Create the Tar builder
+org.at4j.tar.builder.TarBuilder builder = new org.at4j.tar.builder.TarBuilder(tarFile, settings);
+
+// Add a global rule that says that script files should be executable.
+builder.addRule(
+  new org.at4j.archive.builder.ArchiveEntrySettingsRule&lt;org.at4j.tar.builder.TarEntrySettings&gt;(
+    //
+    // The global rule's settings
+    new org.at4j.tar.builder.TarEntrySettings().
+      // 
+      // The code is an octal value, the same as is used with the chmod command.
+      setEntityMode(org.entityfs.entityattrs.unix.UnixEntityMode.forCode(0755)),
+    //
+    // The global rule's filter
+    new org.at4j.archive.builder.NameGlobETAF("*.sh")));
+
+// Add all files and directories from the src directory to the /source directory
+// in the archive
+builder.addRecursively(src, new org.entityfs.el.AbsoluteLocation("/source"));
+
+// Add the headlines from The Times online to indicate the build date...
+// Open a stream
+java.io.InputStream is = new java.net.URL("http://www.timesonline.co.uk/tol/feeds/rss/topstories.xml").
+  openStream();
+try
+{
+  builder.add(is, new org.entityfs.el.AbsoluteLocation("/todays_news.xml"));
+}
+finally
+{
+  is.close();
+}
+
+// Close the builder to finish writing the archive.
+builder.close();

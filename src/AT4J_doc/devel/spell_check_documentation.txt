@@ -1,0 +1,42 @@
+Spell check the At4J documentation:
+===================================
+
+$ export WORKSPACE=[path to workspace]
+$ cd $WORKSPACE/AT4J_doc
+
+XML files:
+$ for foo in `find . -name '*.xml' | grep -v '.metadata'`; \
+  do echo $foo && xterm -e aspell check \
+  --conf=$WORKSPACE/AT4J_resources/aspell/aspell_sgml.conf \
+  -p $WORKSPACE/AT4J_resources/aspell/AT4J.pwl $foo; done
+
+Programmer's guide examples:
+$ cat pg/ex/*.txt | grep '^//' > /tmp/txt.txt
+$ aspell check --conf=$WORKSPACE/AT4J_resources/aspell/aspell_url.conf \
+  -p $WORKSPACE/AT4J_resources/aspell/AT4J.pwl /tmp/txt.txt
+
+HTML and XHTML files:
+$ for foo in `find . -name '*.html' -or -name '*.xhtml' | grep -v '.metadata' | grep -v '/ref/'`; \
+  do echo $foo && xterm -e aspell check \
+  --conf=$WORKSPACE/AT4J_resources/aspell/aspell_html.conf \
+  -p $WORKSPACE/AT4J_resources/aspell/AT4J.pwl $foo; done
+  
+Changelog and release notes
+$ aspell check --conf=$WORKSPACE/AT4J_resources/aspell/aspell_url.conf \
+  -p $WORKSPACE/AT4J_resources/aspell/AT4J.pwl doc/Changelog.txt
+$ aspell check --conf=$WORKSPACE/AT4J_resources/aspell/aspell_url.conf \
+  -p $WORKSPACE/AT4J_resources/aspell/AT4J.pwl doc/Release_Notes.txt
+
+Javadoc is spell checked after its been built. (The aspell context filter did
+not work very well so the Java source files cannot be checked.)
+WARNING: don't fix misspelled words in the HTML docs, fix them in the source
+files instead. Duh.
+$ cd [distribution]/doc/api
+For some reason using a configuration file did not work here
+$ for foo in `find . -name '*.html'`; do echo $foo && xterm -e aspell check \
+  --mode=html --master=en_US --add-html-skip=computeroutput \
+  --add-html-skip=programlisting --add-html-skip=code --add-html-skip=a \
+  --add-html-skip=b --add-html-skip=h2 --add-html-skip=h3 --add-html-skip=pre \
+  --add-html-skip=title \
+  -p $WORKSPACE/AT4J_resources/aspell/AT4J.pwl $foo; done
+

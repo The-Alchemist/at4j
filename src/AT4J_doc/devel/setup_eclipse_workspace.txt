@@ -1,0 +1,42 @@
+Set up workspace:
+=================
+[ ] Import the projects
+
+In Window -> Preferences:
+[ ] General -> Workspace -> Text file encoding: UTF-8
+[ ] General -> Editors -> Text Editors -> Spelling -> User defined dictionary:
+    AT4J_resources/eclipse/dictionary.txt
+[ ] Java -> Build Path, mark "Folders" (src, bin)
+[ ] Java -> Build Path -> Classpath Variables: Create the ENTITYFS_CORE variable
+    to point to AT4J_resources/lib/entityfs-core-xxx.jar
+[ ] Java -> Build Path -> Classpath Variables: Create the ENTITYFS_FSFS variable
+    to point to AT4J_resources/lib/entityfs-fsfs-xxx.jar
+[ ] Java -> Build Path -> Classpath Variables: Create the ENTITYFS_RAM variable
+    to point to AT4J_resources/lib/entityfs-ram-xxx.jar
+[ ] Java -> Build Path -> Classpath Variables: Create the ENTITYFS_UTIL variable
+    to point to AT4J_resources/lib/entityfs-util-xxx.jar
+[ ] Java -> Build Path -> Classpath Variables: Create the JUNIT4 variable
+    to point to AT4J_resources/optlib/junit4-xxx.jar
+[ ] Java -> Code Style -> Code Templates, mark "Automatically add comments for
+    new methods and types"
+[ ] Java -> Code Style -> Code Templates -> Comments -> Files: paste in the
+    contents of AT4J_resources/build/lgpl_license.txt
+[ ] Java -> Code Style -> Code Templates -> Comments -> Type: something good
+[ ] Java -> Code Style -> Fields -> Prefix list: m_
+[ ] Java -> Code Style -> Static Fields -> Prefix list: s_
+[ ] Java -> Code Style -> Formatter -> Import from 
+    AT4J_resources/eclipse/code_formatting.xml
+    Use profile EntityFS.
+[ ] Java -> Installed JREs, Add a Java 5 JDK and a Java 6 JDK if necessary. Use
+    the Java 5 JDK as the default JDK.
+[ ] Java -> Compiler -> Compiler Compliance Level: 1.5
+
+Under Java -> Compiler -> Errors/Warnings:
+[ ] Name shadowing and conflicts -> Field declaration hides another field or
+    variable -> Warning
+[ ] Name shadowing and conflicts -> Local variable declaration hides another
+    field or variable -> Warning
+[ ] Unnecessary code -> Unnecessary cast or 'instanceof' operation -> Warning
+[ ] Annotations -> Missing @Override annotation -> Warning
+
+[ ] Schmant -> Schmant Home: The path to the Schmant installation

@@ -1,0 +1,210 @@
+<chapter id="chap_tar">
+<title>Tar</title>
+<para>Tar is an ancient file format, originally used for making tape backups
+(<emphasis>Tape ARchives</emphasis>). A Tar file consists of a list of tar
+entries. Each entry has a header containing its metadata,
+followed by the its data. The metadata contains, at least, the following data:
+<itemizedlist>
+<listitem>The entry's absolute location in the archive.</listitem> 
+<listitem>The Unix permission mode for the entry, such as
+<computeroutput>0755</computeroutput> or <computeroutput>0644</computeroutput>.</listitem>
+<listitem>The entry's owner user and group id:s.</listitem>
+<listitem>The time of last modification of the entry.</listitem>
+</itemizedlist></para>
+
+<para>There are four significant versions of the
+Tar file format:
+<variablelist>
+<varlistentry><term>Unix V7</term>
+<listitem>The oldest Tar format. Path names and symbolic link targets are limited
+to 99 characters (plus the leading slash). Stores only the numerical user and
+group id:s for each entry. See org.at4j.tar.builder.V7TarEntryStrategy.</listitem></varlistentry>
+
+<varlistentry><term>Posix.1-1988 (ustar)</term>
+<listitem>Path names are limited to a theoretical maximum of 255 characters
+(often shorter), and symbolic link targets are limited to 99 characters. Stores
+the owner user and group names for each entry, in addition to the numerical
+user and group id:s. See org.at4j.tar.builder.UstarEntryStrategy.</listitem></varlistentry>
+
+<varlistentry><term>Gnu Tar</term>
+<listitem>Path names and link targets can be of any length. Stores the owner
+user and group names for each entry, in addition to the numerical user and group
+id:s. See org.at4j.tar.builder.GnuTarEntryStrategy.</listitem></varlistentry>
+
+<varlistentry><term>Posix.1-2001 (pax)</term>
+<listitem>Path names and link targets can be of any length. Supports an unlimited
+number of metadata variables for each entry.
+See org.at4j.tar.builder.PaxTarEntryStrategy</listitem></varlistentry>
+</variablelist>
+Each format is backwards compatible with earlier formats.</para>
+
+<para>The Tar file format does not support any kind of compression of its entries. 
+However, the Tar file itself is often compressed using gzip or bzip2 compression.</para>
+
+<para>For more information on the Tar file
+format, see the <xref linkend="bib_wikipedia_article_on_tar"/> and the    
+<xref linkend="bib_gnu_tar_manual"/>.</para>
+
+<section id="character_encoding_in_tar_files">
+<title>Character encoding in Tar files</title>
+<para>There is no standard dictating which character encoding to use for a Tar entry's
+text metadata, such as its path. Unix Tar programs use the platform's default charset
+(often UTF-8 or ISO8859-1), while Windows programs often use Codepage 437. Pax
+metadata variables are always encoded in UTF-8.</para>
+</section>
+
+<section id="tar_features_not_supported_by_at4j">
+<title>Significant Tar features not supported by &At4J;</title>
+<para>The following significant Tar features are not supported:
+<itemizedlist>
+<listitem>Adding symbolic links when building a Tar archive.</listitem>
+<listitem>Jörg Schilling's Star file format. &At4J; might be able to extract
+Star and Xstar archives fairly well (more testing needed!), but cannot create
+them.</listitem>
+<listitem>Gnu Tar sparse files.</listitem>
+</itemizedlist>
+</para>
+</section>
+
+<section id="reading_tar_archives">
+<title>Reading Tar archives</title>
+<para>A Tar archive is read by creating a org.at4j.tar.TarFile object on the
+Tar file. The org.at4j.tar.TarFile object contains a org.at4j.tar.TarEntry object
+for each entry in the archive.
+
+<example id="ex_reading_data_from_tar_archive">
+<title>Reading data from a Tar archive</title>
+<programlisting>&ex_reading_data_from_tar_archive;</programlisting>
+</example></para>
+
+<para>To access file format version-specific data, the org.at4j.tar.TarEntry
+objects can be cast to the types representing each Tar file format:
+<table id="tar_entry_types">
+<title>Tar entry objects</title>
+<tgroup cols="5">
+<thead>
+<row>
+<entry>Format</entry>
+<entry>Base</entry>
+<entry>File entries</entry>
+<entry>Directory entries</entry>
+<entry>Symbolic link entries</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry>Unix V7</entry>
+<entry>org.at4j.tar.TarEntry</entry>
+<entry>org.at4j.tar.TarFileEntry</entry>
+<entry>org.at4j.tar.TarDirectoryEntry</entry>
+<entry>org.at4j.tar.TarSymbolicLinkEntry</entry>
+</row>
+<row>
+<entry>Ustar</entry>
+<entry>org.at4j.tar.UstarEntry</entry>
+<entry>org.at4j.tar.UstarFileEntry</entry>
+<entry>org.at4j.tar.UstarDirectoryEntry</entry>
+<entry>org.at4j.tar.UstarSymbolicLinkEntry</entry>
+</row>
+<row>
+<entry>Gnu Tar</entry>
+<entry>org.at4j.tar.UstarEntry</entry>
+<entry>org.at4j.tar.UstarFileEntry</entry>
+<entry>org.at4j.tar.UstarDirectoryEntry</entry>
+<entry>org.at4j.tar.UstarSymbolicLinkEntry</entry>
+</row>
+<row>
+<entry>Pax</entry>
+<entry>org.at4j.tar.PaxEntry</entry>
+<entry>org.at4j.tar.PaxFileEntry</entry>
+<entry>org.at4j.tar.PaxDirectoryEntry</entry>
+<entry>org.at4j.tar.PaxSymbolicLinkEntry</entry>
+</row></tbody></tgroup></table>
+
+More sophisticated entry types inherit from their less sophisticated brethren,
+for instance org.at4j.tar.PaxFileEntry &rarr; org.at4j.tar.UstarFileEntry &rarr;
+org.at4j.tar.TarFileEntry.</para>
+
+<para>The root directory entry in the org.at4j.tar.TarFile, i.e. the directory
+entry with the absolute location <computeroutput>/</computeroutput> in the
+archive, is never present in the Tar archive itself. It is always of the type
+org.at4j.tar.TarDirectoryEntry.</para>
+
+<para>The next example shows how a pax variable for an entry in a Posix.1-2001-
+compatible Tar archive is read:
+
+<example id="ex_reading_pax_variables">
+<title>Reading a pax variable for an entry</title>
+<programlisting>&ex_reading_pax_variable;</programlisting>
+</example></para>
+</section>
+
+<section id="extracting_from_tar_archives">
+<title>Extracting entries from Tar archives</title>
+<para>To extract entries from a Tar archive, use the org.at4j.tar.TarExtractor. It
+extracts entries while parsing the archive, which makes it faster than the more
+generic org.at4j.util.archive.ArchiveExtractor. The extraction process can be
+configured with a org.at4j.tar.TarExtractSpecification object.
+
+<example id="ex_extract_from_tar_archive">
+<title>Extracting Java source files from a Tar archive</title>
+<programlisting>&ex_extract_from_tar_archive;</programlisting>
+</example></para>
+
+<para><note>The example above uses the org.entityfs.util.io.GZipReadableFile to
+transparently decompress the contents of the archive file before it is fed to
+the org.at4j.tar.TarExtractor. There are corresponding implementations for bzip2 and
+LZMA compression in the org.at4j.comp.bzip2.BZip2ReadableFile and
+org.at4j.comp.lzma.LzmaReadableFile classes, respectively, as well as org.entityfs.WritableFile
+implementations for transparently compressing data written to a file using gzip,
+bzip2 or LZMA compression.</note></para>
+</section>
+
+<section id="creating_tar_archives">
+<title>Creating Tar archives</title>
+<para>There are two different classes for creating Tar archives:
+org.at4j.tar.builder.TarBuilder and org.at4j.tar.builder.TarStreamBuilder.
+org.at4j.tar.builder.TarBuilder is a org.at4j.archive.builder.StreamAddCapableArchiveBuilder,
+but it requires a org.entityfs.RandomlyAccessibleFile to write to.
+org.at4j.tar.builder.TarStreamBuilder is not stream add capable, but it makes do
+with only a org.entityfs.WritableFile to write data to<footnote><para>This means that a program
+can give the Tar stream builder a transparently compressing writable file
+implementation such as org.entityfs.util.io.GZipWritableFile,
+org.at4j.comp.bzip2.BZip2WritableFile or org.at4j.comp.lzma.LzmaWritableFile to
+have the archive compressed while it is created.</para></footnote>.</para>
+
+<para>Both Tar archive builders use a org.at4j.tar.builder.TarEntryStrategy
+object that determines which Tar file format version that the created archive
+will be compatible with. The available strategies are
+org.at4j.tar.builder.V7TarEntryStrategy, org.at4j.tar.builder.UstarEntryStrategy,
+org.at4j.tar.builder.GnuTarEntryStrategy and
+org.at4j.tar.builder.PaxTarEntryStrategy. The default strategy is the
+org.at4j.tar.builder.GnuTarEntryStrategy.</para>
+
+<para>The configurable metadata for each added Tar entry is represented by a
+org.at4j.tar.builder.TarEntrySettings object. The effective metadata for the
+entry is arrived at using the process described in
+<xref linkend="entry_metadata"/>.</para>
+
+<para>Below is an example that shows how a Tar archive is built using the
+org.at4j.tar.builder.TarBuilder. 
+<example id="ex_build_tar_w_builder">
+<title>Build a Tar archive using the Tar builder</title>
+<programlisting>&ex_build_tar_w_builder;</programlisting>
+</example></para>
+
+<para>The following example shows how a Tar archive is built and compressed
+using the org.at4j.tar.builder.TarStreamBuilder
+<example id="ex_build_tar_w_stream_builder">
+<title>Build a Tar archive using the Tar stream builder</title>
+<programlisting>&ex_build_tar_w_stream_builder;</programlisting>
+</example></para>
+</section>
+
+<section id="standalone_tar_tools">
+<title>Standalone Tar tools</title>
+<para>The org.at4j.tar.prog.Tar class has a runnable main method that emulates
+the behavior of the <computeroutput>tar</computeroutput> command. See its API
+documentation for details on how to use it.</para>
+</section>
+</chapter>

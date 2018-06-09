@@ -1,0 +1,75 @@
+Prepare:
+--------
+[ ] Check all TODO:s
+[ ] Verify that all test suite declarations are present in
+    AT4J_resources/build/run_unit_tests.properties
+[ ] Switch the Workspace JDK to a JDK 5 and verify that everything except
+    AT4J_doc_test compiles.
+    
+Documentation:
+--------------
+ *  Review Architecture guide
+    [ ] Read through
+    
+ *  Review Programmer's guide
+    [ ] Read through
+    
+ *  Review API documentation
+    [ ] Check that all packages contains a package-info.java file.
+    
+[ ] Review Changelog
+[ ] Put release banner in Changelog
+[ ] Write release notes.
+
+Build:
+------
+[ ] Do full build with link validation turned on (remember to save stdout to a
+    file). Call the build [target version]-rc1
+[ ] Review Findbugs reports
+[ ] Verify that the binary and source distributions contain all that they should
+[ ] Spell check the documentation following the instructions in
+    spell_check_documentation.txt
+
+Tests:
+------
+ *  Run unit test suites on
+    [ ] Linux 32 bit
+    [ ] Linux 64 bit
+    [ ] Windows 32 bit
+    [ ] Windows 64 bit
+    [ ] Mac OS
+    [ ] Solaris
+
+ *  Run manual tests from manual_tests.txt
+    
+ *  Run performance tests
+    
+[ ] Write testing.xhtml test report
+
+Release:
+--------
+[ ] Do a build with the target version set. Watch out for build warnings.
+[ ] Copy built tar.bz2 files and pg-single.html to AT4J_releases project
+[ ] Upload to SourceForge and create release
+[ ] Update SourceForge download page
+[ ] Create a new Bug and Feature request tracker group
+[ ] Copy contents of doc catalog and pg-single.xhtml from the release to a new
+    release in the At4J site project. Put pg-single.xhtml in the pg directory.
+[ ] Update At4J website with news and links. 
+[ ]  + Recreate "current" link in releases directory
+[ ]  + Copy the pg-single.xhtml page to 
+       releases/current/doc/pg
+[ ]  + Update news on at4j.org
+[ ]  + Test site!
+[ ] Mail on announcements list
+[ ] Create SourceForge news entry
+[ ] Create Freshmeat news entry
+
+Tag:
+----
+[ ] Commit and tag source code repository
+[ ] Commit site repository
+
+Post release:
+-------------
+[ ] If modified in this release, copy build scripts to Schmant samples.

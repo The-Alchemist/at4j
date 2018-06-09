@@ -1,0 +1,28 @@
+String toCompress = "Compress me!";
+
+// This will contain the compressed byte array
+java.io.ByteArrayOutputStream bout = new java.io.ByteArrayOutputStream();
+
+java.io.OutputStream out = new org.at4j.comp.bzip2.BZip2OutputStream(bout);
+try
+{
+  // Compress the data
+  out.write(toCompress.getBytes());
+}
+finally
+{
+  out.close();
+}
+
+byte[] compressed = bout.toByteArray();
+
+// This will print a long range of numbers starting with "[66, 90, 104, ..."
+System.out.println(java.util.Arrays.toString(compressed));
+
+// Decompress the data again. Use org.entityfs.support.io.StreamUtil to read data.
+byte[] decompressed = org.entityfs.support.io.StreamUtil.readStreamFully(
+  new org.at4j.comp.bzip2.BZip2InputStream(
+    new java.io.ByteArrayInputStream(compressed)), 64);
+
+// This will print "Compress me!"
+System.out.println(new String(decompressed));

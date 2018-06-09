@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>At4J 1.1 test report</title>
+<link rel="stylesheet" type="text/css" href="at4j_doc-1.1.css" />
+</head>
+<body>
+<div id="container">
+<h1>At4J 1.1.1 test report</h1>
+<p>2011.04.10<br/>
+Karl Gustafsson</p>
+
+<p>
+<a href="#unit_tests">Unit tests</a><br/>
+&nbsp;&nbsp;<a href="#ut_64bit_linux">64 bit Linux</a><br/>
+&nbsp;&nbsp;<a href="#ut_32bit_linux">32 bit Linux</a><br/>
+&nbsp;&nbsp;<a href="#ut_64bit_macosx">64 bit Mac OS X</a><br/>
+&nbsp;&nbsp;<a href="#ut_64bit_win">64 bit Windows Vista</a><br/>
+&nbsp;&nbsp;<a href="#ut_32bit_win">32 bit Windows XP</a><br/>
+</p>
+
+<a name="unit_tests"/>
+<h2>Unit tests</h2>
+<p>Unit tests were run as described in the <a href="pg/index.xhtml">Programmer's
+guide</a>.</p>
+
+<a name="ut_64bit_linux"/>
+<h3>64 bit Linux</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Xubuntu 10.10 64bit, Linux 2.6.35-28-generic SMP</dd>
+<dt><b>File system:</b></dt>
+<dd>ext4</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Core 2 Quad Q9550 @ 2.83GHz<br/>
+4096 Mb RAM<br/>
+OCZ Vertex2 SSD</dd>
+</dl>
+<br/>
+<table border="1">
+<thead>
+<tr class="header"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_22 (64 bit)</td><td class="good">OK (7/7)</td></tr>
+<tr><td>Sun JDK 1.6.0_24 (64 bit)</td><td class="good">OK (8/8)</td></tr>
+<tr><td>IBM J9 JVM build 2.4 1.6.0 SR8 (64 bit)</td><td class="good">OK (8/8)</td></tr>
+<tr><td>OpenJDK 1.6.0_20 build 19.0-b09 (64 bit)</td><td class="good">OK (8/8)</td></tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="ut_32bit_linux"/>
+<h3>32 bit Linux</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Xubuntu 9.04 32bit, Linux 2.6.28-18-generic</dd>
+<dt><b>File system:</b></dt>
+<dd>tmpfs</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Pentium M 2.0 GHz stepping 08<br/>
+2048 Mb RAM<br/>
+Hitachi HTE726060M9AT00 (2.5", 7,200 RPM, ATA)</dd>
+</dl>
+<br/>
+<table border="1">
+<thead>
+<tr align="center"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_22</td><td class="good">OK (7/7)</td></tr>
+<tr><td>Sun JDK 1.6.0_24</td><td class="good">OK (8/8)</td></tr>
+<tr><td>IBM J9 JVM build 2.4 1.6.0 SR8</td><td class="good">OK (8/8)</td></tr>
+<tr><td>OpenJDK 1.6.0_18 build 16.0-b13</td><td class="good">OK (8/8)</td></tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="ut_64bit_macosx"/>
+<h3>64 bit Mac OS X</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Mac OS X 10.6.7</dd>
+<dt><b>File system:</b></dt>
+<dd>HFS</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Core 2 Duo @ 2GHz<br/>
+2048 Mb RAM</dd>
+</dl>
+<br/>
+<table border="1">
+<thead>
+<tr class="header"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Apple JDK 1.6.0_24_b07-334 (64 bit)</td><td class="good">OK (8/8)</td></tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="ut_64bit_win"/>
+<h3>64 bit Windows Vista</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Windows Vista Business SP2</dd>
+<dt><b>File system:</b></dt>
+<dd>NTFS</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Core 2 Duo T7500 @ 2.20GHz<br/>
+4096 Mb RAM<br/>
+Seagate ST9160823AS (2.5", 7,200 RPM, SATA)</dd>
+</dl>
+<br/>
+<table border="1">
+<thead>
+<tr align="center"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_22 (64 bit)</td><td class="good">OK (7/7)</td></tr>
+<tr><td>Sun JDK 1.6.0_24 (64 bit)</td><td class="good">(8/8)</td></tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="ut_32bit_win"/>
+<h3>32 bit Windows Vista</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Windows XP Professional SP3</dd>
+<dt><b>File system:</b></dt>
+<dd>NTFS</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Core2 Duo T9600 @ 2.80Ghz<br/>
+2048 Mb RAM<br/>
+Western Digital WD3200BEKT-60V5T1 (1.8", 7,200 RPM, ATA)</dd>
+</dl>
+<br/>
+<table border="1">
+<thead>
+<tr align="center"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_22</td><td class="good">OK (7/7)</td></tr>
+<tr><td>Sun JDK 1.6.0_24</td><td class="good">OK (8/8)</td></tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="perf_tests"/>
+<h2>Performance tests</h2>
+<p>No performance tests were run in this release. See results from
+<a href="old/testing-1.0.html">version 1.0</a>.</p>
+</div></body></html>

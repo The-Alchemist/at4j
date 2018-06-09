@@ -1,0 +1,136 @@
+* = bug fix
++ = new feature or improvement
+! = change that makes the new behavior incompatible with the previous behavior
+--------------------------------------------------------------------------------
+
+Release 1.1.2, 2012.12.04
+================================================================================
++ Fixed some Findbugs warnings.
+
++ Upgraded Docbook XSL to 1.77.1
+
+* [3592104] Fixed a bug that occurred when the ArchiveExtractor overwrites a
+  directory.
+  
++ Upgraded JUnit to 4.11
+
+
+Release 1.1.1, 2011.04.10
+================================================================================
++ Upgraded Apache Commons Compress BZip2 to version 1.1.
+
++ Upgraded EntityFS to version 1.2.
+
+* Deflated Zip entries can now handle compressed entries that need an extra
+  dummy byte that is not included in the entry data at the end of its data to
+  inflate properly.
+
+* ZipFileParser now ignores invalid extra field sizes for the central directory
+  header if the sizes are too short to be plausible.
+
++ Added ZipFile.getBackingFile and TarFile.getBackingFile.
+
++ Added support for empty ZipFiles created from empty files.
+
+* Some Zip files contain an empty root directory entry. That is now ignored.
+
+! Added the postProcessDirectory method on the
+  org.at4j.util.archive.EntryExtractionStrategy interface. It is used for
+  setting the modification times of directories after they have been populated
+  with child entities.
+
++ Added the preserveModificationTimes property on the
+  org.at4j.util.archive.ExtractSpecification object. It can be used to preserve
+  the modification times of extracted files and (for archives types supporting
+  it (i.e., not Zip)) directories.
+
++ Added the SignedInteger class.
+
+
+Release 1.1, 2009.09.22
+================================================================================
++ Upgraded EntityFS to version 1.1.4.
+
++ Updated the documentation stylesheet.
+
++ Zip's BZip2CompressionMethod now uses At4J's bzip2 implementation.
+
++ BZip2ReadableFile and BZip2WritableFile now use BZip2InputStream and
+  BZip2OutputStream by default, but can be configured to use the Apache Commons
+  Compress implementations instead.
+
++ Added the BZip2WritableFileSettings object for configuring BZip2WritableFile
+  objects.
+
++ Added the BZip2ReadableFileSettings object for configuring BZip2ReadableFile
+  objects.
+
++ Minor performance enhancement in the ArchiveBuilder.
+
++ Added the -k argument to BZip2 and BUnzip2.
+
++ BZip2 and BUnzip2 now use BZip2OutputStream and BZip2InputStream by default,
+  but can be configured to use the Apache Commons Compress implementations
+  instead.
+
++ Added the BZip2OutputStream class.
+
++ Added the BZip2InputStream class.
+
+* ArchiveExtractor does not try to copy more bytes than there is in a file when
+  extracting it, so it does not fall prey to Java bug #4040920 anymore.
+
+! The assumeMagicBytes property is now always true in BZip2ReadableFile.
+
+! The writeMagicBytes property is now always true in BZip2WritableFile.
+
+! Upgraded the Apache Commons Compress bzip2 classes to Commons Compress 1.0.
+  The behavior of BZip2CompressorOutputStream has changed in this release. Now
+  it assumes that a bzip2 stream starts with the magic bytes 'BZ'. 
+
++ Added the UnsignedInteger.fromBigEndianByteArrayToLong method.
+
++ Added the BitInput and BitOutput interfaces and the BitInputStream and
+  BitOutputStream classes.
+
+
+Release 1.0.2, 2009.07.17
+================================================================================
++ The default default entry settings objects of ZipBuilderSettings are now
+  read/write.
+
++ Added the ZipEntrySettings constructor that uses another ZipEntrySettings
+  object as a template.
+
++ Introduced the CompressionLevel enum. Implemented support for it in
+  BZip2WritableFile, LzmaOutputStreamSettings, BZip2CompressionMethod,
+  DeflatedCompressionMethod and ZipEntryCompressionMethod.
+
++ Upgraded EntityFS to version 1.1.3.
+
++ Reimplemented the build script in Ruby.
+
+! Made some filter implementations final.
+
++ Added the two-argument BZip2ReadableFile constructor.
+
++ Made it possible to run Emma coverage analysis in run_unit_tests.js.
+
+
+Release 1.0.1, 2009.03.19
+================================================================================
++ Upgraded EntityFS to version 1.1.1.
+
+* The TarExtractor is now better at preserving extracted directories' last
+  modification times.
+
+* The TarExtractor now works on a locking file system.
+
++ Changed the signature of ArchiveExtractor.setFilter to accept a
+  Filter<? super ArchiveEntry> instead of just a Filter<ArchiveEntry>.
+
+* The ArchiveExtractor now works on locking file systems when using filters.
+
+
+Release 1.0, 2009.02.07
+================================================================================

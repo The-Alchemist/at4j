@@ -1,0 +1,13 @@
+// Extract all entries from the Zip file f to the directory d
+
+org.at4j.zip.ZipFile zf = new org.at4j.zip.ZipFile(f);
+try
+{
+  // Extract to d
+  new org.at4j.util.archive.ArchiveExtractor(zf).extract(d);
+}
+finally
+{
+  // Close the Zip file to release all its resources
+  zf.close();
+}

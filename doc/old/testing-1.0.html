@@ -1,0 +1,372 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>At4J 1.0 test report</title>
+<link rel="stylesheet" type="text/css" href="at4j_doc-1.1.css" />
+</head>
+<body>
+<div id="container">
+<h1>At4J 1.0 test report</h1>
+<p>2009.02.07<br>
+Karl Gustafsson</p>
+
+<p>
+<a href="#unit_tests">Unit tests</a><br>
+&nbsp;&nbsp;<a href="#ut_64bit_linux">64 bit Linux</a><br>
+&nbsp;&nbsp;<a href="#ut_32bit_linux">32 bit Linux</a><br>
+&nbsp;&nbsp;<a href="#ut_64bit_solaris">64 bit Solaris 10</a><br>
+&nbsp;&nbsp;<a href="#ut_64bit_win">64 bit Windows Vista</a><br>
+&nbsp;&nbsp;<a href="#ut_32bit_win">32 bit Windows Vista</a><br>
+</p>
+
+<a name="unit_tests"/>
+<h2>Unit tests</h2>
+<p>Unit tests were run as described in the <a href="pg/index.html">Programmer's
+guide</a>.</p>
+
+<a name="ut_64bit_linux"/>
+<h3>64 bit Linux</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Xubuntu 8.10 64 bit, Linux 2.6.27-11-generic SMP</dd>
+<dt><b>File system:</b></dt>
+<dd>xfs</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Core 2 Quad Q9550 @ 2.83GHz<br>
+8192 Mb RAM<br>
+Western Digital Raptor (3.5", 10,000 RPM, SATA)</dd>
+</dl>
+<br/>
+<table border="1">
+<thead>
+<tr class="header"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_17 (64 bit)</td><td class="good">OK (6/6)</td></tr>
+<tr><td>Sun JDK 1.6.0_12 (64 bit)</td><td class="good">OK (7/7)</td></tr>
+<tr><td>IBM J9 JVM build 2.3 1.5.0 SR9 (64 bit)</td><td class="bad">OK (5/6)*</td></tr>
+<tr><td>IBM J9 JVM build 2.4 1.6.0 SR3 (64 bit)</td><td class="bad">OK (6/7)*</td></tr>
+</tbody>
+</table>
+* The LZMA test suite failed with an OutOfMemoryError. According to the dump,
+something inside LZMA wanted to allocate 1.7Gb of memory. At the time, the
+old space memory area was almost full (512Mb).</p>
+<br/><br/>
+
+<a name="ut_32bit_linux"/>
+<h3>32 bit Linux</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>SUSE Linux Enterprise Desktop 10, Linux 2.6.16.27-0.9-default</dd>
+<dt><b>File system:</b></dt>
+<dd>Ext3</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Pentium M 2.0 GHz stepping 08<br>
+2048 Mb RAM<br>
+Hitachi HTE726060M9AT00 (2.5", 7,200 RPM, ATA)
+</dl>
+<br>
+<table border=1>
+<thead>
+<tr align="center"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_17</td><td class="good"> (6/6)</td></tr>
+<tr><td>Sun JDK 1.6.0_12</td><td class="good"> (7/7)</td></tr>
+<tr><td>IBM J9 JVM build 2.3 1.5.0 SR9</td><td class="bad">OK (5/6)*</td></tr>
+<tr><td>IBM J9 JVM build 2.4 1.6.0 SR3</td><td class="bad">OK (6/7)*</td></tr>
+</tbody>
+</table>
+* The LZMA test suite failed with an OutOfMemoryError.</p>
+<br/><br/>
+
+<a name="ut_64bit_solaris"/>
+<h3>64 bit Solaris 10</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Solaris 10 10/08</dd>
+<dt><b>File system:</b></dt>
+<dd>UFS</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Xeon E5420 @ 2.5GHz<br>
+8192 Mb RAM<br>
+RAID 10 array</dd>
+</dl>
+<br>
+<table border="1">
+<thead>
+<tr class="header"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_17 (64 bit)</td><td class="good">OK (6/6)</td></tr>
+<tr><td>Sun JDK 1.6.0_12 (64 bit)</td><td class="good">OK (7/7)</td></tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="ut_64bit_win"/>
+<h3>64 bit Windows Vista</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Windows Vista Business 64bit</dd>
+<dt><b>File system:</b></dt>
+<dd>NTFS</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Core 2 Duo T7500 @ 2.2GHz<br>
+4096 Mb RAM<br>
+Seagate ST9160823AS (2.5", 7,200 RPM, SATA)</dd>
+</dl>
+<br>
+<table border=1>
+<thead>
+<tr align="center"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_17 (64 bit)</td><td class="good">OK (6/6)</td></tr>
+<tr><td>Sun JDK 1.6.0_12 (64 bit)</td><td class="good">OK (7/7)</td></tr>
+</tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="ut_32bit_win"/>
+<h3>32 bit Windows Vista</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Windows Vista Enterprise</dd>
+<dt><b>File system:</b></dt>
+<dd>NTFS</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Core2 Duo U7600 @ 1.2GHz<br>
+2048 Mb RAM<br>
+Toshiba MK1011GAH (1.8", 4,200 RPM, ATA)
+</dl>
+<br>
+<table border=1>
+<thead>
+<tr align="center"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_17</td><td class="good">OK (6/6)</td></tr>
+<tr><td>Sun JDK 1.6.0_11</td><td class="good">OK (7/7)</td></tr>
+</tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="perf_tests"/>
+<h2>Performance tests</h2>
+<p>Performance tests were run as documented below on the files from the Linux
+kernel, version 2.6.28.3. Each test is run five times, and the average time is
+calculated. At4J's times are compared with the time it takes to
+complete the same operation using a command-line tool.</p>
+
+<p>The tests were run on a quad-core machine running XUbuntu 8.10. A lot of
+other programs were running simultaneously, so the measurements given are by
+no means optimal times.</p>
+
+<p>The following environment variables were set:<br/>
+<ul>
+<li><code>$JAVA_HOME</code> &ndash; pointed to a 64 bit JDK 1.6.0_12 installation.</li>
+<li><code>$CLASSPATH</code> &ndash; a class path including all Jar files in the
+At4J distribution's <code>lib</code> directory.</li>
+</ul></p>
+<br/>
+
+<h3>gzip</h3>
+<p><i>gzip compress a Tar archive containing the source code for the Linux kernel.
+The uncompressed size of the archive is 310292480 bytes.</i></p>
+
+<p>Command lines:
+<dl>
+<dt>Using the <code>gzip</code> command:</dt>
+<dd><code>$ time gzip linux-2.6.28.3.tar</code></dd>
+<dt>Using the org.at4j.comp.gzip.prog.GZip class:</dt>
+<dd><code>$ time $JAVA_HOME/bin/java -cp $CLASSPATH dr.org.at4j.comp.gzip.prog.GZip linux-2.6.28.3.tar</code></dd>
+</dl></p>
+
+<table border="1">
+<thead>
+<tr align="center"><td>Command</td><td>Resulting file size</td><td>Average time</td><td>Compared with native</td>
+</thead>
+<tr><td><code>gzip</code></td><td>67403810 bytes</td><td>13.9s</td><td>-</td></tr>
+<tr><td><code>org.at4j.comp.gzip.prog.GZip</code></td><td>67382120 bytes</td><td>17.2s</td><td>124%</td></tr>
+</table>
+
+<p><i>Uncompress a gzip compressed Tar archive containing the source code for the Linux kernel.</i></p>
+
+<p>Command lines:
+<dl>Using the <code>gunzip</code> command:</dt>
+<dd><code>$ time gunzip linux-2.6.28.3.tar.gz</code></dd>
+<dt>Using the org.at4j.comp.gzip.prog.GUnzip class:</dt>
+<dd><code>$ time $JAVA_HOME/bin/java -cp $CLASSPATH dr.org.at4j.comp.gzip.prog.GUnzip linux-2.6.28.3.tar.gz</code></dd>
+</dl></p>
+
+<table border="1">
+<thead>
+<tr align="center"><td>Command</td><td>Average time</td><td>Compared with native</td>
+</thead>
+<tr><td><code>gunzip</code></td><td>2.5s</td><td>-</td></tr>
+<tr><td><code>org.at4j.comp.gzip.prog.GUnzip</code></td><td>3.1s</td><td>124%</td></tr>
+</table>
+<br/>
+
+<h3>bzip2</h3>
+<p><i>bzip2 compress a Tar archive containing the source code for the Linux kernel.
+The uncompressed size of the archive is 310292480 bytes.</i></p>
+
+<p>Command lines:
+<dl>
+<dt>Using the <code>bzip2</code> command:</dt>
+<dd><code>$ time bzip2 linux-2.6.28.3.tar</code></dd>
+<dt>Using the org.at4j.comp.bzip2.prog.BZip2 class:</dt>
+<dd><code>$ time $JAVA_HOME/bin/java -cp $CLASSPATH dr.org.at4j.comp.bzip2.prog.BZip2 linux-2.6.28.3.tar</code></dd>
+</dl></p>
+
+<table border="1">
+<thead>
+<tr align="center"><td>Command</td><td>Resulting file size</td><td>Average time</td><td>Compared with native</td>
+</thead>
+<tr><td><code>bzip2</code></td><td>52703558 bytes</td><td>39.6s</td><td>-</td></tr>
+<tr><td><code>org.at4j.comp.bzip2.prog.BZip2</code></td><td>52726525 bytes</td><td>69.3s</td><td>175%</td></tr>
+</table>
+
+<p><i>Uncompress a bzip2 compressed Tar archive containing the source code for the Linux kernel.</i></p>
+
+<p>Command lines:
+<dl>Using the <code>bunzip2</code> command:</dt>
+<dd><code>$ time bunzip2 linux-2.6.28.3.tar.bz2</code></dd>
+<dt>Using the org.at4j.comp.bzip2.prog.BUnzip2 class:</dt>
+<dd><code>$ time $JAVA_HOME/bin/java -cp $CLASSPATH dr.org.at4j.comp.bzip2.prog.BUnzip2 linux-2.6.28.3.tar.bz2</code></dd>
+</dl></p>
+
+<table border="1">
+<thead>
+<tr align="center"><td>Command</td><td>Average time</td><td>Compared with native</td>
+</thead>
+<tr><td><code>bunzip2</code></td><td>9.3s</td><td>-</td></tr>
+<tr><td><code>org.at4j.comp.bzip2.prog.BUnzip2</code></td><td>16.1s</td><td>173%</td></tr>
+</table>
+<br/>
+
+<h3>LZMA</h3>
+<p><i>LZMA compress a Tar archive containing the source code for the Linux kernel.
+The uncompressed size of the archive is 310292480 bytes.</i></p>
+
+<p>Command lines:
+<dl>
+<dt>Using the <code>lzma</code> command:</dt>
+<dd><code>$ time lzma linux-2.6.28.3.tar</code></dd>
+<dt>Using the org.at4j.comp.lzma.prog.Lzma class:</dt>
+<dd><code>$ time $JAVA_HOME/bin/java -cp $CLASSPATH dr.org.at4j.comp.lzma.prog.Lzma linux-2.6.28.3.tar</code></dd>
+</dl></p>
+
+<table border="1">
+<thead>
+<tr align="center"><td>Command</td><td>Resulting file size</td><td>Average time</td><td>Compared with native</td>
+</thead>
+<tr><td><code>lzma</code></td><td>45029877 bytes</td><td>201.6s</td><td>-</td></tr>
+<tr><td><code>org.at4j.comp.lzma.prog.Lzma</code></td><td>46833567 bytes</td><td>235.1s</td><td>117%</td></tr>
+</table>
+
+<p><i>Uncompress a LZMA compressed Tar archive containing the source code for the Linux kernel.</i></p>
+
+<p>Command lines:
+<dl>Using the <code>unlzma</code> command:</dt>
+<dd><code>$ time unlzma linux-2.6.28.3.tar.lzma</code></dd>
+<dt>Using the org.at4j.comp.lzma.prog.UnLzma class:</dt>
+<dd><code>$ time $JAVA_HOME/bin/java -cp $CLASSPATH dr.org.at4j.comp.lzma.prog.UnLzma linux-2.6.28.3.tar.lzma</code></dd>
+</dl></p>
+
+<table border="1">
+<thead>
+<tr align="center"><td>Command</td><td>Average time</td><td>Compared with native</td>
+</thead>
+<tr><td><code>unlzma</code></td><td>4.8s</td><td>-</td></tr>
+<tr><td><code>org.at4j.comp.lzma.prog.UnLzma</code></td><td>9.8s</td><td>203%</td></tr>
+</table>
+<br/>
+
+<h3>Tar</h3>
+<p><i>Create a Tar archive containing the source code for the Linux kernel.</i></p>
+
+<p>Command lines:
+<dl>
+<dt>Using the <code>tar</code> command:</dt>
+<dd><code>$ time tar cf linux-2.6.28.3.tar linux-2.6.28.3/</code></dd>
+<dt>Using the org.at4j.tar.prog.Tar class:</dt>
+<dd><code>$ time $JAVA_HOME/bin/java -cp $CLASSPATH dr.org.at4j.tar.prog.Tar cf linux-2.6.28.3.tar linux-2.6.28.3/</code></dd>
+</dl></p>
+
+<table border="1">
+<thead>
+<tr align="center"><td>Command</td><td>Average time</td><td>Compared with native</td>
+</thead>
+<tr><td><code>tar cf</code></td><td>5.4s</td><td>-</td></tr>
+<tr><td><code>org.at4j.tar.prog.Tar cf</code></td><td>6.3s</td><td>117%</td></tr>
+</table>
+
+<p><i>Unpack a Tar archive containing the source code for the Linux kernel.</i></p>
+
+<p>Command lines:
+<dl>Using the <code>tar</code> command:</dt>
+<dd><code>$ time tar xf linux-2.6.28.3.tar</code></dd>
+<dt>Using the org.at4j.tar.prog.Tar class:</dt>
+<dd><code>$ time $JAVA_HOME/bin/java -cp $CLASSPATH dr.org.at4j.tar.prog.Tar xf linux-2.6.28.3.tar</code></dd>
+</dl></p>
+
+<table border="1">
+<thead>
+<tr align="center"><td>Command</td><td>Average time</td><td>Compared with native</td>
+</thead>
+<tr><td><code>tar xf</code></td><td>50.9s</td><td>-</td></tr>
+<tr><td><code>org.at4j.tar.prog.Tar xf</code></td><td>60.2s</td><td>118%</td></tr>
+</table>
+<br/>
+
+<h3>Zip</h3> 
+<p><i>Create a Zip archive containing the source code for the Linux kernel.</i></p>
+
+<p>Command lines:
+<dl>
+<dt>Using the <code>zip</code> command:</dt>
+<dd><code>$ time zip -q -r linux-2.6.28.3.zip linux-2.6.28.3/</code></dd>
+<dt>Using the org.at4j.zip.prog.Zip class:</dt>
+<dd><code>$ time $JAVA_HOME/bin/java -cp $CLASSPATH dr.org.at4j.zip.prog.Zip -r linux-2.6.28.3.zip linux-2.6.28.3/</code></dd>
+</dl></p>
+
+<table border="1">
+<thead>
+<tr align="center"><td>Command</td><td>Resulting file size</td><td>Average time</td><td>Compared with native</td>
+</thead>
+<tr><td><code>zip</code></td><td>83876474 bytes</td><td>17.4s</td><td>-</td></tr>
+<tr><td><code>org.at4j.zip.prog.Zip</code></td><td>83005276 bytes</td><td>28.1s</td><td>161%</td></tr>
+</table>
+
+<p><i>Unpack a Zip archive containing the source code for the Linux kernel.</i></p>
+
+<p>Command lines:
+<dl>Using the <code>unzip</code> command:</dt>
+<dd><code>$ time unzip -q linux-2.6.28.3.zip</code></dd>
+<dt>Using the org.at4j.zip.prog.Unzip class:</dt>
+<dd><code>$ time $JAVA_HOME/bin/java -cp $CLASSPATH dr.org.at4j.zip.prog.Unzip -q linux-2.6.28.3.zip</code></dd>
+</dl></p>
+
+<table border="1">
+<thead>
+<tr align="center"><td>Command</td><td>Average time</td><td>Compared with native</td>
+</thead>
+<tr><td><code>unzip</code></td><td>48.4s</td><td>-</td></tr>
+<tr><td><code>org.at4j.zip.prog.Unzip</code></td><td>75.1s</td><td>155%</td></tr>
+</table>
+
+</div></body></html>

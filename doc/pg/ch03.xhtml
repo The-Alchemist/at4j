@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/><title>Chapter 3. Data compression</title><link href="../at4j_doc-1.1.css" type="text/css" rel="stylesheet" /><meta content="DocBook XSL Stylesheets V1.77.1" name="generator" /><link rel="home" href="index.xhtml" title="At4J Programmer's Guide" /><link rel="up" href="index.xhtml" title="At4J Programmer's Guide" /><link rel="prev" href="ch02.xhtml" title="Chapter 2. Getting started" /><link rel="next" href="ch04.xhtml" title="Chapter 4. bzip2 compression" /></head><body><div class="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Chapter 3. Data compression</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="ch02.xhtml">Prev</a> </td><th align="center" width="60%"> </th><td align="right" width="20%"> <a accesskey="n" href="ch04.xhtml">Next</a></td></tr></table><hr /></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chap_compression" />Chapter 3. Data compression</h1></div></div></div><div class="toc"><p><strong>Table of Contents</strong></p><dl><dt><span class="section"><a href="ch03.xhtml#compression_utilities">Utilities</a></span></dt><dt><span class="section"><a href="ch03.xhtml#which_compression_method_is_best">Which compression method is best?</a></span></dt></dl></div><p>At4J has an implementation of bzip2 and provides other data compression
+algorithms through third party libraries. All
+compression methods use Java's streams metaphor—data is compressed by
+writing to an <a class="apilink" title="java.io.OutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/OutputStream.html">OutputStream</a> and decompressed by reading from an
+<a class="apilink" title="java.io.InputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/InputStream.html">InputStream</a>. The example below shows how data is compressed and then
+decompressed using bzip2 compression.
+
+</p><div class="example"><a id="ex_cad" /><p class="title"><strong>Example 3.1. Compressing and decompressing with bzip2</strong></p><div class="example-contents"><pre class="programlisting">String toCompress = "Compress me!";
+
+// This will contain the compressed byte array
+<a class="apilink" title="java.io.ByteArrayOutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/ByteArrayOutputStream.html">ByteArrayOutputStream</a> bout = new <a class="apilink" title="java.io.ByteArrayOutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/ByteArrayOutputStream.html">ByteArrayOutputStream</a>();
+
+// Settings for the bzip2 compressor
+<a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStreamSettings" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStreamSettings.html">BZip2OutputStreamSettings</a> settings = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStreamSettings" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStreamSettings.html">BZip2OutputStreamSettings</a>().
+  // Use four encoder threads to speed up compression
+  setNumberOfEncoderThreads(4);
+
+<a class="apilink" title="java.io.OutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/OutputStream.html">OutputStream</a> out = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStream.html">BZip2OutputStream</a>(bout, settings);
+try
+{
+  // Compress the data
+  out.write(toCompress.getBytes());
+}
+finally
+{
+  out.close();
+}
+
+byte[] compressed = bout.toByteArray();
+
+// This will print a long range of numbers starting with "[66, 90, 104, ..."
+System.out.println(<a class="apilink" title="java.util.Arrays" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/util/Arrays.html">Arrays</a>.toString(compressed));
+
+// Decompress the data again
+StringBuilder decompressed = new StringBuilder();
+<a class="apilink" title="java.io.InputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/InputStream.html">InputStream</a> in = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2InputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2InputStream.html">BZip2InputStream</a>(
+  new <a class="apilink" title="java.io.ByteArrayInputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/ByteArrayInputStream.html">ByteArrayInputStream</a>(compressed));
+try
+{
+  byte[] barr = new byte[64];
+  int noRead = in.read(barr);
+  while(noRead &gt; 0)
+  {
+    decompressed.append(new String(barr, 0, noRead));
+    
+    noRead = in.read(barr);
+  }
+}
+finally
+{
+  in.close();
+}
+
+// This will print "Compress me!"
+System.out.println(decompressed.toString());</pre></div></div><p><br class="example-break" />
+</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="compression_utilities" />Utilities</h2></div></div></div><p><a class="ulink" href="http://www.entityfs.org" target="_top">EntityFS</a> has some utility classes that
+makes the I/O programming less verbose. The example below does the same as the
+example above, but uses the <a class="apilink" title="org.entityfs.support.io.StreamUtil" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/support/io/StreamUtil.html">StreamUtil</a> class for reading
+data from the decompressing stream.
+
+</p><div class="example"><a id="ex_cad_entityfs" /><p class="title"><strong>Example 3.2. Compressing and decompressing with bzip2 using EntityFS utilities</strong></p><div class="example-contents"><pre class="programlisting">String toCompress = "Compress me!";
+
+// This will contain the compressed byte array
+<a class="apilink" title="java.io.ByteArrayOutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/ByteArrayOutputStream.html">ByteArrayOutputStream</a> bout = new <a class="apilink" title="java.io.ByteArrayOutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/ByteArrayOutputStream.html">ByteArrayOutputStream</a>();
+
+<a class="apilink" title="java.io.OutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/OutputStream.html">OutputStream</a> out = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStream.html">BZip2OutputStream</a>(bout);
+try
+{
+  // Compress the data
+  out.write(toCompress.getBytes());
+}
+finally
+{
+  out.close();
+}
+
+byte[] compressed = bout.toByteArray();
+
+// This will print a long range of numbers starting with "[66, 90, 104, ..."
+System.out.println(<a class="apilink" title="java.util.Arrays" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/util/Arrays.html">Arrays</a>.toString(compressed));
+
+// Decompress the data again. Use <a class="apilink" title="org.entityfs.support.io.StreamUtil" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/support/io/StreamUtil.html">StreamUtil</a> to read data.
+byte[] decompressed = <a class="apilink" title="org.entityfs.support.io.StreamUtil" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/support/io/StreamUtil.html">StreamUtil</a>.readStreamFully(
+  new <a class="apilink" title="org.at4j.comp.bzip2.BZip2InputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2InputStream.html">BZip2InputStream</a>(
+    new <a class="apilink" title="java.io.ByteArrayInputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/ByteArrayInputStream.html">ByteArrayInputStream</a>(compressed)), 64);
+
+// This will print "Compress me!"
+System.out.println(new String(decompressed));</pre></div></div><p><br class="example-break" />
+</p><p>
+The following EntityFS classes are useful when working with files and streams:
+</p><div class="table"><a id="tbl_entityfs_classes" /><p class="title"><strong>Table 3.1. Useful EntityFS classes</strong></p><div class="table-contents"><table summary="Useful EntityFS classes" border="1"><colgroup><col /><col /></colgroup><thead><tr><th>Class</th><th>Description</th></tr></thead><tbody><tr><td><a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a></td><td>Support for reading from and writing to files.</td></tr><tr><td><a class="apilink" title="org.entityfs.support.io.StreamUtil" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/support/io/StreamUtil.html">StreamUtil</a></td><td>Support for reading from and writing to streams.</td></tr></tbody></table></div></div><p><br class="table-break" />
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="which_compression_method_is_best" />Which compression method is best?</h2></div></div></div><p>The answer is, of course: <span class="emphasis"><em>it depends</em></span>. The performance
+characteristics of the different compression methods are investigated in
+<a class="xref" href="bi01.xhtml#bib_test_report" title="At4J test report">At4J test report</a>. The table below summarizes the characteristics
+of the different compression methods:
+</p><div class="table"><a id="tbl_compression_methods" /><p class="title"><strong>Table 3.2. Compression methods</strong></p><div class="table-contents"><table summary="Compression methods" border="1"><colgroup><col /><col /><col /><col /></colgroup><thead><tr><th>Method</th><th>Compression</th><th>Speed</th><th>Software support</th></tr></thead><tbody><tr><td>gzip</td><td>fair</td><td>fast</td><td>ubiquitous</td></tr><tr><td>bzip2</td><td>good</td><td>slow</td><td>widespread</td></tr><tr><td>LZMA</td><td>very good</td><td>slower</td><td>scarce</td></tr></tbody></table></div></div><p><br class="table-break" />
+</p></div></div><div class="navfooter"><hr /><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="ch02.xhtml">Prev</a> </td><td align="center" width="20%"> </td><td align="right" width="40%"> <a accesskey="n" href="ch04.xhtml">Next</a></td></tr><tr><td valign="top" align="left" width="40%">Chapter 2. Getting started </td><td align="center" width="20%"><a accesskey="h" href="index.xhtml">Home</a></td><td valign="top" align="right" width="40%"> Chapter 4. bzip2 compression</td></tr></table></div></body></html>

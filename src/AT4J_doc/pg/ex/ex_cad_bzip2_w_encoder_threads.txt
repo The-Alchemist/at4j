@@ -1,0 +1,70 @@
+// Data will be compressed to the java.io.File:s f1 and f2
+
+String toCompress1 = "Compress me!";
+String toCompress2 = "Compress me too!";
+
+// Create a org.at4j.comp.bzip2.BZip2EncoderExecutorService with four threads.
+org.at4j.comp.bzip2.BZip2EncoderExecutorService executor =
+  org.at4j.comp.bzip2.BZip2OutputStream.createExecutorService(4);
+
+// A settings object containing the executor service
+org.at4j.comp.bzip2.BZip2OutputStreamSettings settings = new org.at4j.comp.bzip2.BZip2OutputStreamSettings().
+  setExecutorService(executor);
+
+try
+{
+  java.io.OutputStream bzos1 = new org.at4j.comp.bzip2.BZip2OutputStream(
+	new java.io.FileOutputStream(f1), settings); 
+  try
+  {
+    java.io.OutputStream bzos2 = new org.at4j.comp.bzip2.BZip2OutputStream(
+      new java.io.FileOutputStream(f2), settings);
+    try
+    {
+      bzos1.write(toCompress1.getBytes());
+      bzos2.write(toCompress2.getBytes());
+    }
+    finally
+    {
+      bzos2.close();
+    }
+  }
+  finally
+  {
+    bzos1.close();
+  }
+}
+finally
+{
+  // Shut down the executor service
+  executor.shutdown();
+}
+
+// Read the compressed data
+java.io.InputStream bzis = new org.at4j.comp.bzip2.BZip2InputStream(new java.io.FileInputStream(f1));
+try
+{
+  // Use the EntityFS StreamUtil utility to make our job easier.
+  // This will print "Compress me!"
+  System.out.println(
+    new String(
+      org.entityfs.support.io.StreamUtil.readStreamFully(bzis, 32)));
+}
+finally
+{
+  bzis.close();
+}
+
+bzis = new org.at4j.comp.bzip2.BZip2InputStream(new java.io.FileInputStream(f2));
+try
+{
+  // Use the EntityFS StreamUtil utility to make our job easier.
+  // This will print "Compress me too!"
+  System.out.println(
+    new String(
+      org.entityfs.support.io.StreamUtil.readStreamFully(bzis, 32)));
+}
+finally
+{
+  bzis.close();
+}

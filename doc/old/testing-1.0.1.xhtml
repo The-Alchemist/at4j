@@ -1,0 +1,194 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>At4J 1.0.2 test report</title>
+<link rel="stylesheet" type="text/css" href="at4j_doc.css" />
+</head>
+<body>
+<div id="container">
+<h1>At4J 1.0.2 test report</h1>
+<p>2009.07.17<br/>
+Karl Gustafsson</p>
+
+<p>
+<a href="#unit_tests">Unit tests</a><br/>
+&nbsp;&nbsp;<a href="#ut_64bit_linux">64 bit Linux</a><br/>
+&nbsp;&nbsp;<a href="#ut_32bit_linux">32 bit Linux</a><br/>
+&nbsp;&nbsp;<a href="#ut_64bit_solaris">64 bit Solaris 10</a><br/>
+&nbsp;&nbsp;<a href="#ut_64bit_macosx">64 bit Mac OS X</a><br/>
+&nbsp;&nbsp;<a href="#ut_64bit_win">64 bit Windows Vista</a><br/>
+&nbsp;&nbsp;<a href="#ut_32bit_win">32 bit Windows Vista</a><br/>
+</p>
+
+<a name="unit_tests"/>
+<h2>Unit tests</h2>
+<p>Unit tests were run as described in the <a href="pg/index.xhtml">Programmer's
+guide</a>.</p>
+
+<a name="ut_64bit_linux"/>
+<h3>64 bit Linux</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Xubuntu 9.04 64bit, Linux 2.6.28-11-generic SMP</dd>
+<dt><b>File system:</b></dt>
+<dd>tmpfs</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Core 2 Quad Q9550 @ 2.83GHz<br/>
+8192 Mb RAM<br/>
+Western Digital Raptor (3.5", 10,000 RPM, SATA)</dd>
+</dl>
+<br/>
+<table border="1">
+<thead>
+<tr class="header"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_19 (64 bit)</td><td class="good">OK (7/7)</td></tr>
+<tr><td>Sun JDK 1.6.0_14 (64 bit)</td><td class="good">OK (8/8)</td></tr>
+<tr><td>IBM J9 JVM build 2.3 1.5.0 SR9-SSU (64 bit)</td><td class="good">OK (7/7)</td></tr>
+<tr><td>IBM J9 JVM build 2.4 1.6.0 SR5 (64 bit)</td><td class="good">OK (8/8)</td></tr>
+<tr><td>OpenJDK 6b14-1.4.1-0ubuntu10 (64 bit)</td><td class="good">OK (8/8)</td></tr>
+</tbody>
+</table>
+* The LZMA test suite failed with an OutOfMemoryError.
+</p>
+<br/><br/>
+
+<a name="ut_32bit_linux"/>
+<h3>32 bit Linux</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Xubuntu 9.04 32bit, Linux 2.6.28-13-generic</dd>
+<dt><b>File system:</b></dt>
+<dd>tmpfs</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Pentium M 2.0 GHz stepping 08<br/>
+2048 Mb RAM<br/>
+Hitachi HTE726060M9AT00 (2.5", 7,200 RPM, ATA)</dd>
+</dl>
+<br/>
+<table border="1">
+<thead>
+<tr align="center"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_19</td><td class="good">OK (7/7)</td></tr>
+<tr><td>Sun JDK 1.6.0_14</td><td class="good">OK (8/8)</td></tr>
+<tr><td>IBM J9 JVM build 2.3 1.5.0 SR9-SSU</td><td class="good">OK (7/7)</td></tr>
+<tr><td>IBM J9 JVM build 2.4 1.6.0 SR5</td><td class="good">OK (8/8)</td></tr>
+<tr><td>OpenJDK 6b14-1.4.1-0ubuntu10</td><td class="good">OK (8/8)</td></tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="ut_64bit_solaris"/>
+<h3>64 bit Solaris 10</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Solaris 10 5/09</dd>
+<dt><b>File system:</b></dt>
+<dd>UFS</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Xeon E5420 @ 2.5GHz<br/>
+8192 Mb RAM<br/>
+RAID 10 array</dd>
+</dl>
+<br/>
+<table border="1">
+<thead>
+<tr class="header"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_19 (64 bit)</td><td class="good">OK (7/7)</td></tr>
+<tr><td>Sun JDK 1.6.0_14 (64 bit)</td><td class="good">OK (8/8)</td></tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="ut_64bit_macosx"/>
+<h3>64 bit Mac OS X</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Mac OS X 10.5.7</dd>
+<dt><b>File system:</b></dt>
+<dd>HFS</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Core 2 Duo @ 2GHz<br/>
+2048 Mb RAM</dd>
+</dl>
+<br/>
+<table border="1">
+<thead>
+<tr class="header"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Apple JDK 1.5.0_19_b02-304 (64 bit)</td><td class="good">OK (7/7)</td></tr>
+<tr><td>Apple JDK 1.6.0_13_b03-211 (64 bit)</td><td class="good">OK (8/8)</td></tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="ut_64bit_win"/>
+<h3>64 bit Windows Vista</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Windows Vista Home Premium 64bit SP2</dd>
+<dt><b>File system:</b></dt>
+<dd>NTFS</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Core 2 Duo @ 2GHz<br/>
+2048 Mb RAM</dd>
+</dl>
+<br/>
+<table border="1">
+<thead>
+<tr align="center"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_19 (64 bit)</td><td class="good">OK (7/7)</td></tr>
+<tr><td>Sun JDK 1.6.0_14 (64 bit)</td><td class="good">OK (8/8)</td></tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="ut_32bit_win"/>
+<h3>32 bit Windows Vista</h3>
+<p>
+<dl>
+<dt><b>OS:</b></dt>
+<dd>Windows Vista Enterprise SP2</dd>
+<dt><b>File system:</b></dt>
+<dd>NTFS</dd>
+<dt><b>Hardware:</b></dt>
+<dd>Intel Core2 Duo U7600 @ 1.2Ghz<br/>
+2048 Mb RAM<br/>
+Toshiba MK1011GAH (1.8", 4,200 RPM, ATA)</dd>
+</dl>
+<br/>
+<table border="1">
+<thead>
+<tr align="center"><td><b>JVM</b></td><td><b>Results</b></td></tr>
+</thead>
+<tbody>
+<tr><td>Sun JDK 1.5.0_19</td><td class="good">OK (7/7)</td></tr>
+<tr><td>Sun JDK 1.6.0_14</td><td class="good">OK (8/8)</td></tr>
+</tbody>
+</table>
+</p>
+<br/><br/>
+
+<a name="perf_tests"/>
+<h2>Performance tests</h2>
+<p>No performance tests were run in this release. See results from
+<a href="old/testing-1.0.html">version 1.0</a>.</p>
+</div></body></html>

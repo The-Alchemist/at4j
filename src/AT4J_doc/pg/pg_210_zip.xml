@@ -1,0 +1,227 @@
+<chapter id="chap_zip">
+<title>Zip</title>
+<para>The Zip file format was originally developed in 1989 by Phil Katz for the
+company PKZIP. A Zip archive contains file and directory entries, where each file's
+data is compressed individually. The archive contains a number of Zip entries
+containing metadata on the entry and file data for file entries, followed by a
+<emphasis>central directory</emphasis> where some of the metadata for each
+entry is repeated.</para>
+
+<para>The Zip specification allows for several
+different compression methods, even within the same Zip archive. The &At4J;
+implementation supports the following:
+<itemizedlist>
+<listitem>Stored (uncompressed)</listitem>
+<listitem>Deflated (gzip compression)</listitem>
+<listitem>bzip2 compression</listitem>
+<listitem>LZMA compression</listitem>
+</itemizedlist>
+The Deflated and Stored methods are most common and are widely supported by Zip
+software.
+</para>
+
+<para>Each Zip entry has a metadata record associated with it. It contains
+data such as the entry's absolute location in the archive, its last modification
+time, its <emphasis>external file attributes</emphasis> and a comment. (See
+org.at4j.zip.ZipEntry.) The format of the external file attributes is
+configurable in order to be able to capture significant attributes from the file
+system containing the files that were added to the archive. Unix external file
+attributes, for instance, contains information on the entry's permission mode 
+(same mode as the <computeroutput>chmod</computeroutput> command), such as
+<computeroutput>0644</computeroutput> or <computeroutput>0755</computeroutput>.</para>
+
+<para>The entry metadata can be, and often is, extended using
+<emphasis>extra fields</emphasis> that contain metadata that does not fit into
+the standard metadata record. This can for instance be timestamps
+with a higher precision than the timestamps in the standard record.</para>
+
+<para>The Zip archive itself can also have a comment. It is often printed by
+the Zip program when the archive is being unzipped.</para>
+
+<para>The Zip file format is specified in <xref linkend="bib_pkware_appnote"/>
+and in <xref linkend="bib_infozip_appnote"/>. See also the
+<xref linkend="bib_wikipedia_article_on_zip"/>.</para>
+
+<section id="character_encoding_in_zip_files">
+<title>Character encoding in Zip files</title>
+<para>Neither PKWARE's nor Info-Zip's application notes specify which character
+encoding to use for encoding text metadata. Windows (and DOS) programs use
+Codepage 437 to encode file paths, and the platform's default charset 
+(Codepage 1252 in Sweden, for instance) for other text metadata such as comments.
+Unix programs use the platform's default charset (often UTF-8 or ISO-8859-1)
+for all text data. The Unicode path extra field
+(org.at4j.zip.ef.UnicodePathExtraField) can be, but seldom is, used to store an
+UTF-8-encoded version of an entry's path.</para>
+</section>
+
+<section id="zip_features_not_supported_by_at4j">
+<title>Significant Zip features not supported by &At4J;</title>
+<para>The following significant Zip features are not supported:
+<itemizedlist>
+<listitem>Adding symbolic links when building a Zip archive.</listitem>
+<listitem>Zip archives split over several archive files.</listitem>
+<listitem>Zip file signing.</listitem>
+<listitem>Zip file encryption.</listitem>
+<listitem>Some compression methods.</listitem>
+<listitem>Some entry external file attribute formats.</listitem>
+<listitem>Some entry extra fields.</listitem> 
+</itemizedlist></para>
+</section>
+
+<section id="reading_zip_archives">
+<title>Reading Zip archives</title>
+<para>A Zip archive is read by creating a org.at4j.zip.ZipFile object on the
+Zip file. The org.at4j.zip.ZipFile object contains a org.at4j.zip.ZipEntry object
+for each entry in the archive.
+
+<example id="ex_reading_data_from_zip_archive">
+<title>Reading data from a Zip archive</title>
+<programlisting>&ex_reading_data_from_zip_archive;</programlisting>
+</example></para>
+
+<para>External file attributes, compression method metadata and extra fields can
+be accessed through org.at4j.zip.ZipEntry objects. External file attributes are
+represented by a org.at4j.zip.extattrs.ZipExternalFileAttributes-implementing
+object, compression method metadata by a org.at4j.zip.comp.ZipEntryCompressionMethod
+object and extra fields with a list of org.at4j.zip.ef.ZipEntryExtraField objects.
+Each extra field is represented by two objects since it occurs both in the Zip
+entry's metadata (the local header) and in the central directory at the end of
+the Zip file. The <computeroutput>isInLocalHeader</computeroutput> method of
+an org.at4j.zip.ef.ZipEntryExtraField object can be used to
+query it about where it got its data from &ndash; the local header or the central
+directory.
+
+<example id="ex_reading_metadata_from_zip_entry">
+<title>Reading metadata from a Zip entry</title>
+<programlisting>&ex_reading_metadata_from_zip_entry;</programlisting>
+</example></para>
+
+<para>The org.at4j.zip.ZipFile object uses a org.at4j.zip.ZipFileParser object
+to parse the contents of the Zip file. It has a few extension points where
+additional functionality can be plugged in. See <xref linkend="zip_add_support"/>
+below.</para>
+</section>
+
+<section id="extracting_from_zip_archives">
+<title>Extracting from Zip archives</title>
+<para>Zip entries can be extracted using the org.at4j.util.archive.ArchiveExtractor.
+There is no custom extractor for Zip archives.</para>
+</section>
+
+<section id="creating_zip_archives">
+<title>Creating Zip archives</title>
+<para>A Zip archive is created using a org.at4j.zip.builder.ZipBuilder object.
+It is configured with a org.at4j.zip.builder.ZipBuilderSettings object.</para>
+
+<para>Each added entry is configured with a 
+org.at4j.zip.builder.ZipEntrySettings object. It contains properties for the
+compression method to use, for the extra fields to add, for the entry comment
+and for how the external file attributes should be represented. The builder uses
+the strategy described in <xref linkend="entry_metadata"/> to arrive at the
+effective settings for each entry.</para>
+
+<para>Below is an example that shows how a Zip archive is built using a
+org.at4j.zip.builder.ZipBuilder.
+
+<example id="ex_build_zip">
+<title>Building a Zip archive</title>
+<programlisting>&ex_build_zip;</programlisting>
+</example></para>
+
+<para>The shortcut method <computeroutput>setCompressionLevel</computeroutput>
+on the org.at4j.zip.builder.ZipBuilder object can be used for setting the
+default compression level for files without having to create a new
+org.at4j.zip.comp.ZipEntryCompressionMethod object.
+
+<example id="ex_build_zip_and_set_compression_level">
+<title>Build a Zip archive and set the compression level</title>
+<programlisting>&ex_build_zip_and_set_compression_level;</programlisting>
+</example></para>
+</section>
+
+<section id="zip_add_support">
+<title>Adding support for unsupported features</title>
+<para>It is possible to plug in support for new extra field types, new
+compression methods and new external attribute types in the
+org.at4j.zip.ZipFile and org.at4j.zip.builder.ZipBuilder objects.</para>
+
+<para>Feature implementations will have to work with raw, binary data read from
+and written to Zip files. They will probably find the number types in the
+<computeroutput>org.at4j.support.lang</computeroutput> package and perhaps the
+utilities in the <computeroutput>org.at4j.support.util</computeroutput> package
+useful.</para>
+
+<section id="zip_add_support_comp">
+<title>Adding a new compression method</title>
+<para>This is how to make org.at4j.zip.ZipFile understand a new compression 
+method:
+<orderedlist>
+<listitem>Implement a new org.at4j.zip.comp.ZipEntryCompressionMethod
+class.</listitem>
+<listitem>Implement a new org.at4j.zip.comp.ZipEntryCompressionMethodFactory
+class.</listitem>
+<listitem>Create a new org.at4j.zip.ZipFileParser instance.</listitem>
+<listitem>Register the new compression method factory in the Zip file parser's
+compression method factory registry.</listitem>
+</orderedlist></para>
+
+<para>To use the new compression method with the org.at4j.zip.builder.ZipBuilder,
+use it with the org.at4j.zip.builder.ZipEntrySettings objects for the
+files that should be compressed using the new method, or with the default file
+settings objects if all files should be compressed using it.</para>
+</section>
+
+<section id="zip_add_support_external_fa">
+<title>Adding a new external attribute type</title>
+<para>This is how to make org.at4j.zip.ZipFile understand a new external
+attribute type:
+<orderedlist>
+<listitem>Implement a new org.at4j.zip.extattrs.ZipExternalFileAttributes
+class.</listitem>
+<listitem>Implement a new org.at4j.zip.extattrs.ZipExternalFileAttributesFactory
+class.</listitem>
+<listitem>Create a new org.at4j.zip.ZipFileParser instance.</listitem>
+<listitem>Register the new external attributes factory in the Zip file parser's
+external attributes factory registry.</listitem>
+</orderedlist></para>
+
+<para>To use the new external attributes object with the
+org.at4j.zip.builder.ZipBuilder, use the factory with the
+org.at4j.zip.builder.ZipEntrySettings objects for the entries that should use
+the new attributes, or with the default file and directory settings objects if
+all entries should use them.</para>
+</section>
+
+<section id="zip_add_support_extra_field">
+<title>Adding a new extra field type</title>
+<para>This is how to make org.at4j.zip.ZipFile understand a new extra field
+type:
+<orderedlist>
+<listitem>Implement a new org.at4j.zip.ef.ZipEntryExtraField class.</listitem>
+<listitem>Implement a new org.at4j.zip.ef.ZipEntryExtraFieldParser class.</listitem>
+<listitem>Create a new org.at4j.zip.ZipFileParser instance.</listitem>
+<listitem>Register the new extra field parser in the Zip file parser's extra
+field parser registry.</listitem> 
+</orderedlist></para>
+
+<para>This is how to add entries using the new extra fields to a
+org.at4j.zip.builder.ZipBuilder:
+<orderedlist>
+<listitem>Implement a new org.at4j.zip.ef.ZipEntryExtraFieldFactory class.</listitem>
+<listitem>Use the new extra field factory with the org.at4j.zip.builder.ZipEntrySettings
+for the entries that should have the new extra fields, or with the default
+file and directory settings objects if all file and directory entries should have
+them.</listitem>
+</orderedlist>
+</para>
+</section>
+</section>
+
+<section id="standalone_zip_tools">
+<title>Standalone Zip tools</title>
+<para>The org.at4j.zip.prog.Zip and org.at4j.zip.prog.Unzip emulates the
+behavior of the <computeroutput>zip</computeroutput> and
+<computeroutput>unzip</computeroutput> commands.
+See their API documentation for details on how to use them.</para>
+</section>
+</chapter>

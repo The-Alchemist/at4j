@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="junit4"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="var" path="ENTITYFS_CORE" sourcepath="/ENTITYFS_SRC"/>
+	<classpathentry kind="var" path="ENTITYFS_UTIL" sourcepath="/ENTITYFS_SRC"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/AT4J_tar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/AT4J_support"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/AT4J_test_support"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/AT4J_archive"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/AT4J_compression_bzip2"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/AT4J_util"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/AT4J_compression"/>
+	<classpathentry kind="var" path="JUNIT4"/>
+	<classpathentry kind="var" path="ENTITYFS_FSFS"/>
+	<classpathentry kind="var" path="ENTITYFS_RAM"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

@@ -1,0 +1,24 @@
+// Read data from the Tar file f
+
+// The UTF-8 charset
+java.nio.charset.Charset utf8 = java.nio.charset.Charset.forName("utf8");
+
+// Create the Tar file object. Text in the Tar file is encoded in UTF-8
+org.at4j.tar.TarFile tf = new org.at4j.tar.TarFile(f, utf8);
+try
+{
+  // Print out the names of the child entries of the directory entry /d
+  org.at4j.tar.TarDirectoryEntry d = (org.at4j.tar.TarDirectoryEntry) tf.get(new org.entityfs.el.AbsoluteLocation("/d"));
+  System.out.println("Contents of /d: " + d.getChildEntries().keySet());
+
+  // Print out the contents of the file /d/f
+  org.at4j.tar.TarFileEntry df = (org.at4j.tar.TarFileEntry) d.getChildEntries().get("f");
+  
+  // Use the EntityFS utility class org.entityfs.util.Files to read the text in the file.
+  System.out.println(org.entityfs.util.Files.readTextFile(df, utf8));
+}
+finally
+{
+  // Close the Tar archive to release all resources associated with it.
+  tf.close();
+}

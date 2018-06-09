@@ -1,0 +1,28 @@
+<chapter id="chap_gzip">
+<title>gzip compression</title>
+<para>gzip is a compression format that was created by Jean-Loup Gailly and
+Mark Adler in the early nineties. See the
+<xref linkend="bib_wikipedia_article_on_gzip"/>.</para>
+
+<para>gzip is supported through Java's java.util.zip.GZipOutputStream and
+java.util.zip.GZipInputStream. They filter the data sent to or read from another
+stream to compress it and decompress it, respectively.</para>
+
+<para>&EntityFS; has with the org.entityfs.util.io.GZipReadableFile and
+org.entityfs.util.io.GZipWritableFile classes. They can transparently
+decompress data read from a file and compress data written to a
+file.
+
+<example id="ex_cad_gzip_w_rwf">
+<title>Working with gzip using readable and writable gzip files</title>
+<programlisting>&ex_cad_gzip_w_rwf;</programlisting>
+</example></para>
+
+<section id="standalone_gzip_tools">
+<title>Standalone gzip tools</title>
+<para>The org.at4j.comp.gzip.prog.GZip and org.at4j.comp.gzip.prog.GUnzip classes have
+runnable main methods that emulate the behavior of the
+<computeroutput>gzip</computeroutput> and <computeroutput>gunzip</computeroutput>
+commands. See their API documentation for details on how to use them.</para>
+</section>
+</chapter>

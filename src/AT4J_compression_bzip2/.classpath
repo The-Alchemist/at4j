@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="var" path="ENTITYFS_CORE" sourcepath="/ENTITYFS_SRC"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/AT4J_compression"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/AT4J_support"/>
+	<classpathentry kind="lib" path="/AT4J_resources/lib/apache_cc_bzip2-1.1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

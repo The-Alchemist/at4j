@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/><title>Chapter 4. bzip2 compression</title><link href="../at4j_doc-1.1.css" type="text/css" rel="stylesheet" /><meta content="DocBook XSL Stylesheets V1.77.1" name="generator" /><link rel="home" href="index.xhtml" title="At4J Programmer's Guide" /><link rel="up" href="index.xhtml" title="At4J Programmer's Guide" /><link rel="prev" href="ch03.xhtml" title="Chapter 3. Data compression" /><link rel="next" href="ch05.xhtml" title="Chapter 5. gzip compression" /></head><body><div class="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Chapter 4. bzip2 compression</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="ch03.xhtml">Prev</a> </td><th align="center" width="60%"> </th><td align="right" width="20%"> <a accesskey="n" href="ch05.xhtml">Next</a></td></tr></table><hr /></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chap_bzip2" />Chapter 4. bzip2 compression</h1></div></div></div><div class="toc"><p><strong>Table of Contents</strong></p><dl><dt><span class="section"><a href="ch04.xhtml#bzip2_utilities">bzip2 utilities</a></span></dt><dt><span class="section"><a href="ch04.xhtml#standalone_bzip2_tools">Standalone bzip2 tools</a></span></dt></dl></div><p>The bzip2 compression method was developed by Julian Seward in the
+late nineties. See the
+<a class="xref" href="bi01.xhtml#bib_wikipedia_article_on_bzip2" title="Wikipedia article on bzip2">Wikipedia article on bzip2</a> and the
+<a class="xref" href="bi01.xhtml#bib_bzip2_home_page" title="bzip2 home page">bzip2 home page</a>.</p><p>At4J provides a Java implementation of bzip2. Data is compressed with
+the <a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStream.html">BZip2OutputStream</a> and decompressed with the
+<a class="apilink" title="org.at4j.comp.bzip2.BZip2InputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2InputStream.html">BZip2InputStream</a>.</p><p>Since bzip2 compression is a CPU-intensive task, the
+<a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStream.html">BZip2OutputStream</a> supports using several, parallel
+compression threads. An individual <a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStream.html">BZip2OutputStream</a> may be
+told how many threads that it can use, or several output streams may share a
+set of threads through a <a class="apilink" title="org.at4j.comp.bzip2.BZip2EncoderExecutorService" href="../api/index.html?org/at4j/comp/bzip2/BZip2EncoderExecutorService.html">BZip2EncoderExecutorService</a>.</p><p>The following example shows how data is written to a bzip2 output stream
+that writes to a file, and then read again from the file and decompressed.
+
+</p><div class="example"><a id="ex_cad_bzip2" /><p class="title"><strong>Example 4.1. Compressing and decompressing with bzip2</strong></p><div class="example-contents"><pre class="programlisting">// Data will be compressed to the <a class="apilink" title="java.io.File" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/File.html">File</a> f
+
+String toCompress = "Compress me!";
+
+<a class="apilink" title="java.io.OutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/OutputStream.html">OutputStream</a> os = new <a class="apilink" title="java.io.FileOutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/FileOutputStream.html">FileOutputStream</a>(f);
+try
+{
+  // Use the default compression settings (maximum compression)
+  <a class="apilink" title="java.io.OutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/OutputStream.html">OutputStream</a> bzos = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStream.html">BZip2OutputStream</a>(os);
+  try
+  {
+    bzos.write(toCompress.getBytes());
+  }
+  finally
+  {
+    bzos.close();
+  }      
+}
+finally
+{
+  // Calling close here may mean that close will be called several times on the
+  // same stream. That is safe.
+  os.close();
+}
+
+// Read the compressed data
+<a class="apilink" title="java.io.InputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/InputStream.html">InputStream</a> is = new <a class="apilink" title="java.io.FileInputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/FileInputStream.html">FileInputStream</a>(f);
+try
+{
+  <a class="apilink" title="java.io.InputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/InputStream.html">InputStream</a> bzis = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2InputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2InputStream.html">BZip2InputStream</a>(is);
+  try
+  {
+    // Use the EntityFS StreamUtil utility to make our job easier.
+    // This will print "Compress me!"
+    System.out.println(
+      new String(
+        <a class="apilink" title="org.entityfs.support.io.StreamUtil" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/support/io/StreamUtil.html">StreamUtil</a>.readStreamFully(bzis, 32)));
+  }
+  finally
+  {
+    bzis.close();
+  }
+}
+finally
+{
+  // Calling close here may mean that close will be called several times on the
+  // same stream. That is safe.
+  is.close();
+}</pre></div></div><p><br class="example-break" /></p><p>Next example shows how a set of encoder threads is shared between two
+bzip2 streams.
+
+</p><div class="example"><a id="ex_cad_bzip2" /><p class="title"><strong>Example 4.2. Compressing and decompressing with bzip2 using several encoder threads</strong></p><div class="example-contents"><pre class="programlisting">// Data will be compressed to the <a class="apilink" title="java.io.File" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/File.html">File</a>:s f1 and f2
+
+String toCompress1 = "Compress me!";
+String toCompress2 = "Compress me too!";
+
+// Create a <a class="apilink" title="org.at4j.comp.bzip2.BZip2EncoderExecutorService" href="../api/index.html?org/at4j/comp/bzip2/BZip2EncoderExecutorService.html">BZip2EncoderExecutorService</a> with four threads.
+<a class="apilink" title="org.at4j.comp.bzip2.BZip2EncoderExecutorService" href="../api/index.html?org/at4j/comp/bzip2/BZip2EncoderExecutorService.html">BZip2EncoderExecutorService</a> executor =
+  <a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStream.html">BZip2OutputStream</a>.createExecutorService(4);
+
+// A settings object containing the executor service
+<a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStreamSettings" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStreamSettings.html">BZip2OutputStreamSettings</a> settings = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStreamSettings" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStreamSettings.html">BZip2OutputStreamSettings</a>().
+  setExecutorService(executor);
+
+try
+{
+  <a class="apilink" title="java.io.OutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/OutputStream.html">OutputStream</a> bzos1 = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStream.html">BZip2OutputStream</a>(
+	new <a class="apilink" title="java.io.FileOutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/FileOutputStream.html">FileOutputStream</a>(f1), settings); 
+  try
+  {
+    <a class="apilink" title="java.io.OutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/OutputStream.html">OutputStream</a> bzos2 = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2OutputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2OutputStream.html">BZip2OutputStream</a>(
+      new <a class="apilink" title="java.io.FileOutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/FileOutputStream.html">FileOutputStream</a>(f2), settings);
+    try
+    {
+      bzos1.write(toCompress1.getBytes());
+      bzos2.write(toCompress2.getBytes());
+    }
+    finally
+    {
+      bzos2.close();
+    }
+  }
+  finally
+  {
+    bzos1.close();
+  }
+}
+finally
+{
+  // Shut down the executor service
+  executor.shutdown();
+}
+
+// Read the compressed data
+<a class="apilink" title="java.io.InputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/InputStream.html">InputStream</a> bzis = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2InputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2InputStream.html">BZip2InputStream</a>(new <a class="apilink" title="java.io.FileInputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/FileInputStream.html">FileInputStream</a>(f1));
+try
+{
+  // Use the EntityFS StreamUtil utility to make our job easier.
+  // This will print "Compress me!"
+  System.out.println(
+    new String(
+      <a class="apilink" title="org.entityfs.support.io.StreamUtil" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/support/io/StreamUtil.html">StreamUtil</a>.readStreamFully(bzis, 32)));
+}
+finally
+{
+  bzis.close();
+}
+
+bzis = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2InputStream" href="../api/index.html?org/at4j/comp/bzip2/BZip2InputStream.html">BZip2InputStream</a>(new <a class="apilink" title="java.io.FileInputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/FileInputStream.html">FileInputStream</a>(f2));
+try
+{
+  // Use the EntityFS StreamUtil utility to make our job easier.
+  // This will print "Compress me too!"
+  System.out.println(
+    new String(
+      <a class="apilink" title="org.entityfs.support.io.StreamUtil" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/support/io/StreamUtil.html">StreamUtil</a>.readStreamFully(bzis, 32)));
+}
+finally
+{
+  bzis.close();
+}</pre></div></div><p><br class="example-break" /></p><p>At4J also bundles the bzip2 library from the
+<a class="xref" href="bi01.xhtml#bib_commons_compress_site" title="Apache Commons Compress">Apache Commons Compress site</a> project. It provides the 
+<a class="apilink" title="org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream" href="../api/index.html?org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.html">BZip2CompressorInputStream</a> for
+reading compressed data and the
+<a class="apilink" title="org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream" href="../api/index.html?org/apache/commons/compress/compressors/bzip2/BZip2CompressorOutputStream.html">BZip2CompressorOutputStream</a> for
+writing compressed data.</p><p>Note that the <code class="computeroutput">available</code> method of the
+<a class="apilink" title="org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream" href="../api/index.html?org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.html">BZip2CompressorInputStream</a> always
+returns <code class="computeroutput">0</code>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="bzip2_utilities" />bzip2 utilities</h2></div></div></div><p>The <a class="apilink" title="org.at4j.comp.bzip2.BZip2ReadableFile" href="../api/index.html?org/at4j/comp/bzip2/BZip2ReadableFile.html">BZip2ReadableFile</a> and
+<a class="apilink" title="org.at4j.comp.bzip2.BZip2WritableFile" href="../api/index.html?org/at4j/comp/bzip2/BZip2WritableFile.html">BZip2WritableFile</a> objects can transparently bzip2
+decompress or compress data that is read from or written to a file. They implement the
+<a class="apilink" title="org.entityfs.ReadableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/ReadableFile.html">ReadableFile</a> and the <a class="apilink" title="org.entityfs.WritableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/WritableFile.html">WritableFile</a> interfaces
+respectively and can be passed to all methods that use those interfaces.</p><p>The next example does the same as the example above, except that it uses
+the <a class="apilink" title="org.at4j.comp.bzip2.BZip2ReadableFile" href="../api/index.html?org/at4j/comp/bzip2/BZip2ReadableFile.html">BZip2ReadableFile</a> and 
+<a class="apilink" title="org.at4j.comp.bzip2.BZip2WritableFile" href="../api/index.html?org/at4j/comp/bzip2/BZip2WritableFile.html">BZip2WritableFile</a> classes.
+ 
+</p><div class="example"><a id="ex_cad_bzip2_w_rwf" /><p class="title"><strong>Example 4.3. Compressing and decompressing with bzip2 using At4J readable and
+writable bzip2 files</strong></p><div class="example-contents"><pre class="programlisting">// Data will be compressed to the <a class="apilink" title="java.io.File" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/File.html">File</a> f
+
+String toCompress = "Compress me!";
+
+// Wrap the <a class="apilink" title="java.io.File" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/File.html">File</a> in a <a class="apilink" title="org.entityfs.util.io.ReadWritableFileAdapter" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/io/ReadWritableFileAdapter.html">ReadWritableFileAdapter</a> to make it a
+// <a class="apilink" title="org.entityfs.ReadWritableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/ReadWritableFile.html">ReadWritableFile</a>
+<a class="apilink" title="org.entityfs.ReadWritableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/ReadWritableFile.html">ReadWritableFile</a> fa = new <a class="apilink" title="org.entityfs.util.io.ReadWritableFileAdapter" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/io/ReadWritableFileAdapter.html">ReadWritableFileAdapter</a>(f);
+
+// Write the data using the EntityFS utility class <a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a> and a
+// <a class="apilink" title="org.at4j.comp.bzip2.BZip2WritableFile" href="../api/index.html?org/at4j/comp/bzip2/BZip2WritableFile.html">BZip2WritableFile</a>. Use maximum compression (9).
+<a class="apilink" title="org.at4j.comp.bzip2.BZip2WritableFileSettings" href="../api/index.html?org/at4j/comp/bzip2/BZip2WritableFileSettings.html">BZip2WritableFileSettings</a> writeSettings = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2WritableFileSettings" href="../api/index.html?org/at4j/comp/bzip2/BZip2WritableFileSettings.html">BZip2WritableFileSettings</a>().
+  setBlockSize(9);
+
+<a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a>.writeText(new <a class="apilink" title="org.at4j.comp.bzip2.BZip2WritableFile" href="../api/index.html?org/at4j/comp/bzip2/BZip2WritableFile.html">BZip2WritableFile</a>(fa, writeSettings), toCompress);
+
+// Read the data, again using <a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a>. The data is read from a
+// <a class="apilink" title="org.at4j.comp.bzip2.BZip2ReadableFile" href="../api/index.html?org/at4j/comp/bzip2/BZip2ReadableFile.html">BZip2ReadableFile</a>.
+// This will print out "Compress me!"
+System.out.println(
+  <a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a>.readTextFile(
+    new <a class="apilink" title="org.at4j.comp.bzip2.BZip2ReadableFile" href="../api/index.html?org/at4j/comp/bzip2/BZip2ReadableFile.html">BZip2ReadableFile</a>(fa)));</pre></div></div><p><br class="example-break" /></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="standalone_bzip2_tools" />Standalone bzip2 tools</h2></div></div></div><p>The <a class="apilink" title="org.at4j.comp.bzip2.prog.BZip2" href="../api/index.html?org/at4j/comp/bzip2/prog/BZip2.html">BZip2</a> and <a class="apilink" title="org.at4j.comp.bzip2.prog.BUnzip2" href="../api/index.html?org/at4j/comp/bzip2/prog/BUnzip2.html">BUnzip2</a>
+classes have runnable main methods that emulate the behavior of the
+<code class="computeroutput">bzip2</code> and <code class="computeroutput">bunzip2</code>
+commands. See their API documentation for details on how to use them.</p></div></div><div class="navfooter"><hr /><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="ch03.xhtml">Prev</a> </td><td align="center" width="20%"> </td><td align="right" width="40%"> <a accesskey="n" href="ch05.xhtml">Next</a></td></tr><tr><td valign="top" align="left" width="40%">Chapter 3. Data compression </td><td align="center" width="20%"><a accesskey="h" href="index.xhtml">Home</a></td><td valign="top" align="right" width="40%"> Chapter 5. gzip compression</td></tr></table></div></body></html>

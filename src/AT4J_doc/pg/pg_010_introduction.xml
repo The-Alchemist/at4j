@@ -1,0 +1,33 @@
+<chapter id="chap_introduction">
+<title>Introduction</title>
+<para>&At4J; is a set of Java libraries for data compression and file archiving.
+It has support for reading and building Zip and Tar archives. Through 
+third-party libraries, it has support for bzip2, gzip and LZMA data compression and
+decompression.</para>
+
+<para>This book is the Programmer's guide. It is written for programmers who
+want to use &At4J; in their applications. It gives an overview of &At4J;'s
+design and capabilities with examples and pointers to the
+<ulink url="&apidocsIndex;">API documentation</ulink>, which serves as the
+reference documentation.</para>
+
+<section id="plz_help">
+<title>Please help!</title>
+<para>Feedback and contributions from users is essential for making &At4J; a better 
+library. Please share your thoughts and opinions on &At4J; with the rest of 
+the community through the mailing lists.</para>
+</section>
+
+<section id="license">
+<title>License and Copyright</title>
+<para>&At4J; is Copyright 2009 Karl Gustafsson. It is licensed
+under the <ulink url="&lLicense;">&LicenseName;</ulink>. If you want other
+licensing terms, contact &Holocene;.</para>
+</section>
+
+<section id="support">
+<title>Support</title>
+<para>Support for &At4J; can be found on the users mailing list.
+See <ulink url="&lAt4J;">the &At4J; site</ulink>.</para>
+</section>
+</chapter>

@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/><title>Chapter 8. Tar</title><link href="../at4j_doc-1.1.css" type="text/css" rel="stylesheet" /><meta content="DocBook XSL Stylesheets V1.77.1" name="generator" /><link rel="home" href="index.xhtml" title="At4J Programmer's Guide" /><link rel="up" href="index.xhtml" title="At4J Programmer's Guide" /><link rel="prev" href="ch07.xhtml" title="Chapter 7. Archives" /><link rel="next" href="ch09.xhtml" title="Chapter 9. Zip" /></head><body><div class="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Chapter 8. Tar</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="ch07.xhtml">Prev</a> </td><th align="center" width="60%"> </th><td align="right" width="20%"> <a accesskey="n" href="ch09.xhtml">Next</a></td></tr></table><hr /></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chap_tar" />Chapter 8. Tar</h1></div></div></div><div class="toc"><p><strong>Table of Contents</strong></p><dl><dt><span class="section"><a href="ch08.xhtml#character_encoding_in_tar_files">Character encoding in Tar files</a></span></dt><dt><span class="section"><a href="ch08.xhtml#tar_features_not_supported_by_at4j">Significant Tar features not supported by At4J</a></span></dt><dt><span class="section"><a href="ch08.xhtml#reading_tar_archives">Reading Tar archives</a></span></dt><dt><span class="section"><a href="ch08.xhtml#extracting_from_tar_archives">Extracting entries from Tar archives</a></span></dt><dt><span class="section"><a href="ch08.xhtml#creating_tar_archives">Creating Tar archives</a></span></dt><dt><span class="section"><a href="ch08.xhtml#standalone_tar_tools">Standalone Tar tools</a></span></dt></dl></div><p>Tar is an ancient file format, originally used for making tape backups
+(<span class="emphasis"><em>Tape ARchives</em></span>). A Tar file consists of a list of tar
+entries. Each entry has a header containing its metadata,
+followed by the its data. The metadata contains, at least, the following data:
+</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">The entry's absolute location in the archive.</li><li class="listitem">The Unix permission mode for the entry, such as
+<code class="computeroutput">0755</code> or <code class="computeroutput">0644</code>.</li><li class="listitem">The entry's owner user and group id:s.</li><li class="listitem">The time of last modification of the entry.</li></ul></div><p>There are four significant versions of the
+Tar file format:
+</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">Unix V7</span></dt><dd>The oldest Tar format. Path names and symbolic link targets are limited
+to 99 characters (plus the leading slash). Stores only the numerical user and
+group id:s for each entry. See <a class="apilink" title="org.at4j.tar.builder.V7TarEntryStrategy" href="../api/index.html?org/at4j/tar/builder/V7TarEntryStrategy.html">V7TarEntryStrategy</a>.</dd><dt><span class="term">Posix.1-1988 (ustar)</span></dt><dd>Path names are limited to a theoretical maximum of 255 characters
+(often shorter), and symbolic link targets are limited to 99 characters. Stores
+the owner user and group names for each entry, in addition to the numerical
+user and group id:s. See <a class="apilink" title="org.at4j.tar.builder.UstarEntryStrategy" href="../api/index.html?org/at4j/tar/builder/UstarEntryStrategy.html">UstarEntryStrategy</a>.</dd><dt><span class="term">Gnu Tar</span></dt><dd>Path names and link targets can be of any length. Stores the owner
+user and group names for each entry, in addition to the numerical user and group
+id:s. See <a class="apilink" title="org.at4j.tar.builder.GnuTarEntryStrategy" href="../api/index.html?org/at4j/tar/builder/GnuTarEntryStrategy.html">GnuTarEntryStrategy</a>.</dd><dt><span class="term">Posix.1-2001 (pax)</span></dt><dd>Path names and link targets can be of any length. Supports an unlimited
+number of metadata variables for each entry.
+See <a class="apilink" title="org.at4j.tar.builder.PaxTarEntryStrategy" href="../api/index.html?org/at4j/tar/builder/PaxTarEntryStrategy.html">PaxTarEntryStrategy</a></dd></dl></div><p>
+Each format is backwards compatible with earlier formats.</p><p>The Tar file format does not support any kind of compression of its entries. 
+However, the Tar file itself is often compressed using gzip or bzip2 compression.</p><p>For more information on the Tar file
+format, see the <a class="xref" href="bi01.xhtml#bib_wikipedia_article_on_tar" title="Wikipedia article on Tar">Wikipedia article on Tar</a> and the    
+<a class="xref" href="bi01.xhtml#bib_gnu_tar_manual" title="Gnu Tar manual">Gnu Tar manual</a>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="character_encoding_in_tar_files" />Character encoding in Tar files</h2></div></div></div><p>There is no standard dictating which character encoding to use for a Tar entry's
+text metadata, such as its path. Unix Tar programs use the platform's default charset
+(often UTF-8 or ISO8859-1), while Windows programs often use Codepage 437. Pax
+metadata variables are always encoded in UTF-8.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="tar_features_not_supported_by_at4j" />Significant Tar features not supported by At4J</h2></div></div></div><p>The following significant Tar features are not supported:
+</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">Adding symbolic links when building a Tar archive.</li><li class="listitem">Jörg Schilling's Star file format. At4J might be able to extract
+Star and Xstar archives fairly well (more testing needed!), but cannot create
+them.</li><li class="listitem">Gnu Tar sparse files.</li></ul></div><p>
+</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="reading_tar_archives" />Reading Tar archives</h2></div></div></div><p>A Tar archive is read by creating a <a class="apilink" title="org.at4j.tar.TarFile" href="../api/index.html?org/at4j/tar/TarFile.html">TarFile</a> object on the
+Tar file. The <a class="apilink" title="org.at4j.tar.TarFile" href="../api/index.html?org/at4j/tar/TarFile.html">TarFile</a> object contains a <a class="apilink" title="org.at4j.tar.TarEntry" href="../api/index.html?org/at4j/tar/TarEntry.html">TarEntry</a> object
+for each entry in the archive.
+
+</p><div class="example"><a id="ex_reading_data_from_tar_archive" /><p class="title"><strong>Example 8.1. Reading data from a Tar archive</strong></p><div class="example-contents"><pre class="programlisting">// Read data from the Tar file f
+
+// The UTF-8 charset
+<a class="apilink" title="java.nio.charset.Charset" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/nio/charset/Charset.html">Charset</a> utf8 = <a class="apilink" title="java.nio.charset.Charset" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/nio/charset/Charset.html">Charset</a>.forName("utf8");
+
+// Create the Tar file object. Text in the Tar file is encoded in UTF-8
+<a class="apilink" title="org.at4j.tar.TarFile" href="../api/index.html?org/at4j/tar/TarFile.html">TarFile</a> tf = new <a class="apilink" title="org.at4j.tar.TarFile" href="../api/index.html?org/at4j/tar/TarFile.html">TarFile</a>(f, utf8);
+try
+{
+  // Print out the names of the child entries of the directory entry /d
+  <a class="apilink" title="org.at4j.tar.TarDirectoryEntry" href="../api/index.html?org/at4j/tar/TarDirectoryEntry.html">TarDirectoryEntry</a> d = (<a class="apilink" title="org.at4j.tar.TarDirectoryEntry" href="../api/index.html?org/at4j/tar/TarDirectoryEntry.html">TarDirectoryEntry</a>) tf.get(new <a class="apilink" title="org.entityfs.el.AbsoluteLocation" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/el/AbsoluteLocation.html">AbsoluteLocation</a>("/d"));
+  System.out.println("Contents of /d: " + d.getChildEntries().keySet());
+
+  // Print out the contents of the file /d/f
+  <a class="apilink" title="org.at4j.tar.TarFileEntry" href="../api/index.html?org/at4j/tar/TarFileEntry.html">TarFileEntry</a> df = (<a class="apilink" title="org.at4j.tar.TarFileEntry" href="../api/index.html?org/at4j/tar/TarFileEntry.html">TarFileEntry</a>) d.getChildEntries().get("f");
+  
+  // Use the EntityFS utility class <a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a> to read the text in the file.
+  System.out.println(<a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a>.readTextFile(df, utf8));
+}
+finally
+{
+  // Close the Tar archive to release all resources associated with it.
+  tf.close();
+}</pre></div></div><p><br class="example-break" /></p><p>To access file format version-specific data, the <a class="apilink" title="org.at4j.tar.TarEntry" href="../api/index.html?org/at4j/tar/TarEntry.html">TarEntry</a>
+objects can be cast to the types representing each Tar file format:
+</p><div class="table"><a id="tar_entry_types" /><p class="title"><strong>Table 8.1. Tar entry objects</strong></p><div class="table-contents"><table summary="Tar entry objects" border="1"><colgroup><col /><col /><col /><col /><col /></colgroup><thead><tr><th>Format</th><th>Base</th><th>File entries</th><th>Directory entries</th><th>Symbolic link entries</th></tr></thead><tbody><tr><td>Unix V7</td><td><a class="apilink" title="org.at4j.tar.TarEntry" href="../api/index.html?org/at4j/tar/TarEntry.html">TarEntry</a></td><td><a class="apilink" title="org.at4j.tar.TarFileEntry" href="../api/index.html?org/at4j/tar/TarFileEntry.html">TarFileEntry</a></td><td><a class="apilink" title="org.at4j.tar.TarDirectoryEntry" href="../api/index.html?org/at4j/tar/TarDirectoryEntry.html">TarDirectoryEntry</a></td><td><a class="apilink" title="org.at4j.tar.TarSymbolicLinkEntry" href="../api/index.html?org/at4j/tar/TarSymbolicLinkEntry.html">TarSymbolicLinkEntry</a></td></tr><tr><td>Ustar</td><td><a class="apilink" title="org.at4j.tar.UstarEntry" href="../api/index.html?org/at4j/tar/UstarEntry.html">UstarEntry</a></td><td><a class="apilink" title="org.at4j.tar.UstarFileEntry" href="../api/index.html?org/at4j/tar/UstarFileEntry.html">UstarFileEntry</a></td><td><a class="apilink" title="org.at4j.tar.UstarDirectoryEntry" href="../api/index.html?org/at4j/tar/UstarDirectoryEntry.html">UstarDirectoryEntry</a></td><td><a class="apilink" title="org.at4j.tar.UstarSymbolicLinkEntry" href="../api/index.html?org/at4j/tar/UstarSymbolicLinkEntry.html">UstarSymbolicLinkEntry</a></td></tr><tr><td>Gnu Tar</td><td><a class="apilink" title="org.at4j.tar.UstarEntry" href="../api/index.html?org/at4j/tar/UstarEntry.html">UstarEntry</a></td><td><a class="apilink" title="org.at4j.tar.UstarFileEntry" href="../api/index.html?org/at4j/tar/UstarFileEntry.html">UstarFileEntry</a></td><td><a class="apilink" title="org.at4j.tar.UstarDirectoryEntry" href="../api/index.html?org/at4j/tar/UstarDirectoryEntry.html">UstarDirectoryEntry</a></td><td><a class="apilink" title="org.at4j.tar.UstarSymbolicLinkEntry" href="../api/index.html?org/at4j/tar/UstarSymbolicLinkEntry.html">UstarSymbolicLinkEntry</a></td></tr><tr><td>Pax</td><td><a class="apilink" title="org.at4j.tar.PaxEntry" href="../api/index.html?org/at4j/tar/PaxEntry.html">PaxEntry</a></td><td><a class="apilink" title="org.at4j.tar.PaxFileEntry" href="../api/index.html?org/at4j/tar/PaxFileEntry.html">PaxFileEntry</a></td><td><a class="apilink" title="org.at4j.tar.PaxDirectoryEntry" href="../api/index.html?org/at4j/tar/PaxDirectoryEntry.html">PaxDirectoryEntry</a></td><td><a class="apilink" title="org.at4j.tar.PaxSymbolicLinkEntry" href="../api/index.html?org/at4j/tar/PaxSymbolicLinkEntry.html">PaxSymbolicLinkEntry</a></td></tr></tbody></table></div></div><p><br class="table-break" />
+
+More sophisticated entry types inherit from their less sophisticated brethren,
+for instance <a class="apilink" title="org.at4j.tar.PaxFileEntry" href="../api/index.html?org/at4j/tar/PaxFileEntry.html">PaxFileEntry</a> → <a class="apilink" title="org.at4j.tar.UstarFileEntry" href="../api/index.html?org/at4j/tar/UstarFileEntry.html">UstarFileEntry</a> →
+<a class="apilink" title="org.at4j.tar.TarFileEntry" href="../api/index.html?org/at4j/tar/TarFileEntry.html">TarFileEntry</a>.</p><p>The root directory entry in the <a class="apilink" title="org.at4j.tar.TarFile" href="../api/index.html?org/at4j/tar/TarFile.html">TarFile</a>, i.e. the directory
+entry with the absolute location <code class="computeroutput">/</code> in the
+archive, is never present in the Tar archive itself. It is always of the type
+<a class="apilink" title="org.at4j.tar.TarDirectoryEntry" href="../api/index.html?org/at4j/tar/TarDirectoryEntry.html">TarDirectoryEntry</a>.</p><p>The next example shows how a pax variable for an entry in a Posix.1-2001-
+compatible Tar archive is read:
+
+</p><div class="example"><a id="ex_reading_pax_variables" /><p class="title"><strong>Example 8.2. Reading a pax variable for an entry</strong></p><div class="example-contents"><pre class="programlisting">// Parse the Tar archive in the file f
+// The contents of this Tar archive is encoded with UTF-8. Most of its metadata
+// are stored in PAX variables which always are encoded in UTF-8, so if we did
+// not know the archive's encoding beforehand, that would probably not matter.
+<a class="apilink" title="org.at4j.tar.TarFile" href="../api/index.html?org/at4j/tar/TarFile.html">TarFile</a> tf = new <a class="apilink" title="org.at4j.tar.TarFile" href="../api/index.html?org/at4j/tar/TarFile.html">TarFile</a>(f, <a class="apilink" title="java.nio.charset.Charset" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/nio/charset/Charset.html">Charset</a>.forName("utf8"));
+try
+{
+  // The Tar entry for the file räksmörgås.txt (räksmörgås = shrimp sandwich)
+  <a class="apilink" title="org.at4j.tar.PaxFileEntry" href="../api/index.html?org/at4j/tar/PaxFileEntry.html">PaxFileEntry</a> fe = (<a class="apilink" title="org.at4j.tar.PaxFileEntry" href="../api/index.html?org/at4j/tar/PaxFileEntry.html">PaxFileEntry</a>) tf.get(
+    new <a class="apilink" title="org.entityfs.el.AbsoluteLocation" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/el/AbsoluteLocation.html">AbsoluteLocation</a>("/räksmörgås.txt"));
+  
+  // Print out all Pax variable names
+  System.out.println("Pax variables: " + fe.getPaxVariables().keySet());
+  
+  // Print out the value of the ctime variable (file creation time)
+  System.out.println("ctime: " + fe.getPaxVariables().get("ctime"));
+}
+finally
+{
+  // Close the Tar archive to release its associated resources
+  tf.close();
+}</pre></div></div><p><br class="example-break" /></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="extracting_from_tar_archives" />Extracting entries from Tar archives</h2></div></div></div><p>To extract entries from a Tar archive, use the <a class="apilink" title="org.at4j.tar.TarExtractor" href="../api/index.html?org/at4j/tar/TarExtractor.html">TarExtractor</a>. It
+extracts entries while parsing the archive, which makes it faster than the more
+generic <a class="apilink" title="org.at4j.util.archive.ArchiveExtractor" href="../api/index.html?org/at4j/util/archive/ArchiveExtractor.html">ArchiveExtractor</a>. The extraction process can be
+configured with a <a class="apilink" title="org.at4j.tar.TarExtractSpecification" href="../api/index.html?org/at4j/tar/TarExtractSpecification.html">TarExtractSpecification</a> object.
+
+</p><div class="example"><a id="ex_extract_from_tar_archive" /><p class="title"><strong>Example 8.3. Extracting Java source files from a Tar archive</strong></p><div class="example-contents"><pre class="programlisting">// Extract XML and Java source files from the Tar archive in the file f to the
+// target directory d. The archive is compressed using gzip.
+
+// Use a <a class="apilink" title="org.entityfs.util.io.GZipReadableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/io/GZipReadableFile.html">GZipReadableFile</a> to transparently decompress the file contents.
+<a class="apilink" title="org.entityfs.ReadableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/ReadableFile.html">ReadableFile</a> decompressedView = new <a class="apilink" title="org.entityfs.util.io.GZipReadableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/io/GZipReadableFile.html">GZipReadableFile</a>(f);
+
+<a class="apilink" title="org.at4j.tar.TarExtractor" href="../api/index.html?org/at4j/tar/TarExtractor.html">TarExtractor</a> te = new <a class="apilink" title="org.at4j.tar.TarExtractor" href="../api/index.html?org/at4j/tar/TarExtractor.html">TarExtractor</a>(decompressedView);
+
+// Create a custom specification object
+<a class="apilink" title="org.at4j.tar.TarExtractSpecification" href="../api/index.html?org/at4j/tar/TarExtractSpecification.html">TarExtractSpecification</a> spec = new <a class="apilink" title="org.at4j.tar.TarExtractSpecification" href="../api/index.html?org/at4j/tar/TarExtractSpecification.html">TarExtractSpecification</a>().
+  //
+  // Don't overwrite files
+  setOverwriteStrategy(<a class="apilink" title="org.entityfs.ostrat.DontOverwriteAndLogWarning" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/ostrat/DontOverwriteAndLogWarning.html">DontOverwriteAndLogWarning</a>.INSTANCE).
+  //
+  // Only extract XML and Java source files.
+  // Filter on data found in the Tar entry header. The filters used are from
+  // the org.at4j.tar package and they implement EntityFS' <a class="apilink" title="org.entityfs.support.filter.ConvenientFilter" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/support/filter/ConvenientFilter.html">ConvenientFilter</a>
+  // interface and the marker interface <a class="apilink" title="org.at4j.tar.TarEntryHeaderDataFilter" href="../api/index.html?org/at4j/tar/TarEntryHeaderDataFilter.html">TarEntryHeaderDataFilter</a>. Custom filters are
+  // easy to implement.
+  //
+  // We choose to only extract files. Necessary parent directories will be
+  // created automatically.
+  //
+  // Be sure to get the parentheses right when combining filters! 
+  setFilter(
+    <a class="apilink" title="org.at4j.tar.TarFileEntryFilter" href="../api/index.html?org/at4j/tar/TarFileEntryFilter.html">TarFileEntryFilter</a>.FILTER.and(
+      new <a class="apilink" title="org.at4j.tar.TarEntryNameGlobFilter" href="../api/index.html?org/at4j/tar/TarEntryNameGlobFilter.html">TarEntryNameGlobFilter</a>("*.java").or(
+      new <a class="apilink" title="org.at4j.tar.TarEntryNameGlobFilter" href="../api/index.html?org/at4j/tar/TarEntryNameGlobFilter.html">TarEntryNameGlobFilter</a>("*.xml")))).
+  //
+  // The archive is encoded using UTF-8.
+  setFileNameCharset(<a class="apilink" title="java.nio.charset.Charset" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/nio/charset/Charset.html">Charset</a>.forName("utf8"));
+
+// Extract!
+te.extract(d, spec);</pre></div></div><p><br class="example-break" /></p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3>The example above uses the <a class="apilink" title="org.entityfs.util.io.GZipReadableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/io/GZipReadableFile.html">GZipReadableFile</a> to
+transparently decompress the contents of the archive file before it is fed to
+the <a class="apilink" title="org.at4j.tar.TarExtractor" href="../api/index.html?org/at4j/tar/TarExtractor.html">TarExtractor</a>. There are corresponding implementations for bzip2 and
+LZMA compression in the <a class="apilink" title="org.at4j.comp.bzip2.BZip2ReadableFile" href="../api/index.html?org/at4j/comp/bzip2/BZip2ReadableFile.html">BZip2ReadableFile</a> and
+<a class="apilink" title="org.at4j.comp.lzma.LzmaReadableFile" href="../api/index.html?org/at4j/comp/lzma/LzmaReadableFile.html">LzmaReadableFile</a> classes, respectively, as well as <a class="apilink" title="org.entityfs.WritableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/WritableFile.html">WritableFile</a>
+implementations for transparently compressing data written to a file using gzip,
+bzip2 or LZMA compression.</div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="creating_tar_archives" />Creating Tar archives</h2></div></div></div><p>There are two different classes for creating Tar archives:
+<a class="apilink" title="org.at4j.tar.builder.TarBuilder" href="../api/index.html?org/at4j/tar/builder/TarBuilder.html">TarBuilder</a> and <a class="apilink" title="org.at4j.tar.builder.TarStreamBuilder" href="../api/index.html?org/at4j/tar/builder/TarStreamBuilder.html">TarStreamBuilder</a>.
+<a class="apilink" title="org.at4j.tar.builder.TarBuilder" href="../api/index.html?org/at4j/tar/builder/TarBuilder.html">TarBuilder</a> is a <a class="apilink" title="org.at4j.archive.builder.StreamAddCapableArchiveBuilder" href="../api/index.html?org/at4j/archive/builder/StreamAddCapableArchiveBuilder.html">StreamAddCapableArchiveBuilder</a>,
+but it requires a <a class="apilink" title="org.entityfs.RandomlyAccessibleFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/RandomlyAccessibleFile.html">RandomlyAccessibleFile</a> to write to.
+<a class="apilink" title="org.at4j.tar.builder.TarStreamBuilder" href="../api/index.html?org/at4j/tar/builder/TarStreamBuilder.html">TarStreamBuilder</a> is not stream add capable, but it makes do
+with only a <a class="apilink" title="org.entityfs.WritableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/WritableFile.html">WritableFile</a> to write data to<a href="#ftn.N1030F" class="footnote"><sup class="footnote"><a id="N1030F" />[1]</sup></a>.</p><p>Both Tar archive builders use a <a class="apilink" title="org.at4j.tar.builder.TarEntryStrategy" href="../api/index.html?org/at4j/tar/builder/TarEntryStrategy.html">TarEntryStrategy</a>
+object that determines which Tar file format version that the created archive
+will be compatible with. The available strategies are
+<a class="apilink" title="org.at4j.tar.builder.V7TarEntryStrategy" href="../api/index.html?org/at4j/tar/builder/V7TarEntryStrategy.html">V7TarEntryStrategy</a>, <a class="apilink" title="org.at4j.tar.builder.UstarEntryStrategy" href="../api/index.html?org/at4j/tar/builder/UstarEntryStrategy.html">UstarEntryStrategy</a>,
+<a class="apilink" title="org.at4j.tar.builder.GnuTarEntryStrategy" href="../api/index.html?org/at4j/tar/builder/GnuTarEntryStrategy.html">GnuTarEntryStrategy</a> and
+<a class="apilink" title="org.at4j.tar.builder.PaxTarEntryStrategy" href="../api/index.html?org/at4j/tar/builder/PaxTarEntryStrategy.html">PaxTarEntryStrategy</a>. The default strategy is the
+<a class="apilink" title="org.at4j.tar.builder.GnuTarEntryStrategy" href="../api/index.html?org/at4j/tar/builder/GnuTarEntryStrategy.html">GnuTarEntryStrategy</a>.</p><p>The configurable metadata for each added Tar entry is represented by a
+<a class="apilink" title="org.at4j.tar.builder.TarEntrySettings" href="../api/index.html?org/at4j/tar/builder/TarEntrySettings.html">TarEntrySettings</a> object. The effective metadata for the
+entry is arrived at using the process described in
+<a class="xref" href="ch07.xhtml#entry_metadata" title="Determining the metadata for an entry">the section called “Determining the metadata for an entry”</a>.</p><p>Below is an example that shows how a Tar archive is built using the
+<a class="apilink" title="org.at4j.tar.builder.TarBuilder" href="../api/index.html?org/at4j/tar/builder/TarBuilder.html">TarBuilder</a>. 
+</p><div class="example"><a id="ex_build_tar_w_builder" /><p class="title"><strong>Example 8.4. Build a Tar archive using the Tar builder</strong></p><div class="example-contents"><pre class="programlisting">// Build the Tar file "myArchive.tar" in the directory targetDir.
+<a class="apilink" title="org.entityfs.RandomlyAccessibleFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/RandomlyAccessibleFile.html">RandomlyAccessibleFile</a> tarFile = <a class="apilink" title="org.entityfs.util.Directories" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Directories.html">Directories</a>.newFile(targetDir, "myArchive.tar");
+
+// Configure global Tar builder settings.
+<a class="apilink" title="org.at4j.tar.builder.TarBuilderSettings" href="../api/index.html?org/at4j/tar/builder/TarBuilderSettings.html">TarBuilderSettings</a> settings = new <a class="apilink" title="org.at4j.tar.builder.TarBuilderSettings" href="../api/index.html?org/at4j/tar/builder/TarBuilderSettings.html">TarBuilderSettings</a>().
+  //
+  // Make files and directories owned by the user rmoore (1234), group bonds 
+  // (4321).
+  //
+  // The settings object we create here will be combined with the default
+  // default settings, which means that we only have to set the properties that
+  // we want to change from the default values. 
+  setDefaultFileEntrySettings(
+    new <a class="apilink" title="org.at4j.tar.builder.TarEntrySettings" href="../api/index.html?org/at4j/tar/builder/TarEntrySettings.html">TarEntrySettings</a>().
+      setOwnerUid(1234).
+      setOwnerUserName("rmoore").
+      setOwnerGid(4321).
+      setOwnerGroupName("bonds")).
+  setDefaultDirectoryEntrySettings(
+    new <a class="apilink" title="org.at4j.tar.builder.TarEntrySettings" href="../api/index.html?org/at4j/tar/builder/TarEntrySettings.html">TarEntrySettings</a>().
+      setOwnerUid(1234).
+      setOwnerUserName("rmoore").
+      setOwnerGid(4321).
+      setOwnerGroupName("bonds")).
+  //
+  // Use a Tar entry strategy that will create a Posix.1-2001-compatible
+  // archive
+  setEntryStrategy(
+    // Encode file names using UTF-8
+    new <a class="apilink" title="org.at4j.tar.builder.PaxTarEntryStrategy" href="../api/index.html?org/at4j/tar/builder/PaxTarEntryStrategy.html">PaxTarEntryStrategy</a>(<a class="apilink" title="java.nio.charset.Charset" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/nio/charset/Charset.html">Charset</a>.forName("utf8")));
+
+// Create the Tar builder
+<a class="apilink" title="org.at4j.tar.builder.TarBuilder" href="../api/index.html?org/at4j/tar/builder/TarBuilder.html">TarBuilder</a> builder = new <a class="apilink" title="org.at4j.tar.builder.TarBuilder" href="../api/index.html?org/at4j/tar/builder/TarBuilder.html">TarBuilder</a>(tarFile, settings);
+
+// Add a global rule that says that script files should be executable.
+builder.addRule(
+  new <a class="apilink" title="org.at4j.archive.builder.ArchiveEntrySettingsRule" href="../api/index.html?org/at4j/archive/builder/ArchiveEntrySettingsRule.html">ArchiveEntrySettingsRule</a>&lt;<a class="apilink" title="org.at4j.tar.builder.TarEntrySettings" href="../api/index.html?org/at4j/tar/builder/TarEntrySettings.html">TarEntrySettings</a>&gt;(
+    //
+    // The global rule's settings
+    new <a class="apilink" title="org.at4j.tar.builder.TarEntrySettings" href="../api/index.html?org/at4j/tar/builder/TarEntrySettings.html">TarEntrySettings</a>().
+      // 
+      // The code is an octal value, the same as is used with the chmod command.
+      setEntityMode(<a class="apilink" title="org.entityfs.entityattrs.unix.UnixEntityMode" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/entityattrs/unix/UnixEntityMode.html">UnixEntityMode</a>.forCode(0755)),
+    //
+    // The global rule's filter
+    new <a class="apilink" title="org.at4j.archive.builder.NameGlobETAF" href="../api/index.html?org/at4j/archive/builder/NameGlobETAF.html">NameGlobETAF</a>("*.sh")));
+
+// Add all files and directories from the src directory to the /source directory
+// in the archive
+builder.addRecursively(src, new <a class="apilink" title="org.entityfs.el.AbsoluteLocation" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/el/AbsoluteLocation.html">AbsoluteLocation</a>("/source"));
+
+// Add the headlines from The Times online to indicate the build date...
+// Open a stream
+<a class="apilink" title="java.io.InputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/InputStream.html">InputStream</a> is = new <a class="apilink" title="java.net.URL" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/net/URL.html">URL</a>("http://www.timesonline.co.uk/tol/feeds/rss/topstories.xml").
+  openStream();
+try
+{
+  builder.add(is, new <a class="apilink" title="org.entityfs.el.AbsoluteLocation" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/el/AbsoluteLocation.html">AbsoluteLocation</a>("/todays_news.xml"));
+}
+finally
+{
+  is.close();
+}
+
+// Close the builder to finish writing the archive.
+builder.close();</pre></div></div><p><br class="example-break" /></p><p>The following example shows how a Tar archive is built and compressed
+using the <a class="apilink" title="org.at4j.tar.builder.TarStreamBuilder" href="../api/index.html?org/at4j/tar/builder/TarStreamBuilder.html">TarStreamBuilder</a>
+</p><div class="example"><a id="ex_build_tar_w_stream_builder" /><p class="title"><strong>Example 8.5. Build a Tar archive using the Tar stream builder</strong></p><div class="example-contents"><pre class="programlisting">// Build the Tar file "myArchive.tar.bz2" in the directory targetDir.
+// Use a <a class="apilink" title="org.at4j.comp.bzip2.BZip2WritableFile" href="../api/index.html?org/at4j/comp/bzip2/BZip2WritableFile.html">BZip2WritableFile</a> to compress the archive while it is created.
+<a class="apilink" title="org.entityfs.WritableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/WritableFile.html">WritableFile</a> tarFile = new <a class="apilink" title="org.at4j.comp.bzip2.BZip2WritableFile" href="../api/index.html?org/at4j/comp/bzip2/BZip2WritableFile.html">BZip2WritableFile</a>(
+  <a class="apilink" title="org.entityfs.util.Directories" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Directories.html">Directories</a>.newFile(targetDir, "myArchive.tar.bz2"));
+
+// Configure global Tar builder settings.
+// Use the default Tar entry strategy (<a class="apilink" title="org.at4j.tar.builder.GnuTarEntryStrategy" href="../api/index.html?org/at4j/tar/builder/GnuTarEntryStrategy.html">GnuTarEntryStrategy</a>).
+<a class="apilink" title="org.at4j.tar.builder.TarBuilderSettings" href="../api/index.html?org/at4j/tar/builder/TarBuilderSettings.html">TarBuilderSettings</a> settings = new <a class="apilink" title="org.at4j.tar.builder.TarBuilderSettings" href="../api/index.html?org/at4j/tar/builder/TarBuilderSettings.html">TarBuilderSettings</a>().
+  //
+  // Files are not world readable
+  setDefaultFileEntrySettings(
+    new <a class="apilink" title="org.at4j.tar.builder.TarEntrySettings" href="../api/index.html?org/at4j/tar/builder/TarEntrySettings.html">TarEntrySettings</a>().
+      setEntityMode(<a class="apilink" title="org.entityfs.entityattrs.unix.UnixEntityMode" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/entityattrs/unix/UnixEntityMode.html">UnixEntityMode</a>.forCode(0640)));
+
+// Create the Tar builder
+<a class="apilink" title="org.at4j.tar.builder.TarStreamBuilder" href="../api/index.html?org/at4j/tar/builder/TarStreamBuilder.html">TarStreamBuilder</a> builder = new <a class="apilink" title="org.at4j.tar.builder.TarStreamBuilder" href="../api/index.html?org/at4j/tar/builder/TarStreamBuilder.html">TarStreamBuilder</a>(tarFile, settings);
+
+// Add two files
+builder.add(
+  new <a class="apilink" title="org.entityfs.util.NamedReadableFileAdapter" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/NamedReadableFileAdapter.html">NamedReadableFileAdapter</a>(
+    new <a class="apilink" title="org.entityfs.util.CharSequenceReadableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/CharSequenceReadableFile.html">CharSequenceReadableFile</a>("The contents of this file are secret!"),
+    "secret.txt"),
+  <a class="apilink" title="org.entityfs.el.AbsoluteLocation" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/el/AbsoluteLocation.html">AbsoluteLocation</a>.ROOT_DIR);
+
+builder.add(
+  new <a class="apilink" title="org.entityfs.util.NamedReadableFileAdapter" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/NamedReadableFileAdapter.html">NamedReadableFileAdapter</a>(
+    new <a class="apilink" title="org.entityfs.util.CharSequenceReadableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/CharSequenceReadableFile.html">CharSequenceReadableFile</a>("The contents of this file are public!"),
+    "public.txt"),
+  <a class="apilink" title="org.entityfs.el.AbsoluteLocation" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/el/AbsoluteLocation.html">AbsoluteLocation</a>.ROOT_DIR,
+  //
+  // Use custom settings for this file
+  new <a class="apilink" title="org.at4j.tar.builder.TarEntrySettings" href="../api/index.html?org/at4j/tar/builder/TarEntrySettings.html">TarEntrySettings</a>().
+    setEntityMode(<a class="apilink" title="org.entityfs.entityattrs.unix.UnixEntityMode" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/entityattrs/unix/UnixEntityMode.html">UnixEntityMode</a>.forCode(0644)));
+
+// Close the builder to finish the file.
+builder.close();</pre></div></div><p><br class="example-break" /></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="standalone_tar_tools" />Standalone Tar tools</h2></div></div></div><p>The <a class="apilink" title="org.at4j.tar.prog.Tar" href="../api/index.html?org/at4j/tar/prog/Tar.html">Tar</a> class has a runnable main method that emulates
+the behavior of the <code class="computeroutput">tar</code> command. See its API
+documentation for details on how to use it.</p></div><div class="footnotes"><br /><hr style="width:100; align:left;" /><div id="ftn.N1030F" class="footnote"><p><a href="#N1030F" class="para"><sup class="para">[1] </sup></a>This means that a program
+can give the Tar stream builder a transparently compressing writable file
+implementation such as <a class="apilink" title="org.entityfs.util.io.GZipWritableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/io/GZipWritableFile.html">GZipWritableFile</a>,
+<a class="apilink" title="org.at4j.comp.bzip2.BZip2WritableFile" href="../api/index.html?org/at4j/comp/bzip2/BZip2WritableFile.html">BZip2WritableFile</a> or <a class="apilink" title="org.at4j.comp.lzma.LzmaWritableFile" href="../api/index.html?org/at4j/comp/lzma/LzmaWritableFile.html">LzmaWritableFile</a> to
+have the archive compressed while it is created.</p></div></div></div><div class="navfooter"><hr /><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="ch07.xhtml">Prev</a> </td><td align="center" width="20%"> </td><td align="right" width="40%"> <a accesskey="n" href="ch09.xhtml">Next</a></td></tr><tr><td valign="top" align="left" width="40%">Chapter 7. Archives </td><td align="center" width="20%"><a accesskey="h" href="index.xhtml">Home</a></td><td valign="top" align="right" width="40%"> Chapter 9. Zip</td></tr></table></div></body></html>

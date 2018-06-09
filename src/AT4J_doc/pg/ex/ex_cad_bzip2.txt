@@ -1,0 +1,49 @@
+// Data will be compressed to the java.io.File f
+
+String toCompress = "Compress me!";
+
+java.io.OutputStream os = new java.io.FileOutputStream(f);
+try
+{
+  // Use the default compression settings (maximum compression)
+  java.io.OutputStream bzos = new org.at4j.comp.bzip2.BZip2OutputStream(os);
+  try
+  {
+    bzos.write(toCompress.getBytes());
+  }
+  finally
+  {
+    bzos.close();
+  }      
+}
+finally
+{
+  // Calling close here may mean that close will be called several times on the
+  // same stream. That is safe.
+  os.close();
+}
+
+// Read the compressed data
+java.io.InputStream is = new java.io.FileInputStream(f);
+try
+{
+  java.io.InputStream bzis = new org.at4j.comp.bzip2.BZip2InputStream(is);
+  try
+  {
+    // Use the EntityFS StreamUtil utility to make our job easier.
+    // This will print "Compress me!"
+    System.out.println(
+      new String(
+        org.entityfs.support.io.StreamUtil.readStreamFully(bzis, 32)));
+  }
+  finally
+  {
+    bzis.close();
+  }
+}
+finally
+{
+  // Calling close here may mean that close will be called several times on the
+  // same stream. That is safe.
+  is.close();
+}

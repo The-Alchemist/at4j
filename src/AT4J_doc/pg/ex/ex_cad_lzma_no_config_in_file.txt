@@ -1,0 +1,43 @@
+// Data will be compressed to the java.io.File f
+
+String toCompress = "Compress me!";
+
+// Create the configuration for the output stream. Set two properties and use
+// the default values for the other properties. 
+org.at4j.comp.lzma.LzmaOutputStreamSettings outSettings = new org.at4j.comp.lzma.LzmaOutputStreamSettings().
+  // Do not write the configuration to the file
+  setWriteStreamProperties(false).
+  // Use a dictionary size of 2^8 = 256 bytes
+  setDictionarySizeExponent(8);
+  
+// Create a new LZMA output stream with the custom settings.
+java.io.OutputStream os = new org.at4j.comp.lzma.LzmaOutputStream(new java.io.FileOutputStream(f), outSettings);
+try
+{
+    os.write(toCompress.getBytes());
+}
+finally
+{
+  os.close();
+}
+
+// Create the configuration for the input stream. Configure it using properties
+// from the output stream configuration above.
+org.at4j.comp.lzma.LzmaInputStreamSettings inSettings = new org.at4j.comp.lzma.LzmaInputStreamSettings().
+  setProperties(outSettings.getProperties());
+  
+// Read the compressed data with a manually configured input stream.
+java.io.InputStream is = new org.at4j.comp.lzma.LzmaInputStream(new java.io.FileInputStream(f), inSettings);
+try
+{
+  // Use the EntityFS StreamUtil utility to make our job easier.
+  // This will print "Compress me!"
+  System.out.println(
+    new String(
+      org.entityfs.support.io.StreamUtil.readStreamFully(is, 32)));
+}
+finally
+{
+  // This closes the decoder thread.
+  is.close();
+}

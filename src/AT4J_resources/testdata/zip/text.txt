@@ -1,0 +1,3 @@
+This is a fairly long text file. It is not long enough so that the Zip entry 
+parser will give up trying to scan for the end of central directory header 
+before reaching the start of the file. (It scans backwards.)

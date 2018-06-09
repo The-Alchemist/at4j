@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>FindBugs Report</title>
+<style type="text/css">
+		.tablerow0 {
+			background: #EEEEEE;
+		}
+
+		.tablerow1 {
+			background: white;
+		}
+
+		.detailrow0 {
+			background: #EEEEEE;
+		}
+
+		.detailrow1 {
+			background: white;
+		}
+
+		.tableheader {
+			background: #b9b9fe;
+			font-size: larger;
+		}
+
+		.tablerow0:hover, .tablerow1:hover {
+			background: #aaffaa;
+		}
+
+		.priority-1 {
+		    color: red;
+		    font-weight: bold;
+		}
+		.priority-2 {
+		    color: orange;
+		    font-weight: bold;
+		}
+		.priority-3 {
+		    color: green;
+		    font-weight: bold;
+		}
+		.priority-4 {
+		    color: blue;
+		    font-weight: bold;
+		}
+		</style>
+<script type="text/javascript">
+			function toggleRow(elid) {
+				if (document.getElementById) {
+					element = document.getElementById(elid);
+					if (element) {
+						if (element.style.display == 'none') {
+							element.style.display = 'block';
+							//window.status = 'Toggle on!';
+						} else {
+							element.style.display = 'none';
+							//window.status = 'Toggle off!';
+						}
+					}
+				}
+			}
+		</script>
+</head>
+<body>
+<h1>
+<a href="http://findbugs.sourceforge.net">FindBugs</a> Report</h1>
+<h2>Project Information</h2>
+<p>Project: 
+		</p>
+<p>FindBugs version: 2.0.1</p>
+<p>Code analyzed:</p>
+<ul>
+<li>/tmp/at4jbuild1526647917/schmant1964713443tmp/compile/AT4J_zip</li>
+</ul>
+<p>
+<br/>
+<br/>
+</p>
+<h2>Metrics</h2>
+<p>3395 lines of code analyzed,
+	in 103 classes, 
+	in 6 packages.</p>
+<table width="500" cellpadding="5" cellspacing="2">
+<tr class="tableheader">
+<th align="left">Metric</th>
+<th align="right">Total</th>
+<th align="right">Density*</th>
+</tr>
+<tr class="tablerow0">
+<td>High Priority Warnings</td>
+<td align="right"/>
+<td align="right">0.00</td>
+</tr>
+<tr class="tablerow1">
+<td>Medium Priority Warnings</td>
+<td align="right">4</td>
+<td align="right">1.18</td>
+</tr>
+<tr class="$totalClass">
+<td>
+<b>Total Warnings</b>
+</td>
+<td align="right">
+<b>4</b>
+</td>
+<td align="right">
+<b>1.18</b>
+</td>
+</tr>
+</table>
+<p>
+<i>(* Defects per Thousand lines of non-commenting source statements)</i>
+</p>
+<p>
+<br/>
+<br/>
+</p>
+<h2>Contents</h2>
+<ul>
+<li>
+<a href="#Warnings_MALICIOUS_CODE">Malicious code vulnerability Warnings</a>
+</li>
+<li>
+<a href="#Details">Details</a>
+</li>
+</ul>
+<h1>Summary</h1>
+<table width="500" cellpadding="5" cellspacing="2">
+<tr class="tableheader">
+<th align="left">Warning Type</th>
+<th align="right">Number</th>
+</tr>
+<tr class="tablerow0">
+<td>
+<a href="#Warnings_MALICIOUS_CODE">Malicious code vulnerability Warnings</a>
+</td>
+<td align="right">4</td>
+</tr>
+<tr class="tablerow1">
+<td>
+<b>Total</b>
+</td>
+<td align="right">
+<b>4</b>
+</td>
+</tr>
+</table>
+<h1>Warnings</h1>
+<p>Click on a warning row to see full context information.</p>
+<h2>
+<a name="Warnings_MALICIOUS_CODE">Malicious code vulnerability Warnings</a>
+</h2>
+<table class="warningtable" width="100%" cellspacing="0">
+<tr class="tableheader">
+<th align="left">Code</th>
+<th align="left">Warning</th>
+</tr>
+<tr class="tablerow1" onclick="toggleRow('N65633');">
+<td>
+<span class="priority-2">EI</span>
+</td>
+<td>org.at4j.zip.ef.UnparsedZipEntryExtraField.encode(ZipBuilderConfiguration) may expose internal representation by returning UnparsedZipEntryExtraField.m_data</td>
+</tr>
+<tr class="detailrow1">
+<td/>
+<td>
+<p id="N65633" style="display: none;">
+<a href="#EI_EXPOSE_REP">Bug type EI_EXPOSE_REP (click for details)</a>
+<br/>In class org.at4j.zip.ef.UnparsedZipEntryExtraField<br/>In method org.at4j.zip.ef.UnparsedZipEntryExtraField.encode(ZipBuilderConfiguration)<br/>Field org.at4j.zip.ef.UnparsedZipEntryExtraField.m_data<br/>At UnparsedZipEntryExtraField.java:[line 69]</p>
+</td>
+</tr>
+<tr class="tablerow0" onclick="toggleRow('N65566');">
+<td>
+<span class="priority-2">EI</span>
+</td>
+<td>org.at4j.zip.ZipEntryCentralFileHeaderData.getLastModificationTime() may expose internal representation by returning ZipEntryCentralFileHeaderData.m_lastModificationTime</td>
+</tr>
+<tr class="detailrow0">
+<td/>
+<td>
+<p id="N65566" style="display: none;">
+<a href="#EI_EXPOSE_REP">Bug type EI_EXPOSE_REP (click for details)</a>
+<br/>In class org.at4j.zip.ZipEntryCentralFileHeaderData<br/>In method org.at4j.zip.ZipEntryCentralFileHeaderData.getLastModificationTime()<br/>Field org.at4j.zip.ZipEntryCentralFileHeaderData.m_lastModificationTime<br/>At ZipEntryCentralFileHeaderData.java:[line 104]</p>
+</td>
+</tr>
+<tr class="tablerow1" onclick="toggleRow('N65700');">
+<td>
+<span class="priority-2">EI2</span>
+</td>
+<td>new org.at4j.zip.ef.UnparsedZipEntryExtraField(byte[], boolean) may expose internal representation by storing an externally mutable object into UnparsedZipEntryExtraField.m_data</td>
+</tr>
+<tr class="detailrow1">
+<td/>
+<td>
+<p id="N65700" style="display: none;">
+<a href="#EI_EXPOSE_REP2">Bug type EI_EXPOSE_REP2 (click for details)</a>
+<br/>In class org.at4j.zip.ef.UnparsedZipEntryExtraField<br/>In method new org.at4j.zip.ef.UnparsedZipEntryExtraField(byte[], boolean)<br/>Field org.at4j.zip.ef.UnparsedZipEntryExtraField.m_data<br/>Local variable stored in JVM register 1<br/>At UnparsedZipEntryExtraField.java:[line 46]</p>
+</td>
+</tr>
+<tr class="tablerow0" onclick="toggleRow('N65774');">
+<td>
+<span class="priority-2">EI2</span>
+</td>
+<td>new org.at4j.zip.extattrs.UnparsedExternalFileAttributes(ZipVersionMadeBy, byte[]) may expose internal representation by storing an externally mutable object into UnparsedExternalFileAttributes.m_externalFileAttributes</td>
+</tr>
+<tr class="detailrow0">
+<td/>
+<td>
+<p id="N65774" style="display: none;">
+<a href="#EI_EXPOSE_REP2">Bug type EI_EXPOSE_REP2 (click for details)</a>
+<br/>In class org.at4j.zip.extattrs.UnparsedExternalFileAttributes<br/>In method new org.at4j.zip.extattrs.UnparsedExternalFileAttributes(ZipVersionMadeBy, byte[])<br/>Field org.at4j.zip.extattrs.UnparsedExternalFileAttributes.m_externalFileAttributes<br/>Local variable stored in JVM register 2<br/>At UnparsedExternalFileAttributes.java:[line 53]</p>
+</td>
+</tr>
+</table>
+<h1>
+<a name="Details">Details</a>
+</h1>
+<h2>
+<a name="EI_EXPOSE_REP">EI_EXPOSE_REP: May expose internal representation by returning reference to mutable object</a>
+</h2>
+
+  <p> Returning a reference to a mutable object value stored in one of the object's fields
+  exposes the internal representation of the object.&nbsp;
+   If instances
+   are accessed by untrusted code, and unchecked changes to
+   the mutable object would compromise security or other
+   important properties, you will need to do something different.
+  Returning a new copy of the object is better approach in many situations.</p>
+
+    
+<h2>
+<a name="EI_EXPOSE_REP2">EI_EXPOSE_REP2: May expose internal representation by incorporating reference to mutable object</a>
+</h2>
+
+  <p> This code stores a reference to an externally mutable object into the
+  internal representation of the object.&nbsp;
+   If instances
+   are accessed by untrusted code, and unchecked changes to
+   the mutable object would compromise security or other
+   important properties, you will need to do something different.
+  Storing a copy of the object is better approach in many situations.</p>
+
+    </body>
+</html>

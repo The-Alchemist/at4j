@@ -1,0 +1,71 @@
+<chapter id="chap_bzip2">
+<title>bzip2 compression</title>
+<para>The bzip2 compression method was developed by Julian Seward in the
+late nineties. See the
+<xref linkend="bib_wikipedia_article_on_bzip2"/> and the
+<xref linkend="bib_bzip2_home_page"/>.</para>
+
+<para>&At4J; provides a Java implementation of bzip2. Data is compressed with
+the org.at4j.comp.bzip2.BZip2OutputStream and decompressed with the
+org.at4j.comp.bzip2.BZip2InputStream.</para>
+
+<para>Since bzip2 compression is a CPU-intensive task, the
+org.at4j.comp.bzip2.BZip2OutputStream supports using several, parallel
+compression threads. An individual org.at4j.comp.bzip2.BZip2OutputStream may be
+told how many threads that it can use, or several output streams may share a
+set of threads through a org.at4j.comp.bzip2.BZip2EncoderExecutorService.</para>
+
+<para>The following example shows how data is written to a bzip2 output stream
+that writes to a file, and then read again from the file and decompressed.
+
+<example id="ex_cad_bzip2">
+<title>Compressing and decompressing with bzip2</title>
+<programlisting>&ex_cad_bzip2;</programlisting>
+</example></para>
+
+<para>Next example shows how a set of encoder threads is shared between two
+bzip2 streams.
+
+<example id="ex_cad_bzip2">
+<title>Compressing and decompressing with bzip2 using several encoder threads</title>
+<programlisting>&ex_cad_bzip2_w_encoder_threads;</programlisting>
+</example></para>
+
+<para>&At4J; also bundles the bzip2 library from the
+<xref linkend="bib_commons_compress_site"/> project. It provides the 
+org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream for
+reading compressed data and the
+org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream for
+writing compressed data.</para>
+
+<para>Note that the <computeroutput>available</computeroutput> method of the
+org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream always
+returns <computeroutput>0</computeroutput>.</para>
+
+<section id="bzip2_utilities">
+<title>bzip2 utilities</title>
+<para>The org.at4j.comp.bzip2.BZip2ReadableFile and
+org.at4j.comp.bzip2.BZip2WritableFile objects can transparently bzip2
+decompress or compress data that is read from or written to a file. They implement the
+org.entityfs.ReadableFile and the org.entityfs.WritableFile interfaces
+respectively and can be passed to all methods that use those interfaces.</para>
+
+<para>The next example does the same as the example above, except that it uses
+the org.at4j.comp.bzip2.BZip2ReadableFile and 
+org.at4j.comp.bzip2.BZip2WritableFile classes.
+ 
+<example id="ex_cad_bzip2_w_rwf">
+<title>Compressing and decompressing with bzip2 using &At4J; readable and
+writable bzip2 files</title>
+<programlisting>&ex_cad_bzip2_w_rwf;</programlisting>
+</example></para>
+</section>
+
+<section id="standalone_bzip2_tools">
+<title>Standalone bzip2 tools</title>
+<para>The org.at4j.comp.bzip2.prog.BZip2 and org.at4j.comp.bzip2.prog.BUnzip2
+classes have runnable main methods that emulate the behavior of the
+<computeroutput>bzip2</computeroutput> and <computeroutput>bunzip2</computeroutput>
+commands. See their API documentation for details on how to use them.</para>
+</section>
+</chapter>

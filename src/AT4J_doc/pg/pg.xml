@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+  "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+  <!ENTITY apidocsIndex "../api/index.html">
+  <!ENTITY apidocs "&apidocsIndex;?org/at4j/">
+  <!ENTITY At4J "At4J">
+  <!ENTITY EntityFS "EntityFS">
+  <!ENTITY Schmant "Schmant">
+  <!ENTITY lAt4J "http://www.at4j.org">
+  <!ENTITY lLicense "../COPYING.LESSER">
+  <!ENTITY LicenseName "Gnu Lesser General Public License, version 3">
+  <!ENTITY lEntityFS "http://www.entityfs.org">
+  <!ENTITY Holocene "Holocene Software">
+  
+  <!ENTITY chap_introduction SYSTEM "http://pg/pg_010_introduction.xml">
+  <!ENTITY chap_getting_started SYSTEM "http://pg/pg_020_getting_started.xml">
+  <!ENTITY chap_compression SYSTEM "http://pg/pg_100_compression.xml">
+  <!ENTITY chap_bzip2 SYSTEM "http://pg/pg_110_bzip2.xml">
+  <!ENTITY chap_lzma SYSTEM "http://pg/pg_120_lzma.xml">
+  <!ENTITY chap_gzip SYSTEM "http://pg/pg_130_gzip.xml">
+  <!ENTITY chap_archives SYSTEM "http://pg/pg_200_archives.xml">
+  <!ENTITY chap_zip SYSTEM "http://pg/pg_210_zip.xml">
+  <!ENTITY chap_tar SYSTEM "http://pg/pg_220_tar.xml">
+  
+  <!ENTITY ex_cad SYSTEM "http://pg/ex/ex_cad.txt">
+  <!ENTITY ex_cad_using_entityfs_utilities SYSTEM "http://pg/ex/ex_cad_using_entityfs_utilities.txt">
+  <!ENTITY ex_cad_bzip2 SYSTEM "http://pg/ex/ex_cad_bzip2.txt">
+  <!ENTITY ex_cad_bzip2_w_encoder_threads SYSTEM "http://pg/ex/ex_cad_bzip2_w_encoder_threads.txt">
+  <!ENTITY ex_cad_bzip2_w_rwf SYSTEM "http://pg/ex/ex_cad_bzip2_w_rwf.txt">
+  <!ENTITY ex_cad_gzip_w_rwf SYSTEM "http://pg/ex/ex_cad_gzip_w_rwf.txt">
+  <!ENTITY ex_cad_lzma SYSTEM "http://pg/ex/ex_cad_lzma.txt">
+  <!ENTITY ex_cad_lzma_no_config_in_file SYSTEM "http://pg/ex/ex_cad_lzma_no_config_in_file.txt">
+  <!ENTITY ex_cad_lzma_w_rwf SYSTEM "http://pg/ex/ex_cad_lzma_w_rwf.txt">
+  <!ENTITY ex_archive_extractor SYSTEM "http://pg/ex/ex_archive_extractor.txt">
+  <!ENTITY ex_reading_data_from_tar_archive SYSTEM "http://pg/ex/ex_reading_data_from_tar_archive.txt">
+  <!ENTITY ex_reading_pax_variable SYSTEM "http://pg/ex/ex_reading_pax_variable.txt">
+  <!ENTITY ex_extract_from_tar_archive SYSTEM "http://pg/ex/ex_extract_from_tar_archive.txt">
+  <!ENTITY ex_build_tar_w_builder SYSTEM "http://pg/ex/ex_build_tar_w_builder.txt">
+  <!ENTITY ex_build_tar_w_stream_builder SYSTEM "http://pg/ex/ex_build_tar_w_stream_builder.txt">
+  <!ENTITY ex_reading_data_from_zip_archive SYSTEM "http://pg/ex/ex_reading_data_from_zip_archive.txt">
+  <!ENTITY ex_reading_metadata_from_zip_entry SYSTEM "http://pg/ex/ex_reading_metadata_from_zip_entry.txt">
+  <!ENTITY ex_build_zip SYSTEM "http://pg/ex/ex_build_zip.txt">
+  <!ENTITY ex_build_zip_and_set_compression_level SYSTEM "http://pg/ex/ex_build_zip_and_set_compression_level.txt">
+  ]
+>
+
+<book lang="en">
+<bookinfo>
+	<title>&At4J; Programmer's Guide</title>
+	<author>
+		<firstname>Karl</firstname>
+		<surname>Gustafsson</surname>
+	</author>
+	<revhistory>
+		<revision>
+			<revnumber>1.0</revnumber>
+			<date>2009-02-07</date>
+		</revision>
+	</revhistory>
+</bookinfo>
+
+&chap_introduction;
+
+&chap_getting_started;
+
+&chap_compression;
+
+&chap_bzip2;
+
+&chap_gzip;
+
+&chap_lzma;
+
+&chap_archives;
+
+&chap_tar;
+
+&chap_zip;
+
+<bibliography id="biblio">
+<title>Bibliography</title>
+
+<!-- <biblioentry id="GoF" xreflabel="GoF">
+	<authorgroup>
+		<author>
+			<firstname>Erich</firstname>
+			<surname>Gamma</surname>
+		</author>
+		<author>
+			<firstname>Richard</firstname>
+			<surname>Helm</surname>
+		</author>
+		<author>
+			<firstname>Ralph</firstname>
+			<surname>Johnson</surname>
+		</author>
+		<author>
+			<firstname>John</firstname>
+			<surname>Vlissides</surname>
+		</author>
+	</authorgroup>
+	<isbn>0-201-63361-2</isbn>
+	<publisher>
+		<publishername>Addison-Wesley</publishername>
+	</publisher>
+	<title>Design Patterns: Elements of Reusable Object-Oriented Software</title>
+</biblioentry> -->
+
+<biblioentry id="bib_wikipedia_article_on_bzip2" xreflabel="Wikipedia article on bzip2">
+	<title><ulink url="http://en.wikipedia.org/wiki/Bzip2">Wikipedia article on bzip2</ulink></title>
+</biblioentry>
+
+<biblioentry id="bib_bzip2_home_page" xreflabel="bzip2 home page">
+	<title><ulink url="http://www.bzip.org">bzip2 home page</ulink></title>
+</biblioentry>
+
+<biblioentry id="bib_commons_compress_site" xreflabel="Apache Commons Compress site">
+	<title><ulink url="http://commons.apache.org/sandbox/compress/">Apache Commons Compress</ulink></title>
+</biblioentry>
+
+<biblioentry id="bib_wikipedia_article_on_gzip" xreflabel="Wikipedia article on gzip">
+	<title><ulink url="http://en.wikipedia.org/wiki/Gzip">Wikipedia article on gzip</ulink></title>
+</biblioentry>
+
+<biblioentry id="bib_wikipedia_article_on_lzma" xreflabel="Wikipedia article on LZMA">
+	<title><ulink url="http://en.wikipedia.org/wiki/Lzma">Wikipedia article on LZMA</ulink></title>
+</biblioentry>
+
+<biblioentry id="bib_lzma_sdk_home_page" xreflabel="LZMA SDK">
+	<title><ulink url="http://www.7-zip.org/sdk.html">LZMA SDK home page</ulink></title>
+</biblioentry>
+
+<biblioentry id="bib_wikipedia_article_on_tar" xreflabel="Wikipedia article on Tar">
+	<title><ulink url="http://en.wikipedia.org/wiki/Tar_(file_format)">Wikipedia article on Tar</ulink></title>
+</biblioentry>
+
+<biblioentry id="bib_gnu_tar_manual" xreflabel="Gnu Tar manual">
+	<title><ulink url="http://www.gnu.org/software/tar/manual/">Gnu Tar manual</ulink></title>
+</biblioentry>
+
+<biblioentry id="bib_pkware_appnote" xreflabel="PKWARE Zip application note">
+	<title><ulink url="http://www.pkware.com/support/zip-application-note">PKWARE Zip application note</ulink></title>
+</biblioentry>
+
+<biblioentry id="bib_infozip_appnote" xreflabel="Info-Zip's Zip application note">
+	<title><ulink url="http://www.info-zip.org/doc/">Info-Zip's Zip application note</ulink></title>
+</biblioentry>
+
+<biblioentry id="bib_wikipedia_article_on_zip" xreflabel="Wikipedia article on Zip">
+	<title><ulink url="http://en.wikipedia.org/wiki/ZIP_(file_format)">Wikipedia article on Zip</ulink></title>
+</biblioentry>
+
+<biblioentry id="bib_test_report" xreflabel="&At4J; test report">
+	<title><ulink url="../testing.xhtml">&At4J; test report</ulink></title>
+</biblioentry>
+</bibliography>
+</book>

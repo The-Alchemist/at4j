@@ -1,0 +1,34 @@
+// Extract XML and Java source files from the Tar archive in the file f to the
+// target directory d. The archive is compressed using gzip.
+
+// Use a org.entityfs.util.io.GZipReadableFile to transparently decompress the file contents.
+org.entityfs.ReadableFile decompressedView = new org.entityfs.util.io.GZipReadableFile(f);
+
+org.at4j.tar.TarExtractor te = new org.at4j.tar.TarExtractor(decompressedView);
+
+// Create a custom specification object
+org.at4j.tar.TarExtractSpecification spec = new org.at4j.tar.TarExtractSpecification().
+  //
+  // Don't overwrite files
+  setOverwriteStrategy(org.entityfs.ostrat.DontOverwriteAndLogWarning.INSTANCE).
+  //
+  // Only extract XML and Java source files.
+  // Filter on data found in the Tar entry header. The filters used are from
+  // the org.at4j.tar package and they implement EntityFS' org.entityfs.support.filter.ConvenientFilter
+  // interface and the marker interface org.at4j.tar.TarEntryHeaderDataFilter. Custom filters are
+  // easy to implement.
+  //
+  // We choose to only extract files. Necessary parent directories will be
+  // created automatically.
+  //
+  // Be sure to get the parentheses right when combining filters! 
+  setFilter(
+    org.at4j.tar.TarFileEntryFilter.FILTER.and(
+      new org.at4j.tar.TarEntryNameGlobFilter("*.java").or(
+      new org.at4j.tar.TarEntryNameGlobFilter("*.xml")))).
+  //
+  // The archive is encoded using UTF-8.
+  setFileNameCharset(java.nio.charset.Charset.forName("utf8"));
+
+// Extract!
+te.extract(d, spec);

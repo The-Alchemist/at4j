@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Tests to exclude when running Findbugs on At4J projects -->
+<FindBugsFilter>
+	<Match>
+  		<Bug code="RI,Dm,UwF,PZLA"/>
+	</Match>
+</FindBugsFilter>

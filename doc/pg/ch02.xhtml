@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/><title>Chapter 2. Getting started</title><link href="../at4j_doc-1.1.css" type="text/css" rel="stylesheet" /><meta content="DocBook XSL Stylesheets V1.77.1" name="generator" /><link rel="home" href="index.xhtml" title="At4J Programmer's Guide" /><link rel="up" href="index.xhtml" title="At4J Programmer's Guide" /><link rel="prev" href="ch01.xhtml" title="Chapter 1. Introduction" /><link rel="next" href="ch03.xhtml" title="Chapter 3. Data compression" /></head><body><div class="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Chapter 2. Getting started</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="ch01.xhtml">Prev</a> </td><th align="center" width="60%"> </th><td align="right" width="20%"> <a accesskey="n" href="ch03.xhtml">Next</a></td></tr></table><hr /></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chap_getting_started" />Chapter 2. Getting started</h1></div></div></div><div class="toc"><p><strong>Table of Contents</strong></p><dl><dt><span class="section"><a href="ch02.xhtml#gs_requirements">Requirements</a></span></dt><dt><span class="section"><a href="ch02.xhtml#gs_downloading">Downloading At4J</a></span></dt><dt><span class="section"><a href="ch02.xhtml#gs_installing">Installing At4J</a></span></dt><dt><span class="section"><a href="ch02.xhtml#gs_running_unit_tests">Running unit tests (optional)</a></span></dt></dl></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="gs_requirements" />Requirements</h2></div></div></div><p>At4J requires Java 5 or a newer Java version to run.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="gs_downloading" />Downloading At4J</h2></div></div></div><p>Get At4J from <a class="ulink" href="http://www.at4j.org" target="_top">http://www.at4j.org</a>.</p><p>At4J is
+distributed in two Zip archives. The binary archive contains everything 
+necessary for using At4J. The source archive contains everything that the
+binary archive does, as well as unit test classes, test data
+and the complete At4J source code in an Eclipse workspace.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="gs_installing" />Installing At4J</h2></div></div></div><p>Unzip the distribution into a directory.</p><p>The At4J Jar file and its dependencies are in the
+<code class="computeroutput">lib</code> sub directory of the distribution.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="gs_running_unit_tests" />Running unit tests (optional)</h2></div></div></div><p>The source distribution comes with a <a class="ulink" href="http://www.schmant.org/" target="_top">Schmant</a>
+script for running all unit tests.</p><p>To run the unit tests, open a command window (terminal, cmd) and change
+directory to the At4J source distribution's <code class="computeroutput">build</code>
+directory. Set the <code class="computeroutput">JAVA_HOME</code> environment variable
+to point to a Java JDK 6 installation. (Just a JRE won't do.)</p><p>On Unix, run:
+</p><pre class="programlisting">$ # For instance
+$ export JAVA_HOME=/opt/java6
+$ schmant.sh -p javaCmd=[Java command] run_unit_tests.js
+</pre><p>
+where the Java command is the path to the <code class="computeroutput">java</code>
+to use for running the tests.</p><p>On Windows, run:
+</p><pre class="programlisting">&gt; rem For instance. Note the absence of quotes in JAVA_HOME
+&gt; set JAVA_HOME=c:\Program Files\Java\jdk1.6.0_16
+&gt; schmant -p "javaCmd=[Java command]" run_unit_tests.js
+</pre><p>
+where the Java command is the path to the <code class="computeroutput">java.exe</code>
+to use for running the tests.</p></div></div><div class="navfooter"><hr /><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="ch01.xhtml">Prev</a> </td><td align="center" width="20%"> </td><td align="right" width="40%"> <a accesskey="n" href="ch03.xhtml">Next</a></td></tr><tr><td valign="top" align="left" width="40%">Chapter 1. Introduction </td><td align="center" width="20%"><a accesskey="h" href="index.xhtml">Home</a></td><td valign="top" align="right" width="40%"> Chapter 3. Data compression</td></tr></table></div></body></html>

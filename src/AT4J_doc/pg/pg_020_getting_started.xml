@@ -1,0 +1,54 @@
+<chapter id="chap_getting_started">
+<title>Getting started</title>
+
+<section id="gs_requirements">
+<title>Requirements</title>
+<para>&At4J; requires Java 5 or a newer Java version to run.</para>
+</section>
+
+<section id="gs_downloading">
+<title>Downloading &At4J;</title>
+<para>Get &At4J; from <ulink url="&lAt4J;">&lAt4J;</ulink>.</para>
+
+<para>&At4J; is
+distributed in two Zip archives. The binary archive contains everything 
+necessary for using &At4J;. The source archive contains everything that the
+binary archive does, as well as unit test classes, test data
+and the complete &At4J; source code in an Eclipse workspace.</para>
+</section>
+
+<section id="gs_installing">
+<title>Installing &At4J;</title>
+<para>Unzip the distribution into a directory.</para>
+
+<para>The &At4J; Jar file and its dependencies are in the
+<computeroutput>lib</computeroutput> sub directory of the distribution.</para> 
+</section>
+
+<section id="gs_running_unit_tests">
+<title>Running unit tests (optional)</title>
+<para>The source distribution comes with a <ulink url="http://www.schmant.org/">Schmant</ulink>
+script for running all unit tests.</para>
+
+<para>To run the unit tests, open a command window (terminal, cmd) and change
+directory to the &At4J; source distribution's <computeroutput>build</computeroutput>
+directory. Set the <computeroutput>JAVA_HOME</computeroutput> environment variable
+to point to a Java JDK 6 installation. (Just a JRE won't do.)</para>
+
+<para>On Unix, run:
+<programlisting>$ # For instance
+$ export JAVA_HOME=/opt/java6
+$ schmant.sh -p javaCmd=[Java command] run_unit_tests.js
+</programlisting>
+where the Java command is the path to the <computeroutput>java</computeroutput>
+to use for running the tests.</para>
+
+<para>On Windows, run:
+<programlisting>> rem For instance. Note the absence of quotes in JAVA_HOME
+> set JAVA_HOME=c:\Program Files\Java\jdk1.6.0_16
+> schmant -p "javaCmd=[Java command]" run_unit_tests.js
+</programlisting>
+where the Java command is the path to the <computeroutput>java.exe</computeroutput>
+to use for running the tests.</para>
+</section>
+</chapter>

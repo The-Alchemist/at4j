@@ -1,0 +1,48 @@
+String toCompress = "Compress me!";
+
+// This will contain the compressed byte array
+java.io.ByteArrayOutputStream bout = new java.io.ByteArrayOutputStream();
+
+// Settings for the bzip2 compressor
+org.at4j.comp.bzip2.BZip2OutputStreamSettings settings = new org.at4j.comp.bzip2.BZip2OutputStreamSettings().
+  // Use four encoder threads to speed up compression
+  setNumberOfEncoderThreads(4);
+
+java.io.OutputStream out = new org.at4j.comp.bzip2.BZip2OutputStream(bout, settings);
+try
+{
+  // Compress the data
+  out.write(toCompress.getBytes());
+}
+finally
+{
+  out.close();
+}
+
+byte[] compressed = bout.toByteArray();
+
+// This will print a long range of numbers starting with "[66, 90, 104, ..."
+System.out.println(java.util.Arrays.toString(compressed));
+
+// Decompress the data again
+StringBuilder decompressed = new StringBuilder();
+java.io.InputStream in = new org.at4j.comp.bzip2.BZip2InputStream(
+  new java.io.ByteArrayInputStream(compressed));
+try
+{
+  byte[] barr = new byte[64];
+  int noRead = in.read(barr);
+  while(noRead > 0)
+  {
+    decompressed.append(new String(barr, 0, noRead));
+    
+    noRead = in.read(barr);
+  }
+}
+finally
+{
+  in.close();
+}
+
+// This will print "Compress me!"
+System.out.println(decompressed.toString());

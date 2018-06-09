@@ -1,0 +1,18 @@
+// Data will be compressed to the java.io.File f
+
+String toCompress = "Compress me!";
+
+// Wrap the java.io.File in a org.entityfs.util.io.ReadWritableFileAdapter to make it a
+// org.entityfs.ReadWritableFile
+org.entityfs.ReadWritableFile fa = new org.entityfs.util.io.ReadWritableFileAdapter(f);
+
+// Write the data using the EntityFS utility class org.entityfs.util.Files and a
+// org.entityfs.util.io.GZipWritableFile with default compression settings.
+org.entityfs.util.Files.writeText(new org.entityfs.util.io.GZipWritableFile(fa), toCompress);
+
+// Read the data, again using org.entityfs.util.Files. The data is read from a
+// org.entityfs.util.io.GZipReadableFile.
+// This will print out "Compress me!"
+System.out.println(
+  org.entityfs.util.Files.readTextFile(
+    new org.entityfs.util.io.GZipReadableFile(fa)));

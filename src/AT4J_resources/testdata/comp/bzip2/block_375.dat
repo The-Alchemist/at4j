@@ -1,0 +1,3343 @@
+r: Bit to clear
+ * @addr: Address to start counting from
+ *
+ * Similarly to clear_bit_unlock, the implementation uses a store
+ * with release semantics. See also __raw_spin_unlock().
+ */
+static __inline__ void
+__clear_bit_unlock(int nr, void *addr)
+{
+	__u32 * const m = (__u32 *) addr + (nr >> 5);
+	__u32 const new = *m & ~(1 << (nr & 31));
+
+	ia64_st4_rel_nta(m, new);
+}
+
+/**
+ * __clear_bit - Clears a bit in memory (non-atomic version)
+ * @nr: the bit to clear
+ * @addr: the address to start counting from
+ *
+ * Unlike clear_bit(), this function is non-atomic and may be reordered.
+ * If it's called on the same region of memory simultaneously, the effect
+ * may be that only one operation succeeds.
+ */
+static __inline__ void
+__clear_bit (int nr, volatile void *addr)
+{
+	*((__u32 *) addr + (nr >> 5)) &= ~(1 << (nr & 31));
+}
+
+/**
+ * change_bit - Toggle a bit in memory
+ * @nr: Bit to toggle
+ * @addr: Address to start counting from
+ *
+ * change_bit() is atomic and may not be reordered.
+ * Note that @nr may be almost arbitrarily large; this function is not
+ * restricted to acting on a single-word quantity.
+ */
+static __inline__ void
+change_bit (int nr, volatile void *addr)
+{
+	__u32 bit, old, new;
+	volatile __u32 *m;
+	CMPXCHG_BUGCHECK_DECL
+
+	m = (volatile __u32 *) addr + (nr >> 5);
+	bit = (1 << (nr & 31));
+	do {
+		CMPXCHG_BUGCHECK(m);
+		old = *m;
+		new = old ^ bit;
+	} while (cmpxchg_acq(m, old, new) != old);
+}
+
+/**
+ * __change_bit - Toggle a bit in memory
+ * @nr: the bit to toggle
+ * @addr: the address to start counting from
+ *
+ * Unlike change_bit(), this function is non-atomic and may be reordered.
+ * If it's called on the same region of memory simultaneously, the effect
+ * may be that only one operation succeeds.
+ */
+static __inline__ void
+__change_bit (int nr, volatile void *addr)
+{
+	*((__u32 *) addr + (nr >> 5)) ^= (1 << (nr & 31));
+}
+
+/**
+ * test_and_set_bit - Set a bit and return its old value
+ * @nr: Bit to set
+ * @addr: Address to count from
+ *
+ * This operation is atomic and cannot be reordered.  
+ * It also implies the acquisition side of the memory barrier.
+ */
+static __inline__ int
+test_and_set_bit (int nr, volatile void *addr)
+{
+	__u32 bit, old, new;
+	volatile __u32 *m;
+	CMPXCHG_BUGCHECK_DECL
+
+	m = (volatile __u32 *) addr + (nr >> 5);
+	bit = 1 << (nr & 31);
+	do {
+		CMPXCHG_BUGCHECK(m);
+		old = *m;
+		new = old | bit;
+	} while (cmpxchg_acq(m, old, new) != old);
+	return (old & bit) != 0;
+}
+
+/**
+ * test_and_set_bit_lock - Set a bit and return its old value for lock
+ * @nr: Bit to set
+ * @addr: Address to count from
+ *
+ * This is the same as test_and_set_bit on ia64
+ */
+#define test_and_set_bit_lock test_and_set_bit
+
+/**
+ * __test_and_set_bit - Set a bit and return its old value
+ * @nr: Bit to set
+ * @addr: Address to count from
+ *
+ * This operation is non-atomic and can be reordered.  
+ * If two examples of this operation race, one can appear to succeed
+ * but actually fail.  You must protect multiple accesses with a lock.
+ */
+static __inline__ int
+__test_and_set_bit (int nr, volatile void *addr)
+{
+	__u32 *p = (__u32 *) addr + (nr >> 5);
+	__u32 m = 1 << (nr & 31);
+	int oldbitset = (*p & m) != 0;
+
+	*p |= m;
+	return oldbitset;
+}
+
+/**
+ * test_and_clear_bit - Clear a bit and return its old value
+ * @nr: Bit to clear
+ * @addr: Address to count from
+ *
+ * This operation is atomic and cannot be reordered.  
+ * It also implies the acquisition side of the memory barrier.
+ */
+static __inline__ int
+test_and_clear_bit (int nr, volatile void *addr)
+{
+	__u32 mask, old, new;
+	volatile __u32 *m;
+	CMPXCHG_BUGCHECK_DECL
+
+	m = (volatile __u32 *) addr + (nr >> 5);
+	mask = ~(1 << (nr & 31));
+	do {
+		CMPXCHG_BUGCHECK(m);
+		old = *m;
+		new = old & mask;
+	} while (cmpxchg_acq(m, old, new) != old);
+	return (old & ~mask) != 0;
+}
+
+/**
+ * __test_and_clear_bit - Clear a bit and return its old value
+ * @nr: Bit to clear
+ * @addr: Address to count from
+ *
+ * This operation is non-atomic and can be reordered.  
+ * If two examples of this operation race, one can appear to succeed
+ * but actually fail.  You must protect multiple accesses with a lock.
+ */
+static __inline__ int
+__test_and_clear_bit(int nr, volatile void * addr)
+{
+	__u32 *p = (__u32 *) addr + (nr >> 5);
+	__u32 m = 1 << (nr & 31);
+	int oldbitset = *p & m;
+
+	*p &= ~m;
+	return oldbitset;
+}
+
+/**
+ * test_and_change_bit - Change a bit and return its old value
+ * @nr: Bit to change
+ * @addr: Address to count from
+ *
+ * This operation is atomic and cannot be reordered.  
+ * It also implies the acquisition side of the memory barrier.
+ */
+static __inline__ int
+test_and_change_bit (int nr, volatile void *addr)
+{
+	__u32 bit, old, new;
+	volatile __u32 *m;
+	CMPXCHG_BUGCHECK_DECL
+
+	m = (volatile __u32 *) addr + (nr >> 5);
+	bit = (1 << (nr & 31));
+	do {
+		CMPXCHG_BUGCHECK(m);
+		old = *m;
+		new = old ^ bit;
+	} while (cmpxchg_acq(m, old, new) != old);
+	return (old & bit) != 0;
+}
+
+/**
+ * __test_and_change_bit - Change a bit and return its old value
+ * @nr: Bit to change
+ * @addr: Address to count from
+ *
+ * This operation is non-atomic and can be reordered.
+ */
+static __inline__ int
+__test_and_change_bit (int nr, void *addr)
+{
+	__u32 old, bit = (1 << (nr & 31));
+	__u32 *m = (__u32 *) addr + (nr >> 5);
+
+	old = *m;
+	*m = old ^ bit;
+	return (old & bit) != 0;
+}
+
+static __inline__ int
+test_bit (int nr, const volatile void *addr)
+{
+	return 1 & (((const volatile __u32 *) addr)[nr >> 5] >> (nr & 31));
+}
+
+/**
+ * ffz - find the first zero bit in a long word
+ * @x: The long word to find the bit in
+ *
+ * Returns the bit-number (0..63) of the first (least significant) zero bit.
+ * Undefined if no zero exists, so code should check against ~0UL first...
+ */
+static inline unsigned long
+ffz (unsigned long x)
+{
+	unsigned long result;
+
+	result = ia64_popcnt(x & (~x - 1));
+	return result;
+}
+
+/**
+ * __ffs - find first bit in word.
+ * @x: The word to search
+ *
+ * Undefined if no bit exists, so code should check against 0 first.
+ */
+static __inline__ unsigned long
+__ffs (unsigned long x)
+{
+	unsigned long result;
+
+	result = ia64_popcnt((x-1) & ~x);
+	return result;
+}
+
+#ifdef __KERNEL__
+
+/*
+ * Return bit number of last (most-significant) bit set.  Undefined
+ * for x==0.  Bits are numbered from 0..63 (e.g., ia64_fls(9) == 3).
+ */
+static inline unsigned long
+ia64_fls (unsigned long x)
+{
+	long double d = x;
+	long exp;
+
+	exp = ia64_getf_exp(d);
+	return exp - 0xffff;
+}
+
+/*
+ * Find the last (most significant) bit set.  Returns 0 for x==0 and
+ * bits are numbered from 1..32 (e.g., fls(9) == 4).
+ */
+static inline int
+fls (int t)
+{
+	unsigned long x = t & 0xffffffffu;
+
+	if (!x)
+		return 0;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	return ia64_popcnt(x);
+}
+
+/*
+ * Find the last (most significant) bit set.  Undefined for x==0.
+ * Bits are numbered from 0..63 (e.g., __fls(9) == 3).
+ */
+static inline unsigned long
+__fls (unsigned long x)
+{
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	x |= x >> 32;
+	return ia64_popcnt(x) - 1;
+}
+
+#include <asm-generic/bitops/fls64.h>
+
+/*
+ * ffs: find first bit set. This is defined the same way as the libc and
+ * compiler builtin ffs routines, therefore differs in spirit from the above
+ * ffz (man ffs): it operates on "int" values only and the result value is the
+ * bit number + 1.  ffs(0) is defined to return zero.
+ */
+#define ffs(x)	__builtin_ffs(x)
+
+/*
+ * hweightN: returns the hamming weight (i.e. the number
+ * of bits set) of a N-bit word
+ */
+static __inline__ unsigned long
+hweight64 (unsigned long x)
+{
+	unsigned long result;
+	result = ia64_popcnt(x);
+	return result;
+}
+
+#define hweight32(x)	(unsigned int) hweight64((x) & 0xfffffffful)
+#define hweight16(x)	(unsigned int) hweight64((x) & 0xfffful)
+#define hweight8(x)	(unsigned int) hweight64((x) & 0xfful)
+
+#endif /* __KERNEL__ */
+
+#include <asm-generic/bitops/find.h>
+
+#ifdef __KERNEL__
+
+#include <asm-generic/bitops/ext2-non-atomic.h>
+
+#define ext2_set_bit_atomic(l,n,a)	test_and_set_bit(n,a)
+#define ext2_clear_bit_atomic(l,n,a)	test_and_clear_bit(n,a)
+
+#include <asm-generic/bitops/minix.h>
+#include <asm-generic/bitops/sched.h>
+
+#endif /* __KERNEL__ */
+
+#endif /* _ASM_IA64_BITOPS_H */
+                                                                                                                                                                                                                                                                                               linux-2.6.30.1/arch/ia64/include/asm/break.h                                                        0000664 0000000 0000000 00000001331 11223244106 0020211 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_BREAK_H
+#define _ASM_IA64_BREAK_H
+
+/*
+ * IA-64 Linux break numbers.
+ *
+ * Copyright (C) 1999 Hewlett-Packard Co
+ * Copyright (C) 1999 David Mosberger-Tang <davidm@hpl.hp.com>
+ */
+
+/*
+ * OS-specific debug break numbers:
+ */
+#define __IA64_BREAK_KDB		0x80100
+#define __IA64_BREAK_KPROBE		0x81000 /* .. 0x81fff */
+#define __IA64_BREAK_JPROBE		0x82000
+
+/*
+ * OS-specific break numbers:
+ */
+#define __IA64_BREAK_SYSCALL		0x100000
+
+/*
+ * Xen specific break numbers:
+ */
+#define __IA64_XEN_HYPERCALL		0x1000
+/* [__IA64_XEN_HYPERPRIVOP_START, __IA64_XEN_HYPERPRIVOP_MAX] is used
+   for xen hyperprivops */
+#define __IA64_XEN_HYPERPRIVOP_START	0x1
+#define __IA64_XEN_HYPERPRIVOP_MAX	0x1a
+
+#endif /* _ASM_IA64_BREAK_H */
+                                                                                                                                                                                                                                                                                                       linux-2.6.30.1/arch/ia64/include/asm/bug.h                                                          0000664 0000000 0000000 00000000467 11223244106 0017713 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_BUG_H
+#define _ASM_IA64_BUG_H
+
+#ifdef CONFIG_BUG
+#define ia64_abort()	__builtin_trap()
+#define BUG() do { printk("kernel BUG at %s:%d!\n", __FILE__, __LINE__); ia64_abort(); } while (0)
+
+/* should this BUG be made generic? */
+#define HAVE_ARCH_BUG
+#endif
+
+#include <asm-generic/bug.h>
+
+#endif
+                                                                                                                                                                                                         linux-2.6.30.1/arch/ia64/include/asm/bugs.h                                                         0000664 0000000 0000000 00000000615 11223244106 0020071 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        /*
+ * This is included by init/main.c to check for architecture-dependent bugs.
+ *
+ * Needs:
+ *	void check_bugs(void);
+ *
+ * Based on <asm-alpha/bugs.h>.
+ *
+ * Modified 1998, 1999, 2003
+ *	David Mosberger-Tang <davidm@hpl.hp.com>,  Hewlett-Packard Co.
+ */
+#ifndef _ASM_IA64_BUGS_H
+#define _ASM_IA64_BUGS_H
+
+#include <asm/processor.h>
+
+extern void check_bugs (void);
+
+#endif /* _ASM_IA64_BUGS_H */
+                                                                                                                   linux-2.6.30.1/arch/ia64/include/asm/byteorder.h                                                    0000664 0000000 0000000 00000000214 11223244106 0021123 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_BYTEORDER_H
+#define _ASM_IA64_BYTEORDER_H
+
+#include <linux/byteorder/little_endian.h>
+
+#endif /* _ASM_IA64_BYTEORDER_H */
+                                                                                                                                                                                                                                                                                                                                                                                    linux-2.6.30.1/arch/ia64/include/asm/cache.h                                                        0000664 0000000 0000000 00000001333 11223244106 0020172 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_CACHE_H
+#define _ASM_IA64_CACHE_H
+
+
+/*
+ * Copyright (C) 1998-2000 Hewlett-Packard Co
+ *	David Mosberger-Tang <davidm@hpl.hp.com>
+ */
+
+/* Bytes per L1 (data) cache line.  */
+#define L1_CACHE_SHIFT		CONFIG_IA64_L1_CACHE_SHIFT
+#define L1_CACHE_BYTES		(1 << L1_CACHE_SHIFT)
+
+#ifdef CONFIG_SMP
+# define SMP_CACHE_SHIFT	L1_CACHE_SHIFT
+# define SMP_CACHE_BYTES	L1_CACHE_BYTES
+#else
+  /*
+   * The "aligned" directive can only _increase_ alignment, so this is
+   * safe and provides an easy way to avoid wasting space on a
+   * uni-processor:
+   */
+# define SMP_CACHE_SHIFT	3
+# define SMP_CACHE_BYTES	(1 << 3)
+#endif
+
+#define __read_mostly __attribute__((__section__(".data.read_mostly")))
+
+#endif /* _ASM_IA64_CACHE_H */
+                                                                                                                                                                                                                                                                                                     linux-2.6.30.1/arch/ia64/include/asm/cacheflush.h                                                   0000664 0000000 0000000 00000003201 11223244106 0021230 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_CACHEFLUSH_H
+#define _ASM_IA64_CACHEFLUSH_H
+
+/*
+ * Copyright (C) 2002 Hewlett-Packard Co
+ *	David Mosberger-Tang <davidm@hpl.hp.com>
+ */
+
+#include <linux/page-flags.h>
+#include <linux/bitops.h>
+
+#include <asm/page.h>
+
+/*
+ * Cache flushing routines.  This is the kind of stuff that can be very expensive, so try
+ * to avoid them whenever possible.
+ */
+
+#define flush_cache_all()			do { } while (0)
+#define flush_cache_mm(mm)			do { } while (0)
+#define flush_cache_dup_mm(mm)			do { } while (0)
+#define flush_cache_range(vma, start, end)	do { } while (0)
+#define flush_cache_page(vma, vmaddr, pfn)	do { } while (0)
+#define flush_icache_page(vma,page)		do { } while (0)
+#define flush_cache_vmap(start, end)		do { } while (0)
+#define flush_cache_vunmap(start, end)		do { } while (0)
+
+#define flush_dcache_page(page)			\
+do {						\
+	clear_bit(PG_arch_1, &(page)->flags);	\
+} while (0)
+
+#define flush_dcache_mmap_lock(mapping)		do { } while (0)
+#define flush_dcache_mmap_unlock(mapping)	do { } while (0)
+
+extern void flush_icache_range (unsigned long start, unsigned long end);
+extern void clflush_cache_range(void *addr, int size);
+
+
+#define flush_icache_user_range(vma, page, user_addr, len)					\
+do {												\
+	unsigned long _addr = (unsigned long) page_address(page) + ((user_addr) & ~PAGE_MASK);	\
+	flush_icache_range(_addr, _addr + (len));						\
+} while (0)
+
+#define copy_to_user_page(vma, page, vaddr, dst, src, len) \
+do { memcpy(dst, src, len); \
+     flush_icache_user_range(vma, page, vaddr, len); \
+} while (0)
+#define copy_from_user_page(vma, page, vaddr, dst, src, len) \
+	memcpy(dst, src, len)
+
+#endif /* _ASM_IA64_CACHEFLUSH_H */
+                                                                                                                                                                                                                                                                                                                                                                                               linux-2.6.30.1/arch/ia64/include/asm/checksum.h                                                     0000664 0000000 0000000 00000004205 11223244106 0020732 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_CHECKSUM_H
+#define _ASM_IA64_CHECKSUM_H
+
+/*
+ * Modified 1998, 1999
+ *	David Mosberger-Tang <davidm@hpl.hp.com>, Hewlett-Packard Co
+ */
+
+/*
+ * This is a version of ip_compute_csum() optimized for IP headers,
+ * which always checksum on 4 octet boundaries.
+ */
+extern __sum16 ip_fast_csum(const void *iph, unsigned int ihl);
+
+/*
+ * Computes the checksum of the TCP/UDP pseudo-header returns a 16-bit
+ * checksum, already complemented
+ */
+extern __sum16 csum_tcpudp_magic (__be32 saddr, __be32 daddr,
+					     unsigned short len,
+					     unsigned short proto,
+					     __wsum sum);
+
+extern __wsum csum_tcpudp_nofold (__be32 saddr, __be32 daddr,
+					unsigned short len,
+					unsigned short proto,
+					__wsum sum);
+
+/*
+ * Computes the checksum of a memory block at buff, length len,
+ * and adds in "sum" (32-bit)
+ *
+ * returns a 32-bit number suitable for feeding into itself
+ * or csum_tcpudp_magic
+ *
+ * this function must be called with even lengths, except
+ * for the last fragment, which may be odd
+ *
+ * it's best to have buff aligned on a 32-bit boundary
+ */
+extern __wsum csum_partial(const void *buff, int len, __wsum sum);
+
+/*
+ * Same as csum_partial, but copies from src while it checksums.
+ *
+ * Here it is even more important to align src and dst on a 32-bit (or
+ * even better 64-bit) boundary.
+ */
+extern __wsum csum_partial_copy_from_user(const void __user *src, void *dst,
+						 int len, __wsum sum,
+						 int *errp);
+
+extern __wsum csum_partial_copy_nocheck(const void *src, void *dst,
+					       int len, __wsum sum);
+
+/*
+ * This routine is used for miscellaneous IP-like checksums, mainly in
+ * icmp.c
+ */
+extern __sum16 ip_compute_csum(const void *buff, int len);
+
+/*
+ * Fold a partial checksum without adding pseudo headers.
+ */
+static inline __sum16 csum_fold(__wsum csum)
+{
+	u32 sum = (__force u32)csum;
+	sum = (sum & 0xffff) + (sum >> 16);
+	sum = (sum & 0xffff) + (sum >> 16);
+	return (__force __sum16)~sum;
+}
+
+#define _HAVE_ARCH_IPV6_CSUM	1
+struct in6_addr;
+extern __sum16 csum_ipv6_magic(const struct in6_addr *saddr,
+	const struct in6_addr *daddr, __u32 len, unsigned short proto,
+	__wsum csum);
+
+#endif /* _ASM_IA64_CHECKSUM_H */
+                                                                                                                                                                                                                                                                                                                                                                                           linux-2.6.30.1/arch/ia64/include/asm/compat.h                                                       0000664 0000000 0000000 00000010721 11223244106 0020413 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_COMPAT_H
+#define _ASM_IA64_COMPAT_H
+/*
+ * Architecture specific compatibility types
+ */
+#include <linux/types.h>
+
+#define COMPAT_USER_HZ	100
+
+typedef u32		compat_size_t;
+typedef s32		compat_ssize_t;
+typedef s32		compat_time_t;
+typedef s32		compat_clock_t;
+typedef s32		compat_key_t;
+typedef s32		compat_pid_t;
+typedef u16		__compat_uid_t;
+typedef u16		__compat_gid_t;
+typedef u32		__compat_uid32_t;
+typedef u32		__compat_gid32_t;
+typedef u16		compat_mode_t;
+typedef u32		compat_ino_t;
+typedef u16		compat_dev_t;
+typedef s32		compat_off_t;
+typedef s64		compat_loff_t;
+typedef u16		compat_nlink_t;
+typedef u16		compat_ipc_pid_t;
+typedef s32		compat_daddr_t;
+typedef u32		compat_caddr_t;
+typedef __kernel_fsid_t	compat_fsid_t;
+typedef s32		compat_timer_t;
+
+typedef s32		compat_int_t;
+typedef s32		compat_long_t;
+typedef s64 __attribute__((aligned(4))) compat_s64;
+typedef u32		compat_uint_t;
+typedef u32		compat_ulong_t;
+typedef u64 __attribute__((aligned(4))) compat_u64;
+
+struct compat_timespec {
+	compat_time_t	tv_sec;
+	s32		tv_nsec;
+};
+
+struct compat_timeval {
+	compat_time_t	tv_sec;
+	s32		tv_usec;
+};
+
+struct compat_stat {
+	compat_dev_t	st_dev;
+	u16		__pad1;
+	compat_ino_t	st_ino;
+	compat_mode_t	st_mode;
+	compat_nlink_t	st_nlink;
+	__compat_uid_t	st_uid;
+	__compat_gid_t	st_gid;
+	compat_dev_t	st_rdev;
+	u16		__pad2;
+	u32		st_size;
+	u32		st_blksize;
+	u32		st_blocks;
+	u32		st_atime;
+	u32		st_atime_nsec;
+	u32		st_mtime;
+	u32		st_mtime_nsec;
+	u32		st_ctime;
+	u32		st_ctime_nsec;
+	u32		__unused4;
+	u32		__unused5;
+};
+
+struct compat_flock {
+	short		l_type;
+	short		l_whence;
+	compat_off_t	l_start;
+	compat_off_t	l_len;
+	compat_pid_t	l_pid;
+};
+
+#define F_GETLK64	12
+#define F_SETLK64	13
+#define F_SETLKW64	14
+
+/*
+ * IA32 uses 4 byte alignment for 64 bit quantities,
+ * so we need to pack this structure.
+ */
+struct compat_flock64 {
+	short		l_type;
+	short		l_whence;
+	compat_loff_t	l_start;
+	compat_loff_t	l_len;
+	compat_pid_t	l_pid;
+} __attribute__((packed));
+
+struct compat_statfs {
+	int		f_type;
+	int		f_bsize;
+	int		f_blocks;
+	int		f_bfree;
+	int		f_bavail;
+	int		f_files;
+	int		f_ffree;
+	compat_fsid_t	f_fsid;
+	int		f_namelen;	/* SunOS ignores this field. */
+	int		f_frsize;
+	int		f_spare[5];
+};
+
+#define COMPAT_RLIM_OLD_INFINITY       0x7fffffff
+#define COMPAT_RLIM_INFINITY           0xffffffff
+
+typedef u32		compat_old_sigset_t;	/* at least 32 bits */
+
+#define _COMPAT_NSIG		64
+#define _COMPAT_NSIG_BPW	32
+
+typedef u32		compat_sigset_word;
+
+#define COMPAT_OFF_T_MAX	0x7fffffff
+#define COMPAT_LOFF_T_MAX	0x7fffffffffffffffL
+
+struct compat_ipc64_perm {
+	compat_key_t key;
+	__compat_uid32_t uid;
+	__compat_gid32_t gid;
+	__compat_uid32_t cuid;
+	__compat_gid32_t cgid;
+	unsigned short mode;
+	unsigned short __pad1;
+	unsigned short seq;
+	unsigned short __pad2;
+	compat_ulong_t unused1;
+	compat_ulong_t unused2;
+};
+
+struct compat_semid64_ds {
+	struct compat_ipc64_perm sem_perm;
+	compat_time_t  sem_otime;
+	compat_ulong_t __unused1;
+	compat_time_t  sem_ctime;
+	compat_ulong_t __unused2;
+	compat_ulong_t sem_nsems;
+	compat_ulong_t __unused3;
+	compat_ulong_t __unused4;
+};
+
+struct compat_msqid64_ds {
+	struct compat_ipc64_perm msg_perm;
+	compat_time_t  msg_stime;
+	compat_ulong_t __unused1;
+	compat_time_t  msg_rtime;
+	compat_ulong_t __unused2;
+	compat_time_t  msg_ctime;
+	compat_ulong_t __unused3;
+	compat_ulong_t msg_cbytes;
+	compat_ulong_t msg_qnum;
+	compat_ulong_t msg_qbytes;
+	compat_pid_t   msg_lspid;
+	compat_pid_t   msg_lrpid;
+	compat_ulong_t __unused4;
+	compat_ulong_t __unused5;
+};
+
+struct compat_shmid64_ds {
+	struct compat_ipc64_perm shm_perm;
+	compat_size_t  shm_segsz;
+	compat_time_t  shm_atime;
+	compat_ulong_t __unused1;
+	compat_time_t  shm_dtime;
+	compat_ulong_t __unused2;
+	compat_time_t  shm_ctime;
+	compat_ulong_t __unused3;
+	compat_pid_t   shm_cpid;
+	compat_pid_t   shm_lpid;
+	compat_ulong_t shm_nattch;
+	compat_ulong_t __unused4;
+	compat_ulong_t __unused5;
+};
+
+/*
+ * A pointer passed in from user mode. This should not be used for syscall parameters,
+ * just declare them as pointers because the syscall entry code will have appropriately
+ * converted them already.
+ */
+typedef	u32		compat_uptr_t;
+
+static inline void __user *
+compat_ptr (compat_uptr_t uptr)
+{
+	return (void __user *) (unsigned long) uptr;
+}
+
+static inline compat_uptr_t
+ptr_to_compat(void __user *uptr)
+{
+	return (u32)(unsigned long)uptr;
+}
+
+static __inline__ void __user *
+compat_alloc_user_space (long len)
+{
+	struct pt_regs *regs = task_pt_regs(current);
+	return (void __user *) (((regs->r12 & 0xffffffff) & -16) - len);
+}
+
+#endif /* _ASM_IA64_COMPAT_H */
+                                               linux-2.6.30.1/arch/ia64/include/asm/cpu.h                                                          0000664 0000000 0000000 00000000641 11223244106 0017717 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_CPU_H_
+#define _ASM_IA64_CPU_H_
+
+#include <linux/device.h>
+#include <linux/cpu.h>
+#include <linux/topology.h>
+#include <linux/percpu.h>
+
+struct ia64_cpu {
+	struct cpu cpu;
+};
+
+DECLARE_PER_CPU(struct ia64_cpu, cpu_devices);
+
+DECLARE_PER_CPU(int, cpu_state);
+
+#ifdef CONFIG_HOTPLUG_CPU
+extern int arch_register_cpu(int num);
+extern void arch_unregister_cpu(int);
+#endif
+
+#endif /* _ASM_IA64_CPU_H_ */
+                                                                                               linux-2.6.30.1/arch/ia64/include/asm/cputime.h                                                      0000664 0000000 0000000 00000006331 11223244106 0020600 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        /*
+ * Definitions for measuring cputime on ia64 machines.
+ *
+ * Based on <asm-powerpc/cputime.h>.
+ *
+ * Copyright (C) 2007 FUJITSU LIMITED
+ * Copyright (C) 2007 Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version
+ * 2 of the License, or (at your option) any later version.
+ *
+ * If we have CONFIG_VIRT_CPU_ACCOUNTING, we measure cpu time in nsec.
+ * Otherwise we measure cpu time in jiffies using the generic definitions.
+ */
+
+#ifndef __IA64_CPUTIME_H
+#define __IA64_CPUTIME_H
+
+#ifndef CONFIG_VIRT_CPU_ACCOUNTING
+#include <asm-generic/cputime.h>
+#else
+
+#include <linux/time.h>
+#include <linux/jiffies.h>
+#include <asm/processor.h>
+
+typedef u64 cputime_t;
+typedef u64 cputime64_t;
+
+#define cputime_zero			((cputime_t)0)
+#define cputime_max			((~((cputime_t)0) >> 1) - 1)
+#define cputime_add(__a, __b)		((__a) +  (__b))
+#define cputime_sub(__a, __b)		((__a) -  (__b))
+#define cputime_div(__a, __n)		((__a) /  (__n))
+#define cputime_halve(__a)		((__a) >> 1)
+#define cputime_eq(__a, __b)		((__a) == (__b))
+#define cputime_gt(__a, __b)		((__a) >  (__b))
+#define cputime_ge(__a, __b)		((__a) >= (__b))
+#define cputime_lt(__a, __b)		((__a) <  (__b))
+#define cputime_le(__a, __b)		((__a) <= (__b))
+
+#define cputime64_zero			((cputime64_t)0)
+#define cputime64_add(__a, __b)		((__a) + (__b))
+#define cputime64_sub(__a, __b)		((__a) - (__b))
+#define cputime_to_cputime64(__ct)	(__ct)
+
+/*
+ * Convert cputime <-> jiffies (HZ)
+ */
+#define cputime_to_jiffies(__ct)	((__ct) / (NSEC_PER_SEC / HZ))
+#define jiffies_to_cputime(__jif)	((__jif) * (NSEC_PER_SEC / HZ))
+#define cputime64_to_jiffies64(__ct)	((__ct) / (NSEC_PER_SEC / HZ))
+#define jiffies64_to_cputime64(__jif)	((__jif) * (NSEC_PER_SEC / HZ))
+
+/*
+ * Convert cputime <-> milliseconds
+ */
+#define cputime_to_msecs(__ct)		((__ct) / NSEC_PER_MSEC)
+#define msecs_to_cputime(__msecs)	((__msecs) * NSEC_PER_MSEC)
+
+/*
+ * Convert cputime <-> seconds
+ */
+#define cputime_to_secs(__ct)		((__ct) / NSEC_PER_SEC)
+#define secs_to_cputime(__secs)		((__secs) * NSEC_PER_SEC)
+
+/*
+ * Convert cputime <-> timespec (nsec)
+ */
+static inline cputime_t timespec_to_cputime(const struct timespec *val)
+{
+	cputime_t ret = val->tv_sec * NSEC_PER_SEC;
+	return (ret + val->tv_nsec);
+}
+static inline void cputime_to_timespec(const cputime_t ct, struct timespec *val)
+{
+	val->tv_sec  = ct / NSEC_PER_SEC;
+	val->tv_nsec = ct % NSEC_PER_SEC;
+}
+
+/*
+ * Convert cputime <-> timeval (msec)
+ */
+static inline cputime_t timeval_to_cputime(struct timeval *val)
+{
+	cputime_t ret = val->tv_sec * NSEC_PER_SEC;
+	return (ret + val->tv_usec * NSEC_PER_USEC);
+}
+static inline void cputime_to_timeval(const cputime_t ct, struct timeval *val)
+{
+	val->tv_sec = ct / NSEC_PER_SEC;
+	val->tv_usec = (ct % NSEC_PER_SEC) / NSEC_PER_USEC;
+}
+
+/*
+ * Convert cputime <-> clock (USER_HZ)
+ */
+#define cputime_to_clock_t(__ct)	((__ct) / (NSEC_PER_SEC / USER_HZ))
+#define clock_t_to_cputime(__x)		((__x) * (NSEC_PER_SEC / USER_HZ))
+
+/*
+ * Convert cputime64 to clock.
+ */
+#define cputime64_to_clock_t(__ct)      cputime_to_clock_t((cputime_t)__ct)
+
+#endif /* CONFIG_VIRT_CPU_ACCOUNTING */
+#endif /* __IA64_CPUTIME_H */
+                                                                                                                                                                                                                                                                                                       linux-2.6.30.1/arch/ia64/include/asm/current.h                                                      0000664 0000000 0000000 00000000573 11223244106 0020616 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_CURRENT_H
+#define _ASM_IA64_CURRENT_H
+
+/*
+ * Modified 1998-2000
+ *	David Mosberger-Tang <davidm@hpl.hp.com>, Hewlett-Packard Co
+ */
+
+#include <asm/intrinsics.h>
+
+/*
+ * In kernel mode, thread pointer (r13) is used to point to the current task
+ * structure.
+ */
+#define current	((struct task_struct *) ia64_getreg(_IA64_REG_TP))
+
+#endif /* _ASM_IA64_CURRENT_H */
+                                                                                                                                     linux-2.6.30.1/arch/ia64/include/asm/cyclone.h                                                      0000664 0000000 0000000 00000000623 11223244106 0020564 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef ASM_IA64_CYCLONE_H
+#define ASM_IA64_CYCLONE_H
+
+#ifdef	CONFIG_IA64_CYCLONE
+extern int use_cyclone;
+extern void __init cyclone_setup(void);
+#else	/* CONFIG_IA64_CYCLONE */
+#define use_cyclone 0
+static inline void cyclone_setup(void)
+{
+	printk(KERN_ERR "Cyclone Counter: System not configured"
+					" w/ CONFIG_IA64_CYCLONE.\n");
+}
+#endif	/* CONFIG_IA64_CYCLONE */
+#endif	/* !ASM_IA64_CYCLONE_H */
+                                                                                                             linux-2.6.30.1/arch/ia64/include/asm/delay.h                                                        0000664 0000000 0000000 00000003243 11223244106 0020227 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_DELAY_H
+#define _ASM_IA64_DELAY_H
+
+/*
+ * Delay routines using a pre-computed "cycles/usec" value.
+ *
+ * Copyright (C) 1998, 1999 Hewlett-Packard Co
+ *	David Mosberger-Tang <davidm@hpl.hp.com>
+ * Copyright (C) 1999 VA Linux Systems
+ * Copyright (C) 1999 Walt Drummond <drummond@valinux.com>
+ * Copyright (C) 1999 Asit Mallick <asit.k.mallick@intel.com>
+ * Copyright (C) 1999 Don Dugger <don.dugger@intel.com>
+ */
+
+#include <linux/kernel.h>
+#include <linux/sched.h>
+#include <linux/compiler.h>
+
+#include <asm/intrinsics.h>
+#include <asm/processor.h>
+
+static __inline__ void
+ia64_set_itm (unsigned long val)
+{
+	ia64_setreg(_IA64_REG_CR_ITM, val);
+	ia64_srlz_d();
+}
+
+static __inline__ unsigned long
+ia64_get_itm (void)
+{
+	unsigned long result;
+
+	result = ia64_getreg(_IA64_REG_CR_ITM);
+	ia64_srlz_d();
+	return result;
+}
+
+static __inline__ void
+ia64_set_itv (unsigned long val)
+{
+	ia64_setreg(_IA64_REG_CR_ITV, val);
+	ia64_srlz_d();
+}
+
+static __inline__ unsigned long
+ia64_get_itv (void)
+{
+	return ia64_getreg(_IA64_REG_CR_ITV);
+}
+
+static __inline__ void
+ia64_set_itc (unsigned long val)
+{
+	ia64_setreg(_IA64_REG_AR_ITC, val);
+	ia64_srlz_d();
+}
+
+static __inline__ unsigned long
+ia64_get_itc (void)
+{
+	unsigned long result;
+
+	result = ia64_getreg(_IA64_REG_AR_ITC);
+	ia64_barrier();
+#ifdef CONFIG_ITANIUM
+	while (unlikely((__s32) result == -1)) {
+		result = ia64_getreg(_IA64_REG_AR_ITC);
+		ia64_barrier();
+	}
+#endif
+	return result;
+}
+
+extern void ia64_delay_loop (unsigned long loops);
+
+static __inline__ void
+__delay (unsigned long loops)
+{
+	if (unlikely(loops < 1))
+		return;
+
+	ia64_delay_loop (loops - 1);
+}
+
+extern void udelay (unsigned long usecs);
+
+#endif /* _ASM_IA64_DELAY_H */
+                                                                                                                                                                                                                                                                                                                                                             linux-2.6.30.1/arch/ia64/include/asm/device.h                                                       0000664 0000000 0000000 00000000517 11223244106 0020371 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        /*
+ * Arch specific extensions to struct device
+ *
+ * This file is released under the GPLv2
+ */
+#ifndef _ASM_IA64_DEVICE_H
+#define _ASM_IA64_DEVICE_H
+
+struct dev_archdata {
+#ifdef CONFIG_ACPI
+	void	*acpi_handle;
+#endif
+#ifdef CONFIG_DMAR
+	void *iommu; /* hook for IOMMU specific extension */
+#endif
+};
+
+#endif /* _ASM_IA64_DEVICE_H */
+                                                                                                                                                                                 linux-2.6.30.1/arch/ia64/include/asm/div64.h                                                        0000664 0000000 0000000 00000000037 11223244106 0020063 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #include <asm-generic/div64.h>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 linux-2.6.30.1/arch/ia64/include/asm/dma-mapping.h                                                  0000664 0000000 0000000 00000012525 11223244106 0021326 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_DMA_MAPPING_H
+#define _ASM_IA64_DMA_MAPPING_H
+
+/*
+ * Copyright (C) 2003-2004 Hewlett-Packard Co
+ *	David Mosberger-Tang <davidm@hpl.hp.com>
+ */
+#include <asm/machvec.h>
+#include <linux/scatterlist.h>
+#include <asm/swiotlb.h>
+
+#define ARCH_HAS_DMA_GET_REQUIRED_MASK
+
+extern struct dma_map_ops *dma_ops;
+extern struct ia64_machine_vector ia64_mv;
+extern void set_iommu_machvec(void);
+
+extern void machvec_dma_sync_single(struct device *, dma_addr_t, size_t,
+				    enum dma_data_direction);
+extern void machvec_dma_sync_sg(struct device *, struct scatterlist *, int,
+				enum dma_data_direction);
+
+static inline void *dma_alloc_coherent(struct device *dev, size_t size,
+				       dma_addr_t *daddr, gfp_t gfp)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	return ops->alloc_coherent(dev, size, daddr, gfp);
+}
+
+static inline void dma_free_coherent(struct device *dev, size_t size,
+				     void *caddr, dma_addr_t daddr)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	ops->free_coherent(dev, size, caddr, daddr);
+}
+
+#define dma_alloc_noncoherent(d, s, h, f) dma_alloc_coherent(d, s, h, f)
+#define dma_free_noncoherent(d, s, v, h) dma_free_coherent(d, s, v, h)
+
+static inline dma_addr_t dma_map_single_attrs(struct device *dev,
+					      void *caddr, size_t size,
+					      enum dma_data_direction dir,
+					      struct dma_attrs *attrs)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	return ops->map_page(dev, virt_to_page(caddr),
+			     (unsigned long)caddr & ~PAGE_MASK, size,
+			     dir, attrs);
+}
+
+static inline void dma_unmap_single_attrs(struct device *dev, dma_addr_t daddr,
+					  size_t size,
+					  enum dma_data_direction dir,
+					  struct dma_attrs *attrs)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	ops->unmap_page(dev, daddr, size, dir, attrs);
+}
+
+#define dma_map_single(d, a, s, r) dma_map_single_attrs(d, a, s, r, NULL)
+#define dma_unmap_single(d, a, s, r) dma_unmap_single_attrs(d, a, s, r, NULL)
+
+static inline int dma_map_sg_attrs(struct device *dev, struct scatterlist *sgl,
+				   int nents, enum dma_data_direction dir,
+				   struct dma_attrs *attrs)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	return ops->map_sg(dev, sgl, nents, dir, attrs);
+}
+
+static inline void dma_unmap_sg_attrs(struct device *dev,
+				      struct scatterlist *sgl, int nents,
+				      enum dma_data_direction dir,
+				      struct dma_attrs *attrs)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	ops->unmap_sg(dev, sgl, nents, dir, attrs);
+}
+
+#define dma_map_sg(d, s, n, r) dma_map_sg_attrs(d, s, n, r, NULL)
+#define dma_unmap_sg(d, s, n, r) dma_unmap_sg_attrs(d, s, n, r, NULL)
+
+static inline void dma_sync_single_for_cpu(struct device *dev, dma_addr_t daddr,
+					   size_t size,
+					   enum dma_data_direction dir)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	ops->sync_single_for_cpu(dev, daddr, size, dir);
+}
+
+static inline void dma_sync_sg_for_cpu(struct device *dev,
+				       struct scatterlist *sgl,
+				       int nents, enum dma_data_direction dir)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	ops->sync_sg_for_cpu(dev, sgl, nents, dir);
+}
+
+static inline void dma_sync_single_for_device(struct device *dev,
+					      dma_addr_t daddr,
+					      size_t size,
+					      enum dma_data_direction dir)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	ops->sync_single_for_device(dev, daddr, size, dir);
+}
+
+static inline void dma_sync_sg_for_device(struct device *dev,
+					  struct scatterlist *sgl,
+					  int nents,
+					  enum dma_data_direction dir)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	ops->sync_sg_for_device(dev, sgl, nents, dir);
+}
+
+static inline int dma_mapping_error(struct device *dev, dma_addr_t daddr)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	return ops->mapping_error(dev, daddr);
+}
+
+static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
+				      size_t offset, size_t size,
+				      enum dma_data_direction dir)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	return ops->map_page(dev, page, offset, size, dir, NULL);
+}
+
+static inline void dma_unmap_page(struct device *dev, dma_addr_t addr,
+				  size_t size, enum dma_data_direction dir)
+{
+	dma_unmap_single(dev, addr, size, dir);
+}
+
+/*
+ * Rest of this file is part of the "Advanced DMA API".  Use at your own risk.
+ * See Documentation/DMA-API.txt for details.
+ */
+
+#define dma_sync_single_range_for_cpu(dev, dma_handle, offset, size, dir)	\
+	dma_sync_single_for_cpu(dev, dma_handle, size, dir)
+#define dma_sync_single_range_for_device(dev, dma_handle, offset, size, dir)	\
+	dma_sync_single_for_device(dev, dma_handle, size, dir)
+
+static inline int dma_supported(struct device *dev, u64 mask)
+{
+	struct dma_map_ops *ops = platform_dma_get_ops(dev);
+	return ops->dma_supported(dev, mask);
+}
+
+static inline int
+dma_set_mask (struct device *dev, u64 mask)
+{
+	if (!dev->dma_mask || !dma_supported(dev, mask))
+		return -EIO;
+	*dev->dma_mask = mask;
+	return 0;
+}
+
+extern int dma_get_cache_alignment(void);
+
+static inline void
+dma_cache_sync (struct device *dev, void *vaddr, size_t size,
+	enum dma_data_direction dir)
+{
+	/*
+	 * IA-64 is cache-coherent, so this is mostly a no-op.  However, we do need to
+	 * ensure that dma_cache_sync() enforces order, hence the mb().
+	 */
+	mb();
+}
+
+#define dma_is_consistent(d, h)	(1)	/* all we do is coherent memory... */
+
+#endif /* _ASM_IA64_DMA_MAPPING_H */
+                                                                                                                                                                           linux-2.6.30.1/arch/ia64/include/asm/dma.h                                                          0000664 0000000 0000000 00000000653 11223244106 0017674 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_DMA_H
+#define _ASM_IA64_DMA_H
+
+/*
+ * Copyright (C) 1998-2002 Hewlett-Packard Co
+ *	David Mosberger-Tang <davidm@hpl.hp.com>
+ */
+
+
+#include <asm/io.h>		/* need byte IO */
+
+extern unsigned long MAX_DMA_ADDRESS;
+
+#ifdef CONFIG_PCI
+  extern int isa_dma_bridge_buggy;
+#else
+# define isa_dma_bridge_buggy 	(0)
+#endif
+
+#define free_dma(x)
+
+void dma_mark_clean(void *addr, size_t size);
+
+#endif /* _ASM_IA64_DMA_H */
+                                                                                     linux-2.6.30.1/arch/ia64/include/asm/dmi.h                                                          0000664 0000000 0000000 00000000327 11223244106 0017702 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_DMI_H
+#define _ASM_DMI_H 1
+
+#include <asm/io.h>
+
+/* Use normal IO mappings for DMI */
+#define dmi_ioremap ioremap
+#define dmi_iounmap(x,l) iounmap(x)
+#define dmi_alloc(l) kmalloc(l, GFP_ATOMIC)
+
+#endif
+                                                                                                                                                                                                                                                                                                         linux-2.6.30.1/arch/ia64/include/asm/elf.h                                                          0000664 0000000 0000000 00000027154 11223244106 0017706 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_ELF_H
+#define _ASM_IA64_ELF_H
+
+/*
+ * ELF-specific definitions.
+ *
+ * Copyright (C) 1998-1999, 2002-2004 Hewlett-Packard Co
+ *	David Mosberger-Tang <davidm@hpl.hp.com>
+ */
+
+
+#include <asm/fpu.h>
+#include <asm/page.h>
+#include <asm/auxvec.h>
+
+/*
+ * This is used to ensure we don't load something for the wrong architecture.
+ */
+#define elf_check_arch(x) ((x)->e_machine == EM_IA_64)
+
+/*
+ * These are used to set parameters in the core dumps.
+ */
+#define ELF_CLASS	ELFCLASS64
+#define ELF_DATA	ELFDATA2LSB
+#define ELF_ARCH	EM_IA_64
+
+#define USE_ELF_CORE_DUMP
+#define CORE_DUMP_USE_REGSET
+
+/* Least-significant four bits of ELF header's e_flags are OS-specific.  The bits are
+   interpreted as follows by Linux: */
+#define EF_IA_64_LINUX_EXECUTABLE_STACK	0x1	/* is stack (& heap) executable by default? */
+
+#define ELF_EXEC_PAGESIZE	PAGE_SIZE
+
+/*
+ * This is the location that an ET_DYN program is loaded if exec'ed.
+ * Typical use of this is to invoke "./ld.so someprog" to test out a
+ * new version of the loader.  We need to make sure that it is out of
+ * the way of the program that it will "exec", and that there is
+ * sufficient room for the brk.
+ */
+#define ELF_ET_DYN_BASE		(TASK_UNMAPPED_BASE + 0x800000000UL)
+
+#define PT_IA_64_UNWIND		0x70000001
+
+/* IA-64 relocations: */
+#define R_IA64_NONE		0x00	/* none */
+#define R_IA64_IMM14		0x21	/* symbol + addend, add imm14 */
+#define R_IA64_IMM22		0x22	/* symbol + addend, add imm22 */
+#define R_IA64_IMM64		0x23	/* symbol + addend, mov imm64 */
+#define R_IA64_DIR32MSB		0x24	/* symbol + addend, data4 MSB */
+#define R_IA64_DIR32LSB		0x25	/* symbol + addend, data4 LSB */
+#define R_IA64_DIR64MSB		0x26	/* symbol + addend, data8 MSB */
+#define R_IA64_DIR64LSB		0x27	/* symbol + addend, data8 LSB */
+#define R_IA64_GPREL22		0x2a	/* @gprel(sym+add), add imm22 */
+#define R_IA64_GPREL64I		0x2b	/* @gprel(sym+add), mov imm64 */
+#define R_IA64_GPREL32MSB	0x2c	/* @gprel(sym+add), data4 MSB */
+#define R_IA64_GPREL32LSB	0x2d	/* @gprel(sym+add), data4 LSB */
+#define R_IA64_GPREL64MSB	0x2e	/* @gprel(sym+add), data8 MSB */
+#define R_IA64_GPREL64LSB	0x2f	/* @gprel(sym+add), data8 LSB */
+#define R_IA64_LTOFF22		0x32	/* @ltoff(sym+add), add imm22 */
+#define R_IA64_LTOFF64I		0x33	/* @ltoff(sym+add), mov imm64 */
+#define R_IA64_PLTOFF22		0x3a	/* @pltoff(sym+add), add imm22 */
+#define R_IA64_PLTOFF64I	0x3b	/* @pltoff(sym+add), mov imm64 */
+#define R_IA64_PLTOFF64MSB	0x3e	/* @pltoff(sym+add), data8 MSB */
+#define R_IA64_PLTOFF64LSB	0x3f	/* @pltoff(sym+add), data8 LSB */
+#define R_IA64_FPTR64I		0x43	/* @fptr(sym+add), mov imm64 */
+#define R_IA64_FPTR32MSB	0x44	/* @fptr(sym+add), data4 MSB */
+#define R_IA64_FPTR32LSB	0x45	/* @fptr(sym+add), data4 LSB */
+#define R_IA64_FPTR64MSB	0x46	/* @fptr(sym+add), data8 MSB */
+#define R_IA64_FPTR64LSB	0x47	/* @fptr(sym+add), data8 LSB */
+#define R_IA64_PCREL60B		0x48	/* @pcrel(sym+add), brl */
+#define R_IA64_PCREL21B		0x49	/* @pcrel(sym+add), ptb, call */
+#define R_IA64_PCREL21M		0x4a	/* @pcrel(sym+add), chk.s */
+#define R_IA64_PCREL21F		0x4b	/* @pcrel(sym+add), fchkf */
+#define R_IA64_PCREL32MSB	0x4c	/* @pcrel(sym+add), data4 MSB */
+#define R_IA64_PCREL32LSB	0x4d	/* @pcrel(sym+add), data4 LSB */
+#define R_IA64_PCREL64MSB	0x4e	/* @pcrel(sym+add), data8 MSB */
+#define R_IA64_PCREL64LSB	0x4f	/* @pcrel(sym+add), data8 LSB */
+#define R_IA64_LTOFF_FPTR22	0x52	/* @ltoff(@fptr(s+a)), imm22 */
+#define R_IA64_LTOFF_FPTR64I	0x53	/* @ltoff(@fptr(s+a)), imm64 */
+#define R_IA64_LTOFF_FPTR32MSB	0x54	/* @ltoff(@fptr(s+a)), 4 MSB */
+#define R_IA64_LTOFF_FPTR32LSB	0x55	/* @ltoff(@fptr(s+a)), 4 LSB */
+#define R_IA64_LTOFF_FPTR64MSB	0x56	/* @ltoff(@fptr(s+a)), 8 MSB */
+#define R_IA64_LTOFF_FPTR64LSB	0x57	/* @ltoff(@fptr(s+a)), 8 LSB */
+#define R_IA64_SEGREL32MSB	0x5c	/* @segrel(sym+add), data4 MSB */
+#define R_IA64_SEGREL32LSB	0x5d	/* @segrel(sym+add), data4 LSB */
+#define R_IA64_SEGREL64MSB	0x5e	/* @segrel(sym+add), data8 MSB */
+#define R_IA64_SEGREL64LSB	0x5f	/* @segrel(sym+add), data8 LSB */
+#define R_IA64_SECREL32MSB	0x64	/* @secrel(sym+add), data4 MSB */
+#define R_IA64_SECREL32LSB	0x65	/* @secrel(sym+add), data4 LSB */
+#define R_IA64_SECREL64MSB	0x66	/* @secrel(sym+add), data8 MSB */
+#define R_IA64_SECREL64LSB	0x67	/* @secrel(sym+add), data8 LSB */
+#define R_IA64_REL32MSB		0x6c	/* data 4 + REL */
+#define R_IA64_REL32LSB		0x6d	/* data 4 + REL */
+#define R_IA64_REL64MSB		0x6e	/* data 8 + REL */
+#define R_IA64_REL64LSB		0x6f	/* data 8 + REL */
+#define R_IA64_LTV32MSB		0x74	/* symbol + addend, data4 MSB */
+#define R_IA64_LTV32LSB		0x75	/* symbol + addend, data4 LSB */
+#define R_IA64_LTV64MSB		0x76	/* symbol + addend, data8 MSB */
+#define R_IA64_LTV64LSB		0x77	/* symbol + addend, data8 LSB */
+#define R_IA64_PCREL21BI	0x79	/* @pcrel(sym+add), ptb, call */
+#define R_IA64_PCREL22		0x7a	/* @pcrel(sym+add), imm22 */
+#define R_IA64_PCREL64I		0x7b	/* @pcrel(sym+add), imm64 */
+#define R_IA64_IPLTMSB		0x80	/* dynamic reloc, imported PLT, MSB */
+#define R_IA64_IPLTLSB		0x81	/* dynamic reloc, imported PLT, LSB */
+#define R_IA64_COPY		0x84	/* dynamic reloc, data copy */
+#define R_IA64_SUB		0x85	/* -symbol + addend, add imm22 */
+#define R_IA64_LTOFF22X		0x86	/* LTOFF22, relaxable.  */
+#define R_IA64_LDXMOV		0x87	/* Use of LTOFF22X.  */
+#define R_IA64_TPREL14		0x91	/* @tprel(sym+add), add imm14 */
+#define R_IA64_TPREL22		0x92	/* @tprel(sym+add), add imm22 */
+#define R_IA64_TPREL64I		0x93	/* @tprel(sym+add), add imm64 */
+#define R_IA64_TPREL64MSB	0x96	/* @tprel(sym+add), data8 MSB */
+#define R_IA64_TPREL64LSB	0x97	/* @tprel(sym+add), data8 LSB */
+#define R_IA64_LTOFF_TPREL22	0x9a	/* @ltoff(@tprel(s+a)), add imm22 */
+#define R_IA64_DTPMOD64MSB	0xa6	/* @dtpmod(sym+add), data8 MSB */
+#define R_IA64_DTPMOD64LSB	0xa7	/* @dtpmod(sym+add), data8 LSB */
+#define R_IA64_LTOFF_DTPMOD22	0xaa	/* @ltoff(@dtpmod(s+a)), imm22 */
+#define R_IA64_DTPREL14		0xb1	/* @dtprel(sym+add), imm14 */
+#define R_IA64_DTPREL22		0xb2	/* @dtprel(sym+add), imm22 */
+#define R_IA64_DTPREL64I	0xb3	/* @dtprel(sym+add), imm64 */
+#define R_IA64_DTPREL32MSB	0xb4	/* @dtprel(sym+add), data4 MSB */
+#define R_IA64_DTPREL32LSB	0xb5	/* @dtprel(sym+add), data4 LSB */
+#define R_IA64_DTPREL64MSB	0xb6	/* @dtprel(sym+add), data8 MSB */
+#define R_IA64_DTPREL64LSB	0xb7	/* @dtprel(sym+add), data8 LSB */
+#define R_IA64_LTOFF_DTPREL22	0xba	/* @ltoff(@dtprel(s+a)), imm22 */
+
+/* IA-64 specific section flags: */
+#define SHF_IA_64_SHORT		0x10000000	/* section near gp */
+
+/*
+ * We use (abuse?) this macro to insert the (empty) vm_area that is
+ * used to map the register backing store.  I don't see any better
+ * place to do this, but we should discuss this with Linus once we can
+ * talk to him...
+ */
+extern void ia64_init_addr_space (void);
+#define ELF_PLAT_INIT(_r, load_addr)	ia64_init_addr_space()
+
+/* ELF register definitions.  This is needed for core dump support.  */
+
+/*
+ * elf_gregset_t contains the application-level state in the following order:
+ *	r0-r31
+ *	NaT bits (for r0-r31; bit N == 1 iff rN is a NaT)
+ *	predicate registers (p0-p63)
+ *	b0-b7
+ *	ip cfm psr
+ *	ar.rsc ar.bsp ar.bspstore ar.rnat
+ *	ar.ccv ar.unat ar.fpsr ar.pfs ar.lc ar.ec ar.csd ar.ssd
+ */
+#define ELF_NGREG	128	/* we really need just 72 but let's leave some headroom... */
+#define ELF_NFPREG	128	/* f0 and f1 could be omitted, but so what... */
+
+/* elf_gregset_t register offsets */
+#define ELF_GR_0_OFFSET     0
+#define ELF_NAT_OFFSET     (32 * sizeof(elf_greg_t))
+#define ELF_PR_OFFSET      (33 * sizeof(elf_greg_t))
+#define ELF_BR_0_OFFSET    (34 * sizeof(elf_greg_t))
+#define ELF_CR_IIP_OFFSET  (42 * sizeof(elf_greg_t))
+#define ELF_CFM_OFFSET     (43 * sizeof(elf_greg_t))
+#define ELF_CR_IPSR_OFFSET (44 * sizeof(elf_greg_t))
+#define ELF_GR_OFFSET(i)   (ELF_GR_0_OFFSET + i * sizeof(elf_greg_t))
+#define ELF_BR_OFFSET(i)   (ELF_BR_0_OFFSET + i * sizeof(elf_greg_t))
+#define ELF_AR_RSC_OFFSET  (45 * sizeof(elf_greg_t))
+#define ELF_AR_BSP_OFFSET  (46 * sizeof(elf_greg_t))
+#define ELF_AR_BSPSTORE_OFFSET (47 * sizeof(elf_greg_t))
+#define ELF_AR_RNAT_OFFSET (48 * sizeof(elf_greg_t))
+#define ELF_AR_CCV_OFFSET  (49 * sizeof(elf_greg_t))
+#define ELF_AR_UNAT_OFFSET (50 * sizeof(elf_greg_t))
+#define ELF_AR_FPSR_OFFSET (51 * sizeof(elf_greg_t))
+#define ELF_AR_PFS_OFFSET  (52 * sizeof(elf_greg_t))
+#define ELF_AR_LC_OFFSET   (53 * sizeof(elf_greg_t))
+#define ELF_AR_EC_OFFSET   (54 * sizeof(elf_greg_t))
+#define ELF_AR_CSD_OFFSET  (55 * sizeof(elf_greg_t))
+#define ELF_AR_SSD_OFFSET  (56 * sizeof(elf_greg_t))
+#define ELF_AR_END_OFFSET  (57 * sizeof(elf_greg_t))
+
+typedef unsigned long elf_fpxregset_t;
+
+typedef unsigned long elf_greg_t;
+typedef elf_greg_t elf_gregset_t[ELF_NGREG];
+
+typedef struct ia64_fpreg elf_fpreg_t;
+typedef elf_fpreg_t elf_fpregset_t[ELF_NFPREG];
+
+
+
+struct pt_regs;	/* forward declaration... */
+extern void ia64_elf_core_copy_regs (struct pt_regs *src, elf_gregset_t dst);
+#define ELF_CORE_COPY_REGS(_dest,_regs)	ia64_elf_core_copy_regs(_regs, _dest);
+
+/* This macro yields a bitmask that programs can use to figure out
+   what instruction set this CPU supports.  */
+#define ELF_HWCAP 	0
+
+/* This macro yields a string that ld.so will use to load
+   implementation specific libraries for optimization.  Not terribly
+   relevant until we have real hardware to play with... */
+#define ELF_PLATFORM	NULL
+
+#define SET_PERSONALITY(ex)	set_personality(PER_LINUX)
+#define elf_read_implies_exec(ex, executable_stack)					\
+	((executable_stack!=EXSTACK_DISABLE_X) && ((ex).e_flags & EF_IA_64_LINUX_EXECUTABLE_STACK) != 0)
+
+struct task_struct;
+
+#define GATE_EHDR	((const struct elfhdr *) GATE_ADDR)
+
+/* update AT_VECTOR_SIZE_ARCH if the number of NEW_AUX_ENT entries changes */
+#define ARCH_DLINFO								\
+do {										\
+	extern char __kernel_syscall_via_epc[];					\
+	NEW_AUX_ENT(AT_SYSINFO, (unsigned long) __kernel_syscall_via_epc);	\
+	NEW_AUX_ENT(AT_SYSINFO_EHDR, (unsigned long) GATE_EHDR);		\
+} while (0)
+
+
+/*
+ * These macros parameterize elf_core_dump in fs/binfmt_elf.c to write out
+ * extra segments containing the gate DSO contents.  Dumping its
+ * contents makes post-mortem fully interpretable later without matching up
+ * the same kernel and hardware config to see what PC values meant.
+ * Dumping its extra ELF program headers includes all the other information
+ * a debugger needs to easily find how the gate DSO was being used.
+ */
+#define ELF_CORE_EXTRA_PHDRS		(GATE_EHDR->e_phnum)
+#define ELF_CORE_WRITE_EXTRA_PHDRS						\
+do {										\
+	const struct elf_phdr *const gate_phdrs =			      \
+		(const struct elf_phdr *) (GATE_ADDR + GATE_EHDR->e_phoff);   \
+	int i;									\
+	Elf64_Off ofs = 0;						      \
+	for (i = 0; i < GATE_EHDR->e_phnum; ++i) {				\
+		struct elf_phdr phdr = gate_phdrs[i];			      \
+		if (phdr.p_type == PT_LOAD) {					\
+			phdr.p_memsz = PAGE_ALIGN(phdr.p_memsz);	      \
+			phdr.p_filesz = phdr.p_memsz;			      \
+			if (ofs == 0) {					      \
+				ofs = phdr.p_offset = offset;		      \
+			offset += phdr.p_filesz;				\
+		}							      \
+		else							      \
+				phdr.p_offset = ofs;			      \
+		}							      \
+		else							      \
+			phdr.p_offset += ofs;					\
+		phdr.p_paddr = 0; /* match other core phdrs */			\
+		DUMP_WRITE(&phdr, sizeof(phdr));				\
+	}									\
+} while (0)
+#define ELF_CORE_WRITE_EXTRA_DATA					\
+do {									\
+	const struct elf_phdr *const gate_phdrs =			      \
+		(const struct elf_phdr *) (GATE_ADDR + GATE_EHDR->e_phoff);   \
+	int i;								\
+	for (i = 0; i < GATE_EHDR->e_phnum; ++i) {			\
+		if (gate_phdrs[i].p_type == PT_LOAD) {			      \
+			DUMP_WRITE((void *) gate_phdrs[i].p_vaddr,	      \
+				   PAGE_ALIGN(gate_phdrs[i].p_memsz));	      \
+			break;						      \
+		}							      \
+	}								\
+} while (0)
+
+/*
+ * format for entries in the Global Offset Table
+ */
+struct got_entry {
+	uint64_t val;
+};
+
+/*
+ * Layout of the Function Descriptor
+ */
+struct fdesc {
+	uint64_t ip;
+	uint64_t gp;
+};
+
+#endif /* _ASM_IA64_ELF_H */
+                                                                                                                                                                                                                                                                                                                                                                                                                    linux-2.6.30.1/arch/ia64/include/asm/emergency-restart.h                                            0000664 0000000 0000000 00000000225 11223244106 0022566 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_EMERGENCY_RESTART_H
+#define _ASM_EMERGENCY_RESTART_H
+
+#include <asm-generic/emergency-restart.h>
+
+#endif /* _ASM_EMERGENCY_RESTART_H */
+                                                                                                                                                                                                                                                                                                                                                                           linux-2.6.30.1/arch/ia64/include/asm/errno.h                                                        0000664 0000000 0000000 00000000037 11223244106 0020254 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #include <asm-generic/errno.h>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 linux-2.6.30.1/arch/ia64/include/asm/esi.h                                                          0000664 0000000 0000000 00000001520 11223244106 0017705 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        /*
+ * ESI service calls.
+ *
+ * Copyright (c) Copyright 2005-2006 Hewlett-Packard Development Company, L.P.
+ * 	Alex Williamson <alex.williamson@hp.com>
+ */
+#ifndef esi_h
+#define esi_h
+
+#include <linux/efi.h>
+
+#define ESI_QUERY			0x00000001
+#define ESI_OPEN_HANDLE			0x02000000
+#define ESI_CLOSE_HANDLE		0x02000001
+
+enum esi_proc_type {
+	ESI_PROC_SERIALIZED,	/* calls need to be serialized */
+	ESI_PROC_MP_SAFE,	/* MP-safe, but not reentrant */
+	ESI_PROC_REENTRANT	/* MP-safe and reentrant */
+};
+
+extern struct ia64_sal_retval esi_call_phys (void *, u64 *);
+extern int ia64_esi_call(efi_guid_t, struct ia64_sal_retval *,
+			 enum esi_proc_type,
+			 u64, u64, u64, u64, u64, u64, u64, u64);
+extern int ia64_esi_call_phys(efi_guid_t, struct ia64_sal_retval *, u64, u64,
+                              u64, u64, u64, u64, u64, u64);
+
+#endif /* esi_h */
+                                                                                                                                                                                linux-2.6.30.1/arch/ia64/include/asm/fb.h                                                           0000664 0000000 0000000 00000001022 11223244106 0017511 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_FB_H_
+#define _ASM_FB_H_
+
+#include <linux/fb.h>
+#include <linux/fs.h>
+#include <linux/efi.h>
+#include <asm/page.h>
+
+static inline void fb_pgprotect(struct file *file, struct vm_area_struct *vma,
+				unsigned long off)
+{
+	if (efi_range_is_wc(vma->vm_start, vma->vm_end - vma->vm_start))
+		vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
+	else
+		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+}
+
+static inline int fb_is_primary_device(struct fb_info *info)
+{
+	return 0;
+}
+
+#endif /* _ASM_FB_H_ */
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              linux-2.6.30.1/arch/ia64/include/asm/fcntl.h                                                        0000664 0000000 0000000 00000000446 11223244106 0020241 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_FCNTL_H
+#define _ASM_IA64_FCNTL_H
+/*
+ * Modified 1998-2000
+ *	David Mosberger-Tang <davidm@hpl.hp.com>, Hewlett-Packard Co.
+ */
+
+#define force_o_largefile()	\
+		(personality(current->personality) != PER_LINUX32)
+
+#include <asm-generic/fcntl.h>
+
+#endif /* _ASM_IA64_FCNTL_H */
+                                                                                                                                                                                                                          linux-2.6.30.1/arch/ia64/include/asm/fpswa.h                                                        0000664 0000000 0000000 00000003536 11223244106 0020256 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_FPSWA_H
+#define _ASM_IA64_FPSWA_H
+
+/*
+ * Floating-point Software Assist
+ *
+ * Copyright (C) 1999 Intel Corporation.
+ * Copyright (C) 1999 Asit Mallick <asit.k.mallick@intel.com>
+ * Copyright (C) 1999 Goutham Rao <goutham.rao@intel.com>
+ */
+
+typedef struct {
+	/* 4 * 128 bits */
+	unsigned long fp_lp[4*2];
+} fp_state_low_preserved_t;
+
+typedef struct {
+	/* 10 * 128 bits */
+	unsigned long fp_lv[10 * 2];
+} fp_state_low_volatile_t;
+
+typedef	struct {
+	/* 16 * 128 bits */
+	unsigned long fp_hp[16 * 2];
+} fp_state_high_preserved_t;
+
+typedef struct {
+	/* 96 * 128 bits */
+	unsigned long fp_hv[96 * 2];
+} fp_state_high_volatile_t;
+
+/**
+ * floating point state to be passed to the FP emulation library by
+ * the trap/fault handler
+ */
+typedef struct {
+	unsigned long			bitmask_low64;
+	unsigned long			bitmask_high64;
+	fp_state_low_preserved_t	*fp_state_low_preserved;
+	fp_state_low_volatile_t		*fp_state_low_volatile;
+	fp_state_high_preserved_t	*fp_state_high_preserved;
+	fp_state_high_volatile_t	*fp_state_high_volatile;
+} fp_state_t;
+
+typedef struct {
+	unsigned long status;
+	unsigned long err0;
+	unsigned long err1;
+	unsigned long err2;
+} fpswa_ret_t;
+
+/**
+ * function header for the Floating Point software assist
+ * library. This function is invoked by the Floating point software
+ * assist trap/fault handler.
+ */
+typedef fpswa_ret_t (*efi_fpswa_t) (unsigned long trap_type, void *bundle, unsigned long *ipsr,
+				    unsigned long *fsr, unsigned long *isr, unsigned long *preds,
+				    unsigned long *ifs, fp_state_t *fp_state);
+
+/**
+ * This is the FPSWA library interface as defined by EFI.  We need to pass a 
+ * pointer to the interface itself on a call to the assist library
+ */
+typedef struct {
+	unsigned int	 revision;
+	unsigned int	 reserved;
+	efi_fpswa_t	 fpswa;
+} fpswa_interface_t;
+
+extern fpswa_interface_t *fpswa_interface;
+
+#endif /* _ASM_IA64_FPSWA_H */
+                                                                                                                                                                  linux-2.6.30.1/arch/ia64/include/asm/fpu.h                                                          0000664 0000000 0000000 00000004206 11223244106 0017723 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_FPU_H
+#define _ASM_IA64_FPU_H
+
+/*
+ * Copyright (C) 1998, 1999, 2002, 2003 Hewlett-Packard Co
+ *	David Mosberger-Tang <davidm@hpl.hp.com>
+ */
+
+/* floating point status register: */
+#define FPSR_TRAP_VD	(1 << 0)	/* invalid op trap disabled */
+#define FPSR_TRAP_DD	(1 << 1)	/* denormal trap disabled */
+#define FPSR_TRAP_ZD	(1 << 2)	/* zero-divide trap disabled */
+#define FPSR_TRAP_OD	(1 << 3)	/* overflow trap disabled */
+#define FPSR_TRAP_UD	(1 << 4)	/* underflow trap disabled */
+#define FPSR_TRAP_ID	(1 << 5)	/* inexact trap disabled */
+#define FPSR_S0(x)	((x) <<  6)
+#define FPSR_S1(x)	((x) << 19)
+#define FPSR_S2(x)	(__IA64_UL(x) << 32)
+#define FPSR_S3(x)	(__IA64_UL(x) << 45)
+
+/* floating-point status field controls: */
+#define FPSF_FTZ	(1 << 0)		/* flush-to-zero */
+#define FPSF_WRE	(1 << 1)		/* widest-range exponent */
+#define FPSF_PC(x)	(((x) & 0x3) << 2)	/* precision control */
+#define FPSF_RC(x)	(((x) & 0x3) << 4)	/* rounding control */
+#define FPSF_TD		(1 << 6)		/* trap disabled */
+
+/* floating-point status field flags: */
+#define FPSF_V		(1 <<  7)		/* invalid operation flag */
+#define FPSF_D		(1 <<  8)		/* denormal/unnormal operand flag */
+#define FPSF_Z		(1 <<  9)		/* zero divide (IEEE) flag */
+#define FPSF_O		(1 << 10)		/* overflow (IEEE) flag */
+#define FPSF_U		(1 << 11)		/* underflow (IEEE) flag */
+#define FPSF_I		(1 << 12)		/* inexact (IEEE) flag) */
+
+/* floating-point rounding control: */
+#define FPRC_NEAREST	0x0
+#define FPRC_NEGINF	0x1
+#define FPRC_POSINF	0x2
+#define FPRC_TRUNC	0x3
+
+#define FPSF_DEFAULT	(FPSF_PC (0x3) | FPSF_RC (FPRC_NEAREST))
+
+/* This default value is the same as HP-UX uses.  Don't change it
+   without a very good reason.  */
+#define FPSR_DEFAULT	(FPSR_TRAP_VD | FPSR_TRAP_DD | FPSR_TRAP_ZD	\
+			 | FPSR_TRAP_OD | FPSR_TRAP_UD | FPSR_TRAP_ID	\
+			 | FPSR_S0 (FPSF_DEFAULT)			\
+			 | FPSR_S1 (FPSF_DEFAULT | FPSF_TD | FPSF_WRE)	\
+			 | FPSR_S2 (FPSF_DEFAULT | FPSF_TD)		\
+			 | FPSR_S3 (FPSF_DEFAULT | FPSF_TD))
+
+# ifndef __ASSEMBLY__
+
+struct ia64_fpreg {
+	union {
+		unsigned long bits[2];
+		long double __dummy;	/* force 16-byte alignment */
+	} u;
+};
+
+# endif /* __ASSEMBLY__ */
+
+#endif /* _ASM_IA64_FPU_H */
+                                                                                                                                                                                                                                                                                                                                                                                          linux-2.6.30.1/arch/ia64/include/asm/ftrace.h                                                       0000664 0000000 0000000 00000001336 11223244106 0020376 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_FTRACE_H
+#define _ASM_IA64_FTRACE_H
+
+#ifdef CONFIG_FUNCTION_TRACER
+#define MCOUNT_INSN_SIZE        32 /* sizeof mcount call */
+
+#ifndef __ASSEMBLY__
+extern void _mcount(unsigned long pfs, unsigned long r1, unsigned long b0, unsigned long r0);
+#define mcount _mcount
+
+#include <asm/kprobes.h>
+/* In IA64, MCOUNT_ADDR is set in link time, so it's not a constant at compile time */
+#define MCOUNT_ADDR (((struct fnptr *)mcount)->ip)
+#define FTRACE_ADDR (((struct fnptr *)ftrace_caller)->ip)
+
+static inline unsigned long ftrace_call_adjust(unsigned long addr)
+{
+	/* second bundle, insn 2 */
+	return addr - 0x12;
+}
+
+struct dyn_arch_ftrace {
+};
+#endif
+
+#endif /* CONFIG_FUNCTION_TRACER */
+
+#endif /* _ASM_IA64_FTRACE_H */
+                                                                                                                                                                                                                                                                                                  linux-2.6.30.1/arch/ia64/include/asm/futex.h                                                        0000664 0000000 0000000 00000006145 11223244106 0020270 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_FUTEX_H
+#define _ASM_FUTEX_H
+
+#include <linux/futex.h>
+#include <linux/uaccess.h>
+#include <asm/errno.h>
+#include <asm/system.h>
+
+#define __futex_atomic_op1(insn, ret, oldval, uaddr, oparg) \
+do {									\
+	register unsigned long r8 __asm ("r8") = 0;			\
+	__asm__ __volatile__(						\
+		"	mf;;					\n"	\
+		"[1:] "	insn ";;				\n"	\
+		"	.xdata4 \"__ex_table\", 1b-., 2f-.	\n"	\
+		"[2:]"							\
+		: "+r" (r8), "=r" (oldval)				\
+		: "r" (uaddr), "r" (oparg)				\
+		: "memory");						\
+	ret = r8;							\
+} while (0)
+
+#define __futex_atomic_op2(insn, ret, oldval, uaddr, oparg) \
+do {									\
+	register unsigned long r8 __asm ("r8") = 0;			\
+	int val, newval;						\
+	do {								\
+		__asm__ __volatile__(					\
+			"	mf;;				  \n"	\
+			"[1:]	ld4 %3=[%4];;			  \n"	\
+			"	mov %2=%3			  \n"	\
+				insn	";;			  \n"	\
+			"	mov ar.ccv=%2;;			  \n"	\
+			"[2:]	cmpxchg4.acq %1=[%4],%3,ar.ccv;;  \n"	\
+			"	.xdata4 \"__ex_table\", 1b-., 3f-.\n"	\
+			"	.xdata4 \"__ex_table\", 2b-., 3f-.\n"	\
+			"[3:]"						\
+			: "+r" (r8), "=r" (val), "=&r" (oldval),	\
+			   "=&r" (newval)				\
+			: "r" (uaddr), "r" (oparg)			\
+			: "memory");					\
+		if (unlikely (r8))					\
+			break;						\
+	} while (unlikely (val != oldval));				\
+	ret = r8;							\
+} while (0)
+
+static inline int
+futex_atomic_op_inuser (int encoded_op, int __user *uaddr)
+{
+	int op = (encoded_op >> 28) & 7;
+	int cmp = (encoded_op >> 24) & 15;
+	int oparg = (encoded_op << 8) >> 20;
+	int cmparg = (encoded_op << 20) >> 20;
+	int oldval = 0, ret;
+	if (encoded_op & (FUTEX_OP_OPARG_SHIFT << 28))
+		oparg = 1 << oparg;
+
+	if (! access_ok (VERIFY_WRITE, uaddr, sizeof(int)))
+		return -EFAULT;
+
+	pagefault_disable();
+
+	switch (op) {
+	case FUTEX_OP_SET:
+		__futex_atomic_op1("xchg4 %1=[%2],%3", ret, oldval, uaddr,
+				   oparg);
+		break;
+	case FUTEX_OP_ADD:
+		__futex_atomic_op2("add %3=%3,%5", ret, oldval, uaddr, oparg);
+		break;
+	case FUTEX_OP_OR:
+		__futex_atomic_op2("or %3=%3,%5", ret, oldval, uaddr, oparg);
+		break;
+	case FUTEX_OP_ANDN:
+		__futex_atomic_op2("and %3=%3,%5", ret, oldval, uaddr,
+				   ~oparg);
+		break;
+	case FUTEX_OP_XOR:
+		__futex_atomic_op2("xor %3=%3,%5", ret, oldval, uaddr, oparg);
+		break;
+	default:
+		ret = -ENOSYS;
+	}
+
+	pagefault_enable();
+
+	if (!ret) {
+		switch (cmp) {
+		case FUTEX_OP_CMP_EQ: ret = (oldval == cmparg); break;
+		case FUTEX_OP_CMP_NE: ret = (oldval != cmparg); break;
+		case FUTEX_OP_CMP_LT: ret = (oldval < cmparg); break;
+		case FUTEX_OP_CMP_GE: ret = (oldval >= cmparg); break;
+		case FUTEX_OP_CMP_LE: ret = (oldval <= cmparg); break;
+		case FUTEX_OP_CMP_GT: ret = (oldval > cmparg); break;
+		default: ret = -ENOSYS;
+		}
+	}
+	return ret;
+}
+
+static inline int
+futex_atomic_cmpxchg_inatomic(int __user *uaddr, int oldval, int newval)
+{
+	if (!access_ok(VERIFY_WRITE, uaddr, sizeof(int)))
+		return -EFAULT;
+
+	{
+		register unsigned long r8 __asm ("r8");
+		__asm__ __volatile__(
+			"	mf;;					\n"
+			"	mov ar.ccv=%3;;				\n"
+			"[1:]	cmpxchg4.acq %0=[%1],%2,ar.ccv		\n"
+			"	.xdata4 \"__ex_table\", 1b-., 2f-.	\n"
+			"[2:]"
+			: "=r" (r8)
+			: "r" (uaddr), "r" (newval),
+			  "rO" ((long) (unsigned) oldval)
+			: "memory");
+		return r8;
+	}
+}
+
+#endif /* _ASM_FUTEX_H */
+                                                                                                                                                                                                                                                                                                                                                                                                                           linux-2.6.30.1/arch/ia64/include/asm/gcc_intrin.h                                                   0000664 0000000 0000000 00000044007 11223244106 0021253 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_GCC_INTRIN_H
+#define _ASM_IA64_GCC_INTRIN_H
+/*
+ *
+ * Copyright (C) 2002,2003 Jun Nakajima <jun.nakajima@intel.com>
+ * Copyright (C) 2002,2003 Suresh Siddha <suresh.b.siddha@intel.com>
+ */
+
+#include <linux/types.h>
+#include <linux/compiler.h>
+
+/* define this macro to get some asm stmts included in 'c' files */
+#define ASM_SUPPORTED
+
+/* Optimization barrier */
+/* The "volatile" is due to gcc bugs */
+#define ia64_barrier()	asm volatile ("":::"memory")
+
+#define ia64_stop()	asm volatile (";;"::)
+
+#define ia64_invala_gr(regnum)	asm volatile ("invala.e r%0" :: "i"(regnum))
+
+#define ia64_invala_fr(regnum)	asm volatile ("invala.e f%0" :: "i"(regnum))
+
+#define ia64_flushrs() asm volatile ("flushrs;;":::"memory")
+
+#define ia64_loadrs() asm volatile ("loadrs;;":::"memory")
+
+extern void ia64_bad_param_for_setreg (void);
+extern void ia64_bad_param_for_getreg (void);
+
+#ifdef __KERNEL__
+register unsigned long ia64_r13 asm ("r13") __used;
+#endif
+
+#define ia64_native_setreg(regnum, val)						\
+({										\
+	switch (regnum) {							\
+	    case _IA64_REG_PSR_L:						\
+		    asm volatile ("mov psr.l=%0" :: "r"(val) : "memory");	\
+		    break;							\
+	    case _IA64_REG_AR_KR0 ... _IA64_REG_AR_EC:				\
+		    asm volatile ("mov ar%0=%1" ::				\
+		    			  "i" (regnum - _IA64_REG_AR_KR0),	\
+					  "r"(val): "memory");			\
+		    break;							\
+	    case _IA64_REG_CR_DCR ... _IA64_REG_CR_LRR1:			\
+		    asm volatile ("mov cr%0=%1" ::				\
+				          "i" (regnum - _IA64_REG_CR_DCR),	\
+					  "r"(val): "memory" );			\
+		    break;							\
+	    case _IA64_REG_SP:							\
+		    asm volatile ("mov r12=%0" ::				\
+			    		  "r"(val): "memory");			\
+		    break;							\
+	    case _IA64_REG_GP:							\
+		    asm volatile ("mov gp=%0" :: "r"(val) : "memory");		\
+		break;								\
+	    default:								\
+		    ia64_bad_param_for_setreg();				\
+		    break;							\
+	}									\
+})
+
+#define ia64_native_getreg(regnum)						\
+({										\
+	__u64 ia64_intri_res;							\
+										\
+	switch (regnum) {							\
+	case _IA64_REG_GP:							\
+		asm volatile ("mov %0=gp" : "=r"(ia64_intri_res));		\
+		break;								\
+	case _IA64_REG_IP:							\
+		asm volatile ("mov %0=ip" : "=r"(ia64_intri_res));		\
+		break;								\
+	case _IA64_REG_PSR:							\
+		asm volatile ("mov %0=psr" : "=r"(ia64_intri_res));		\
+		break;								\
+	case _IA64_REG_TP:	/* for current() */				\
+		ia64_intri_res = ia64_r13;					\
+		break;								\
+	case _IA64_REG_AR_KR0 ... _IA64_REG_AR_EC:				\
+		asm volatile ("mov %0=ar%1" : "=r" (ia64_intri_res)		\
+				      : "i"(regnum - _IA64_REG_AR_KR0));	\
+		break;								\
+	case _IA64_REG_CR_DCR ... _IA64_REG_CR_LRR1:				\
+		asm volatile ("mov %0=cr%1" : "=r" (ia64_intri_res)		\
+				      : "i" (regnum - _IA64_REG_CR_DCR));	\
+		break;								\
+	case _IA64_REG_SP:							\
+		asm volatile ("mov %0=sp" : "=r" (ia64_intri_res));		\
+		break;								\
+	default:								\
+		ia64_bad_param_for_getreg();					\
+		break;								\
+	}									\
+	ia64_intri_res;								\
+})
+
+#define ia64_hint_pause 0
+
+#define ia64_hint(mode)						\
+({								\
+	switch (mode) {						\
+	case ia64_hint_pause:					\
+		asm volatile ("hint @pause" ::: "memory");	\
+		break;						\
+	}							\
+})
+
+
+/* Integer values for mux1 instruction */
+#define ia64_mux1_brcst 0
+#define ia64_mux1_mix   8
+#define ia64_mux1_shuf  9
+#define ia64_mux1_alt  10
+#define ia64_mux1_rev  11
+
+#define ia64_mux1(x, mode)							\
+({										\
+	__u64 ia64_intri_res;							\
+										\
+	switch (mode) {								\
+	case ia64_mux1_brcst:							\
+		asm ("mux1 %0=%1,@brcst" : "=r" (ia64_intri_res) : "r" (x));	\
+		break;								\
+	case ia64_mux1_mix:							\
+		asm ("mux1 %0=%1,@mix" : "=r" (ia64_intri_res) : "r" (x));	\
+		break;								\
+	case ia64_mux1_shuf:							\
+		asm ("mux1 %0=%1,@shuf" : "=r" (ia64_intri_res) : "r" (x));	\
+		break;								\
+	case ia64_mux1_alt:							\
+		asm ("mux1 %0=%1,@alt" : "=r" (ia64_intri_res) : "r" (x));	\
+		break;								\
+	case ia64_mux1_rev:							\
+		asm ("mux1 %0=%1,@rev" : "=r" (ia64_intri_res) : "r" (x));	\
+		break;								\
+	}									\
+	ia64_intri_res;								\
+})
+
+#if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+# define ia64_popcnt(x)		__builtin_popcountl(x)
+#else
+# define ia64_popcnt(x)						\
+  ({								\
+	__u64 ia64_intri_res;					\
+	asm ("popcnt %0=%1" : "=r" (ia64_intri_res) : "r" (x));	\
+								\
+	ia64_intri_res;						\
+  })
+#endif
+
+#define ia64_getf_exp(x)					\
+({								\
+	long ia64_intri_res;					\
+								\
+	asm ("getf.exp %0=%1" : "=r"(ia64_intri_res) : "f"(x));	\
+								\
+	ia64_intri_res;						\
+})
+
+#define ia64_shrp(a, b, count)								\
+({											\
+	__u64 ia64_intri_res;								\
+	asm ("shrp %0=%1,%2,%3" : "=r"(ia64_intri_res) : "r"(a), "r"(b), "i"(count));	\
+	ia64_intri_res;									\
+})
+
+#define ia64_ldfs(regnum, x)					\
+({								\
+	register double __f__ asm ("f"#regnum);			\
+	asm volatile ("ldfs %0=[%1]" :"=f"(__f__): "r"(x));	\
+})
+
+#define ia64_ldfd(regnum, x)					\
+({								\
+	register double __f__ asm ("f"#regnum);			\
+	asm volatile ("ldfd %0=[%1]" :"=f"(__f__): "r"(x));	\
+})
+
+#define ia64_ldfe(regnum, x)					\
+({								\
+	register double __f__ asm ("f"#regnum);			\
+	asm volatile ("ldfe %0=[%1]" :"=f"(__f__): "r"(x));	\
+})
+
+#define ia64_ldf8(regnum, x)					\
+({								\
+	register double __f__ asm ("f"#regnum);			\
+	asm volatile ("ldf8 %0=[%1]" :"=f"(__f__): "r"(x));	\
+})
+
+#define ia64_ldf_fill(regnum, x)				\
+({								\
+	register double __f__ asm ("f"#regnum);			\
+	asm volatile ("ldf.fill %0=[%1]" :"=f"(__f__): "r"(x));	\
+})
+
+#define ia64_st4_rel_nta(m, val)					\
+({									\
+	asm volatile ("st4.rel.nta [%0] = %1\n\t" :: "r"(m), "r"(val));	\
+})
+
+#define ia64_stfs(x, regnum)						\
+({									\
+	register double __f__ asm ("f"#regnum);				\
+	asm volatile ("stfs [%0]=%1" :: "r"(x), "f"(__f__) : "memory");	\
+})
+
+#define ia64_stfd(x, regnum)						\
+({									\
+	register double __f__ asm ("f"#regnum);				\
+	asm volatile ("stfd [%0]=%1" :: "r"(x), "f"(__f__) : "memory");	\
+})
+
+#define ia64_stfe(x, regnum)						\
+({									\
+	register double __f__ asm ("f"#regnum);				\
+	asm volatile ("stfe [%0]=%1" :: "r"(x), "f"(__f__) : "memory");	\
+})
+
+#define ia64_stf8(x, regnum)						\
+({									\
+	register double __f__ asm ("f"#regnum);				\
+	asm volatile ("stf8 [%0]=%1" :: "r"(x), "f"(__f__) : "memory");	\
+})
+
+#define ia64_stf_spill(x, regnum)						\
+({										\
+	register double __f__ asm ("f"#regnum);					\
+	asm volatile ("stf.spill [%0]=%1" :: "r"(x), "f"(__f__) : "memory");	\
+})
+
+#define ia64_fetchadd4_acq(p, inc)						\
+({										\
+										\
+	__u64 ia64_intri_res;							\
+	asm volatile ("fetchadd4.acq %0=[%1],%2"				\
+				: "=r"(ia64_intri_res) : "r"(p), "i" (inc)	\
+				: "memory");					\
+										\
+	ia64_intri_res;								\
+})
+
+#define ia64_fetchadd4_rel(p, inc)						\
+({										\
+	__u64 ia64_intri_res;							\
+	asm volatile ("fetchadd4.rel %0=[%1],%2"				\
+				: "=r"(ia64_intri_res) : "r"(p), "i" (inc)	\
+				: "memory");					\
+										\
+	ia64_intri_res;								\
+})
+
+#define ia64_fetchadd8_acq(p, inc)						\
+({										\
+										\
+	__u64 ia64_intri_res;							\
+	asm volatile ("fetchadd8.acq %0=[%1],%2"				\
+				: "=r"(ia64_intri_res) : "r"(p), "i" (inc)	\
+				: "memory");					\
+										\
+	ia64_intri_res;								\
+})
+
+#define ia64_fetchadd8_rel(p, inc)						\
+({										\
+	__u64 ia64_intri_res;							\
+	asm volatile ("fetchadd8.rel %0=[%1],%2"				\
+				: "=r"(ia64_intri_res) : "r"(p), "i" (inc)	\
+				: "memory");					\
+										\
+	ia64_intri_res;								\
+})
+
+#define ia64_xchg1(ptr,x)							\
+({										\
+	__u64 ia64_intri_res;							\
+	asm volatile ("xchg1 %0=[%1],%2"					\
+		      : "=r" (ia64_intri_res) : "r" (ptr), "r" (x) : "memory");	\
+	ia64_intri_res;								\
+})
+
+#define ia64_xchg2(ptr,x)						\
+({									\
+	__u64 ia64_intri_res;						\
+	asm volatile ("xchg2 %0=[%1],%2" : "=r" (ia64_intri_res)	\
+		      : "r" (ptr), "r" (x) : "memory");			\
+	ia64_intri_res;							\
+})
+
+#define ia64_xchg4(ptr,x)						\
+({									\
+	__u64 ia64_intri_res;						\
+	asm volatile ("xchg4 %0=[%1],%2" : "=r" (ia64_intri_res)	\
+		      : "r" (ptr), "r" (x) : "memory");			\
+	ia64_intri_res;							\
+})
+
+#define ia64_xchg8(ptr,x)						\
+({									\
+	__u64 ia64_intri_res;						\
+	asm volatile ("xchg8 %0=[%1],%2" : "=r" (ia64_intri_res)	\
+		      : "r" (ptr), "r" (x) : "memory");			\
+	ia64_intri_res;							\
+})
+
+#define ia64_cmpxchg1_acq(ptr, new, old)						\
+({											\
+	__u64 ia64_intri_res;								\
+	asm volatile ("mov ar.ccv=%0;;" :: "rO"(old));					\
+	asm volatile ("cmpxchg1.acq %0=[%1],%2,ar.ccv":					\
+			      "=r"(ia64_intri_res) : "r"(ptr), "r"(new) : "memory");	\
+	ia64_intri_res;									\
+})
+
+#define ia64_cmpxchg1_rel(ptr, new, old)						\
+({											\
+	__u64 ia64_intri_res;								\
+	asm volatile ("mov ar.ccv=%0;;" :: "rO"(old));					\
+	asm volatile ("cmpxchg1.rel %0=[%1],%2,ar.ccv":					\
+			      "=r"(ia64_intri_res) : "r"(ptr), "r"(new) : "memory");	\
+	ia64_intri_res;									\
+})
+
+#define ia64_cmpxchg2_acq(ptr, new, old)						\
+({											\
+	__u64 ia64_intri_res;								\
+	asm volatile ("mov ar.ccv=%0;;" :: "rO"(old));					\
+	asm volatile ("cmpxchg2.acq %0=[%1],%2,ar.ccv":					\
+			      "=r"(ia64_intri_res) : "r"(ptr), "r"(new) : "memory");	\
+	ia64_intri_res;									\
+})
+
+#define ia64_cmpxchg2_rel(ptr, new, old)						\
+({											\
+	__u64 ia64_intri_res;								\
+	asm volatile ("mov ar.ccv=%0;;" :: "rO"(old));					\
+											\
+	asm volatile ("cmpxchg2.rel %0=[%1],%2,ar.ccv":					\
+			      "=r"(ia64_intri_res) : "r"(ptr), "r"(new) : "memory");	\
+	ia64_intri_res;									\
+})
+
+#define ia64_cmpxchg4_acq(ptr, new, old)						\
+({											\
+	__u64 ia64_intri_res;								\
+	asm volatile ("mov ar.ccv=%0;;" :: "rO"(old));					\
+	asm volatile ("cmpxchg4.acq %0=[%1],%2,ar.ccv":					\
+			      "=r"(ia64_intri_res) : "r"(ptr), "r"(new) : "memory");	\
+	ia64_intri_res;									\
+})
+
+#define ia64_cmpxchg4_rel(ptr, new, old)						\
+({											\
+	__u64 ia64_intri_res;								\
+	asm volatile ("mov ar.ccv=%0;;" :: "rO"(old));					\
+	asm volatile ("cmpxchg4.rel %0=[%1],%2,ar.ccv":					\
+			      "=r"(ia64_intri_res) : "r"(ptr), "r"(new) : "memory");	\
+	ia64_intri_res;									\
+})
+
+#define ia64_cmpxchg8_acq(ptr, new, old)						\
+({											\
+	__u64 ia64_intri_res;								\
+	asm volatile ("mov ar.ccv=%0;;" :: "rO"(old));					\
+	asm volatile ("cmpxchg8.acq %0=[%1],%2,ar.ccv":					\
+			      "=r"(ia64_intri_res) : "r"(ptr), "r"(new) : "memory");	\
+	ia64_intri_res;									\
+})
+
+#define ia64_cmpxchg8_rel(ptr, new, old)						\
+({											\
+	__u64 ia64_intri_res;								\
+	asm volatile ("mov ar.ccv=%0;;" :: "rO"(old));					\
+											\
+	asm volatile ("cmpxchg8.rel %0=[%1],%2,ar.ccv":					\
+			      "=r"(ia64_intri_res) : "r"(ptr), "r"(new) : "memory");	\
+	ia64_intri_res;									\
+})
+
+#define ia64_mf()	asm volatile ("mf" ::: "memory")
+#define ia64_mfa()	asm volatile ("mf.a" ::: "memory")
+
+#define ia64_invala() asm volatile ("invala" ::: "memory")
+
+#define ia64_native_thash(addr)							\
+({										\
+	__u64 ia64_intri_res;							\
+	asm volatile ("thash %0=%1" : "=r"(ia64_intri_res) : "r" (addr));	\
+	ia64_intri_res;								\
+})
+
+#define ia64_srlz_i()	asm volatile (";; srlz.i ;;" ::: "memory")
+#define ia64_srlz_d()	asm volatile (";; srlz.d" ::: "memory");
+
+#ifdef HAVE_SERIALIZE_DIRECTIVE
+# define ia64_dv_serialize_data()		asm volatile (".serialize.data");
+# define ia64_dv_serialize_instruction()	asm volatile (".serialize.instruction");
+#else
+# define ia64_dv_serialize_data()
+# define ia64_dv_serialize_instruction()
+#endif
+
+#define ia64_nop(x)	asm volatile ("nop %0"::"i"(x));
+
+#define ia64_itci(addr)	asm volatile ("itc.i %0;;" :: "r"(addr) : "memory")
+
+#define ia64_itcd(addr)	asm volatile ("itc.d %0;;" :: "r"(addr) : "memory")
+
+
+#define ia64_itri(trnum, addr) asm volatile ("itr.i itr[%0]=%1"				\
+					     :: "r"(trnum), "r"(addr) : "memory")
+
+#define ia64_itrd(trnum, addr) asm volatile ("itr.d dtr[%0]=%1"				\
+					     :: "r"(trnum), "r"(addr) : "memory")
+
+#define ia64_tpa(addr)								\
+({										\
+	__u64 ia64_pa;								\
+	asm volatile ("tpa %0 = %1" : "=r"(ia64_pa) : "r"(addr) : "memory");	\
+	ia64_pa;								\
+})
+
+#define __ia64_set_dbr(index, val)						\
+	asm volatile ("mov dbr[%0]=%1" :: "r"(index), "r"(val) : "memory")
+
+#define ia64_set_ibr(index, val)						\
+	asm volatile ("mov ibr[%0]=%1" :: "r"(index), "r"(val) : "memory")
+
+#define ia64_set_pkr(index, val)						\
+	asm volatile ("mov pkr[%0]=%1" :: "r"(index), "r"(val) : "memory")
+
+#define ia64_set_pmc(index, val)						\
+	asm volatile ("mov pmc[%0]=%1" :: "r"(index), "r"(val) : "memory")
+
+#define ia64_set_pmd(index, val)						\
+	asm volatile ("mov pmd[%0]=%1" :: "r"(index), "r"(val) : "memory")
+
+#define ia64_native_set_rr(index, val)							\
+	asm volatile ("mov rr[%0]=%1" :: "r"(index), "r"(val) : "memory");
+
+#define ia64_native_get_cpuid(index)							\
+({											\
+	__u64 ia64_intri_res;								\
+	asm volatile ("mov %0=cpuid[%r1]" : "=r"(ia64_intri_res) : "rO"(index));	\
+	ia64_intri_res;									\
+})
+
+#define __ia64_get_dbr(index)							\
+({										\
+	__u64 ia64_intri_res;							\
+	asm volatile ("mov %0=dbr[%1]" : "=r"(ia64_intri_res) : "r"(index));	\
+	ia64_intri_res;								\
+})
+
+#define ia64_get_ibr(index)							\
+({										\
+	__u64 ia64_intri_res;							\
+	asm volatile ("mov %0=ibr[%1]" : "=r"(ia64_intri_res) : "r"(index));	\
+	ia64_intri_res;								\
+})
+
+#define ia64_get_pkr(index)							\
+({										\
+	__u64 ia64_intri_res;							\
+	asm volatile ("mov %0=pkr[%1]" : "=r"(ia64_intri_res) : "r"(index));	\
+	ia64_intri_res;								\
+})
+
+#define ia64_get_pmc(index)							\
+({										\
+	__u64 ia64_intri_res;							\
+	asm volatile ("mov %0=pmc[%1]" : "=r"(ia64_intri_res) : "r"(index));	\
+	ia64_intri_res;								\
+})
+
+
+#define ia64_native_get_pmd(index)						\
+({										\
+	__u64 ia64_intri_res;							\
+	asm volatile ("mov %0=pmd[%1]" : "=r"(ia64_intri_res) : "r"(index));	\
+	ia64_intri_res;								\
+})
+
+#define ia64_native_get_rr(index)						\
+({										\
+	__u64 ia64_intri_res;							\
+	asm volatile ("mov %0=rr[%1]" : "=r"(ia64_intri_res) : "r" (index));	\
+	ia64_intri_res;								\
+})
+
+#define ia64_native_fc(addr)	asm volatile ("fc %0" :: "r"(addr) : "memory")
+
+
+#define ia64_sync_i()	asm volatile (";; sync.i" ::: "memory")
+
+#define ia64_native_ssm(mask)	asm volatile ("ssm %0":: "i"((mask)) : "memory")
+#define ia64_native_rsm(mask)	asm volatile ("rsm %0":: "i"((mask)) : "memory")
+#define ia64_sum(mask)	asm volatile ("sum %0":: "i"((mask)) : "memory")
+#define ia64_rum(mask)	asm volatile ("rum %0":: "i"((mask)) : "memory")
+
+#define ia64_ptce(addr)	asm volatile ("ptc.e %0" :: "r"(addr))
+
+#define ia64_native_ptcga(addr, size)						\
+do {										\
+	asm volatile ("ptc.ga %0,%1" :: "r"(addr), "r"(size) : "memory");	\
+	ia64_dv_serialize_data();						\
+} while (0)
+
+#define ia64_ptcl(addr, size)							\
+do {										\
+	asm volatile ("ptc.l %0,%1" :: "r"(addr), "r"(size) : "memory");	\
+	ia64_dv_serialize_data();						\
+} while (0)
+
+#define ia64_ptri(addr, size)						\
+	asm volatile ("ptr.i %0,%1" :: "r"(addr), "r"(size) : "memory")
+
+#define ia64_ptrd(addr, size)						\
+	asm volatile ("ptr.d %0,%1" :: "r"(addr), "r"(size) : "memory")
+
+#define ia64_ttag(addr)							\
+({									  \
+	__u64 ia64_intri_res;						   \
+	asm volatile ("ttag %0=%1" : "=r"(ia64_intri_res) : "r" (addr));   \
+	ia64_intri_res;							 \
+})
+
+
+/* Values for lfhint in ia64_lfetch and ia64_lfetch_fault */
+
+#define ia64_lfhint_none   0
+#define ia64_lfhint_nt1    1
+#define ia64_lfhint_nt2    2
+#define ia64_lfhint_nta    3
+
+#define ia64_lfetch(lfhint, y)					\
+({								\
+        switch (lfhint) {					\
+        case ia64_lfhint_none:					\
+                asm volatile ("lfetch [%0]" : : "r"(y));	\
+                break;						\
+        case ia64_lfhint_nt1:					\
+                asm volatile ("lfetch.nt1 [%0]" : : "r"(y));	\
+                break;						\
+        case ia64_lfhint_nt2:					\
+                asm volatile ("lfetch.nt2 [%0]" : : "r"(y));	\
+                break;						\
+        case ia64_lfhint_nta:					\
+                asm volatile ("lfetch.nta [%0]" : : "r"(y));	\
+                break;						\
+        }							\
+})
+
+#define ia64_lfetch_excl(lfhint, y)					\
+({									\
+        switch (lfhint) {						\
+        case ia64_lfhint_none:						\
+                asm volatile ("lfetch.excl [%0]" :: "r"(y));		\
+                break;							\
+        case ia64_lfhint_nt1:						\
+                asm volatile ("lfetch.excl.nt1 [%0]" :: "r"(y));	\
+                break;							\
+        case ia64_lfhint_nt2:						\
+                asm volatile ("lfetch.excl.nt2 [%0]" :: "r"(y));	\
+                break;							\
+        case ia64_lfhint_nta:						\
+                asm volatile ("lfetch.excl.nta [%0]" :: "r"(y));	\
+                break;							\
+        }								\
+})
+
+#define ia64_lfetch_fault(lfhint, y)					\
+({									\
+        switch (lfhint) {						\
+        case ia64_lfhint_none:						\
+                asm volatile ("lfetch.fault [%0]" : : "r"(y));		\
+                break;							\
+        case ia64_lfhint_nt1:						\
+                asm volatile ("lfetch.fault.nt1 [%0]" : : "r"(y));	\
+                break;							\
+        case ia64_lfhint_nt2:						\
+                asm volatile ("lfetch.fault.nt2 [%0]" : : "r"(y));	\
+                break;							\
+        case ia64_lfhint_nta:						\
+                asm volatile ("lfetch.fault.nta [%0]" : : "r"(y));	\
+                break;							\
+        }								\
+})
+
+#define ia64_lfetch_fault_excl(lfhint, y)				\
+({									\
+        switch (lfhint) {						\
+        case ia64_lfhint_none:						\
+                asm volatile ("lfetch.fault.excl [%0]" :: "r"(y));	\
+                break;							\
+        case ia64_lfhint_nt1:						\
+                asm volatile ("lfetch.fault.excl.nt1 [%0]" :: "r"(y));	\
+                break;							\
+        case ia64_lfhint_nt2:						\
+                asm volatile ("lfetch.fault.excl.nt2 [%0]" :: "r"(y));	\
+                break;							\
+        case ia64_lfhint_nta:						\
+                asm volatile ("lfetch.fault.excl.nta [%0]" :: "r"(y));	\
+                break;							\
+        }								\
+})
+
+#define ia64_native_intrin_local_irq_restore(x)			\
+do {								\
+	asm volatile (";;   cmp.ne p6,p7=%0,r0;;"		\
+		      "(p6) ssm psr.i;"				\
+		      "(p7) rsm psr.i;;"			\
+		      "(p6) srlz.d"				\
+		      :: "r"((x)) : "p6", "p7", "memory");	\
+} while (0)
+
+#endif /* _ASM_IA64_GCC_INTRIN_H */
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         linux-2.6.30.1/arch/ia64/include/asm/hardirq.h                                                      0000664 0000000 0000000 00000001016 11223244106 0020557 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_HARDIRQ_H
+#define _ASM_IA64_HARDIRQ_H
+
+/*
+ * Modified 1998-2002, 2004 Hewlett-Packard Co
+ *	David Mosberger-Tang <davidm@hpl.hp.com>
+ */
+
+
+#include <linux/threads.h>
+#include <linux/irq.h>
+
+#include <asm/processor.h>
+
+/*
+ * No irq_cpustat_t for IA-64.  The data is held in the per-CPU data structure.
+ */
+
+#define __ARCH_IRQ_STAT	1
+
+#define local_softirq_pending()		(local_cpu_data->softirq_pending)
+
+extern void __iomem *ipi_base_addr;
+
+void ack_bad_irq(unsigned int irq);
+
+#endif /* _ASM_IA64_HARDIRQ_H */
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  linux-2.6.30.1/arch/ia64/include/asm/hpsim.h                                                        0000664 0000000 0000000 00000000521 11223244106 0020245 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASMIA64_HPSIM_H
+#define _ASMIA64_HPSIM_H
+
+#ifndef CONFIG_HP_SIMSERIAL_CONSOLE
+static inline int simcons_register(void) { return 1; }
+#else
+int simcons_register(void);
+#endif
+
+struct tty_driver;
+extern struct tty_driver *hp_simserial_driver;
+
+void ia64_ssc_connect_irq(long intr, long irq);
+void ia64_ctl_trace(long on);
+
+#endif
+                                                                                                                                                                               linux-2.6.30.1/arch/ia64/include/asm/hugetlb.h                                                      0000664 0000000 0000000 00000003362 11223244106 0020565 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_HUGETLB_H
+#define _ASM_IA64_HUGETLB_H
+
+#include <asm/page.h>
+
+
+void hugetlb_free_pgd_range(struct mmu_gather *tlb, unsigned long addr,
+			    unsigned long end, unsigned long floor,
+			    unsigned long ceiling);
+
+int prepare_hugepage_range(struct file *file,
+			unsigned long addr, unsigned long len);
+
+static inline int is_hugepage_only_range(struct mm_struct *mm,
+					 unsigned long addr,
+					 unsigned long len)
+{
+	return (REGION_NUMBER(addr) == RGN_HPAGE ||
+		REGION_NUMBER((addr)+(len)-1) == RGN_HPAGE);
+}
+
+static inline void hugetlb_prefault_arch_hook(struct mm_struct *mm)
+{
+}
+
+static inline void set_huge_pte_at(struct mm_struct *mm, unsigned long addr,
+				   pte_t *ptep, pte_t pte)
+{
+	set_pte_at(mm, addr, ptep, pte);
+}
+
+static inline pte_t huge_ptep_get_and_clear(struct mm_struct *mm,
+					    unsigned long addr, pte_t *ptep)
+{
+	return ptep_get_and_clear(mm, addr, ptep);
+}
+
+static inline void huge_ptep_clear_flush(struct vm_area_struct *vma,
+					 unsigned long addr, pte_t *ptep)
+{
+}
+
+static inline int huge_pte_none(pte_t pte)
+{
+	return pte_none(pte);
+}
+
+static inline pte_t huge_pte_wrprotect(pte_t pte)
+{
+	return pte_wrprotect(pte);
+}
+
+static inline void huge_ptep_set_wrprotect(struct mm_struct *mm,
+					   unsigned long addr, pte_t *ptep)
+{
+	ptep_set_wrprotect(mm, addr, ptep);
+}
+
+static inline int huge_ptep_set_access_flags(struct vm_area_struct *vma,
+					     unsigned long addr, pte_t *ptep,
+					     pte_t pte, int dirty)
+{
+	return ptep_set_access_flags(vma, addr, ptep, pte, dirty);
+}
+
+static inline pte_t huge_ptep_get(pte_t *ptep)
+{
+	return *ptep;
+}
+
+static inline int arch_prepare_hugepage(struct page *page)
+{
+	return 0;
+}
+
+static inline void arch_release_hugepage(struct page *page)
+{
+}
+
+#endif /* _ASM_IA64_HUGETLB_H */
+                                                                                                                                                                                                                                                                              linux-2.6.30.1/arch/ia64/include/asm/hw_irq.h                                                       0000664 0000000 0000000 00000014354 11223244106 0020427 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_HW_IRQ_H
+#define _ASM_IA64_HW_IRQ_H
+
+/*
+ * Copyright (C) 2001-2003 Hewlett-Packard Co
+ *	David Mosberger-Tang <davidm@hpl.hp.com>
+ */
+
+#include <linux/interrupt.h>
+#include <linux/sched.h>
+#include <linux/types.h>
+#include <linux/profile.h>
+
+#include <asm/machvec.h>
+#include <asm/ptrace.h>
+#include <asm/smp.h>
+
+#ifndef CONFIG_PARAVIRT
+typedef u8 ia64_vector;
+#else
+typedef u16 ia64_vector;
+#endif
+
+/*
+ * 0 special
+ *
+ * 1,3-14 are reserved from firmware
+ *
+ * 16-255 (vectored external interrupts) are available
+ *
+ * 15 spurious interrupt (see IVR)
+ *
+ * 16 lowest priority, 255 highest priority
+ *
+ * 15 classes of 16 interrupts each.
+ */
+#define IA64_MIN_VECTORED_IRQ		 16
+#define IA64_MAX_VECTORED_IRQ		255
+#define IA64_NUM_VECTORS		256
+
+#define AUTO_ASSIGN			-1
+
+#define IA64_SPURIOUS_INT_VECTOR	0x0f
+
+/*
+ * Vectors 0x10-0x1f are used for low priority interrupts, e.g. CMCI.
+ */
+#define IA64_CPEP_VECTOR		0x1c	/* corrected platform error polling vector */
+#define IA64_CMCP_VECTOR		0x1d	/* corrected machine-check polling vector */
+#define IA64_CPE_VECTOR			0x1e	/* corrected platform error interrupt vector */
+#define IA64_CMC_VECTOR			0x1f	/* corrected machine-check interrupt vector */
+/*
+ * Vectors 0x20-0x2f are reserved for legacy ISA IRQs.
+ * Use vectors 0x30-0xe7 as the default device vector range for ia64.
+ * Platforms may choose to reduce this range in platform_irq_setup, but the
+ * platform range must fall within
+ *	[IA64_DEF_FIRST_DEVICE_VECTOR..IA64_DEF_LAST_DEVICE_VECTOR]
+ */
+extern int ia64_first_device_vector;
+extern int ia64_last_device_vector;
+
+#define IA64_DEF_FIRST_DEVICE_VECTOR	0x30
+#define IA64_DEF_LAST_DEVICE_VECTOR	0xe7
+#define IA64_FIRST_DEVICE_VECTOR	ia64_first_device_vector
+#define IA64_LAST_DEVICE_VECTOR		ia64_last_device_vector
+#define IA64_MAX_DEVICE_VECTORS		(IA64_DEF_LAST_DEVICE_VECTOR - IA64_DEF_FIRST_DEVICE_VECTOR + 1)
+#define IA64_NUM_DEVICE_VECTORS		(IA64_LAST_DEVICE_VECTOR - IA64_FIRST_DEVICE_VECTOR + 1)
+
+#define IA64_MCA_RENDEZ_VECTOR		0xe8	/* MCA rendez interrupt */
+#define IA64_PERFMON_VECTOR		0xee	/* performance monitor interrupt vector */
+#define IA64_TIMER_VECTOR		0xef	/* use highest-prio group 15 interrupt for timer */
+#define	IA64_MCA_WAKEUP_VECTOR		0xf0	/* MCA wakeup (must be >MCA_RENDEZ_VECTOR) */
+#define IA64_IPI_LOCAL_TLB_FLUSH	0xfc	/* SMP flush local TLB */
+#define IA64_IPI_RESCHEDULE		0xfd	/* SMP reschedule */
+#define IA64_IPI_VECTOR			0xfe	/* inter-processor interrupt vector */
+
+/* Used for encoding redirected irqs */
+
+#define IA64_IRQ_REDIRECTED		(1 << 31)
+
+/* IA64 inter-cpu interrupt related definitions */
+
+#define IA64_IPI_DEFAULT_BASE_ADDR	0xfee00000
+
+/* Delivery modes for inter-cpu interrupts */
+enum {
+        IA64_IPI_DM_INT =       0x0,    /* pend an external interrupt */
+        IA64_IPI_DM_PMI =       0x2,    /* pend a PMI */
+        IA64_IPI_DM_NMI =       0x4,    /* pend an NMI (vector 2) */
+        IA64_IPI_DM_INIT =      0x5,    /* pend an INIT interrupt */
+        IA64_IPI_DM_EXTINT =    0x7,    /* pend an 8259-compatible interrupt. */
+};
+
+extern __u8 isa_irq_to_vector_map[16];
+#define isa_irq_to_vector(x)	isa_irq_to_vector_map[(x)]
+
+struct irq_cfg {
+	ia64_vector vector;
+	cpumask_t domain;
+	cpumask_t old_domain;
+	unsigned move_cleanup_count;
+	u8 move_in_progress : 1;
+};
+extern spinlock_t vector_lock;
+extern struct irq_cfg irq_cfg[NR_IRQS];
+#define irq_to_domain(x)	irq_cfg[(x)].domain
+DECLARE_PER_CPU(int[IA64_NUM_VECTORS], vector_irq);
+
+extern struct hw_interrupt_type irq_type_ia64_lsapic;	/* CPU-internal interrupt controller */
+
+#ifdef CONFIG_PARAVIRT_GUEST
+#include <asm/paravirt.h>
+#else
+#define ia64_register_ipi	ia64_native_register_ipi
+#define assign_irq_vector	ia64_native_assign_irq_vector
+#define free_irq_vector		ia64_native_free_irq_vector
+#define register_percpu_irq	ia64_native_register_percpu_irq
+#define ia64_resend_irq		ia64_native_resend_irq
+#endif
+
+extern void ia64_native_register_ipi(void);
+extern int bind_irq_vector(int irq, int vector, cpumask_t domain);
+extern int ia64_native_assign_irq_vector (int irq);	/* allocate a free vector */
+extern void ia64_native_free_irq_vector (int vector);
+extern int reserve_irq_vector (int vector);
+extern void __setup_vector_irq(int cpu);
+extern void ia64_send_ipi (int cpu, int vector, int delivery_mode, int redirect);
+extern void ia64_native_register_percpu_irq (ia64_vector vec, struct irqaction *action);
+extern int check_irq_used (int irq);
+extern void destroy_and_reserve_irq (unsigned int irq);
+
+#if defined(CONFIG_SMP) && (defined(CONFIG_IA64_GENERIC) || defined(CONFIG_IA64_DIG))
+extern int irq_prepare_move(int irq, int cpu);
+extern void irq_complete_move(unsigned int irq);
+#else
+static inline int irq_prepare_move(int irq, int cpu) { return 0; }
+static inline void irq_complete_move(unsigned int irq) {}
+#endif
+
+static inline void ia64_native_resend_irq(unsigned int vector)
+{
+	platform_send_ipi(smp_processor_id(), vector, IA64_IPI_DM_INT, 0);
+}
+
+/*
+ * Default implementations for the irq-descriptor API:
+ */
+
+extern irq_desc_t irq_desc[NR_IRQS];
+
+#ifndef CONFIG_IA64_GENERIC
+static inline ia64_vector __ia64_irq_to_vector(int irq)
+{
+	return irq_cfg[irq].vector;
+}
+
+static inline unsigned int
+__ia64_local_vector_to_irq (ia64_vector vec)
+{
+	return __get_cpu_var(vector_irq)[vec];
+}
+#endif
+
+/*
+ * Next follows the irq descriptor interface.  On IA-64, each CPU supports 256 interrupt
+ * vectors.  On smaller systems, there is a one-to-one correspondence between interrupt
+ * vectors and the Linux irq numbers.  However, larger systems may have multiple interrupt
+ * domains meaning that the translation from vector number to irq number depends on the
+ * interrupt domain that a CPU belongs to.  This API abstracts such platform-dependent
+ * differences and provides a uniform means to translate between vector and irq numbers
+ * and to obtain the irq descriptor for a given irq number.
+ */
+
+/* Extract the IA-64 vector that corresponds to IRQ.  */
+static inline ia64_vector
+irq_to_vector (int irq)
+{
+	return platform_irq_to_vector(irq);
+}
+
+/*
+ * Convert the local IA-64 vector to the corresponding irq number.  This translation is
+ * done in the context of the interrupt domain that the currently executing CPU belongs
+ * to.
+ */
+static inline unsigned int
+local_vector_to_irq (ia64_vector vec)
+{
+	return platform_local_vector_to_irq(vec);
+}
+
+#endif /* _ASM_IA64_HW_IRQ_H */
+                                                                                                                                                                                                                                                                                    linux-2.6.30.1/arch/ia64/include/asm/ia32.h                                                         0000664 0000000 0000000 00000002332 11223244106 0017665 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_IA32_H
+#define _ASM_IA64_IA32_H
+
+
+#include <asm/ptrace.h>
+#include <asm/signal.h>
+
+#define IA32_NR_syscalls		285	/* length of syscall table */
+#define IA32_PAGE_SHIFT			12	/* 4KB pages */
+
+#ifndef __ASSEMBLY__
+
+# ifdef CONFIG_IA32_SUPPORT
+
+#define IA32_PAGE_OFFSET	0xc0000000
+
+extern void ia32_cpu_init (void);
+extern void ia32_mem_init (void);
+extern void ia32_gdt_init (void);
+extern int ia32_exception (struct pt_regs *regs, unsigned long isr);
+extern int ia32_intercept (struct pt_regs *regs, unsigned long isr);
+extern int ia32_clone_tls (struct task_struct *child, struct pt_regs *childregs);
+
+# endif /* !CONFIG_IA32_SUPPORT */
+
+/* Declare this unconditionally, so we don't get warnings for unreachable code.  */
+extern int ia32_setup_frame1 (int sig, struct k_sigaction *ka, siginfo_t *info,
+			      sigset_t *set, struct pt_regs *regs);
+#if PAGE_SHIFT > IA32_PAGE_SHIFT
+extern int ia32_copy_ia64_partial_page_list(struct task_struct *,
+					unsigned long);
+extern void ia32_drop_ia64_partial_page_list(struct task_struct *);
+#else
+# define ia32_copy_ia64_partial_page_list(a1, a2)	0
+# define ia32_drop_ia64_partial_page_list(a1)	do { ; } while (0)
+#endif
+
+#endif /* !__ASSEMBLY__ */
+
+#endif /* _ASM_IA64_IA32_H */
+                                                                                                                                                                                                                                                                                                      linux-2.6.30.1/arch/ia64/include/asm/ia64regs.h                                                     0000664 0000000 0000000 00000005374 11223244106 0020564 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        /*
+ * Copyright (C) 2002,2003 Intel Corp.
+ *      Jun Nakajima <jun.nakajima@intel.com>
+ *      Suresh Siddha <suresh.b.siddha@intel.com>
+ */
+
+#ifndef _ASM_IA64_IA64REGS_H
+#define _ASM_IA64_IA64REGS_H
+
+/*
+ * Register Names for getreg() and setreg().
+ *
+ * The "magic" numbers happen to match the values used by the Intel compiler's
+ * getreg()/setreg() intrinsics.
+ */
+
+/* Special Registers */
+
+#define _IA64_REG_IP		1016	/* getreg only */
+#define _IA64_REG_PSR		1019
+#define _IA64_REG_PSR_L		1019
+
+/* General Integer Registers */
+
+#define _IA64_REG_GP		1025	/* R1 */
+#define _IA64_REG_R8		1032	/* R8 */
+#define _IA64_REG_R9		1033	/* R9 */
+#define _IA64_REG_SP		1036	/* R12 */
+#define _IA64_REG_TP		1037	/* R13 */
+
+/* Application Registers */
+
+#define _IA64_REG_AR_KR0	3072
+#define _IA64_REG_AR_KR1	3073
+#define _IA64_REG_AR_KR2	3074
+#define _IA64_REG_AR_KR3	3075
+#define _IA64_REG_AR_KR4	3076
+#define _IA64_REG_AR_KR5	3077
+#define _IA64_REG_AR_KR6	3078
+#define _IA64_REG_AR_KR7	3079
+#define _IA64_REG_AR_RSC	3088
+#define _IA64_REG_AR_BSP	3089
+#define _IA64_REG_AR_BSPSTORE	3090
+#define _IA64_REG_AR_RNAT	3091
+#define _IA64_REG_AR_FCR	3093
+#define _IA64_REG_AR_EFLAG	3096
+#define _IA64_REG_AR_CSD	3097
+#define _IA64_REG_AR_SSD	3098
+#define _IA64_REG_AR_CFLAG	3099
+#define _IA64_REG_AR_FSR	3100
+#define _IA64_REG_AR_FIR	3101
+#define _IA64_REG_AR_FDR	3102
+#define _IA64_REG_AR_CCV	3104
+#define _IA64_REG_AR_UNAT	3108
+#define _IA64_REG_AR_FPSR	3112
+#define _IA64_REG_AR_ITC	3116
+#define _IA64_REG_AR_PFS	3136
+#define _IA64_REG_AR_LC		3137
+#define _IA64_REG_AR_EC		3138
+
+/* Control Registers */
+
+#define _IA64_REG_CR_DCR	4096
+#define _IA64_REG_CR_ITM	4097
+#define _IA64_REG_CR_IVA	4098
+#define _IA64_REG_CR_PTA	4104
+#define _IA64_REG_CR_IPSR	4112
+#define _IA64_REG_CR_ISR	4113
+#define _IA64_REG_CR_IIP	4115
+#define _IA64_REG_CR_IFA	4116
+#define _IA64_REG_CR_ITIR	4117
+#define _IA64_REG_CR_IIPA	4118
+#define _IA64_REG_CR_IFS	4119
+#define _IA64_REG_CR_IIM	4120
+#define _IA64_REG_CR_IHA	4121
+#define _IA64_REG_CR_LID	4160
+#define _IA64_REG_CR_IVR	4161	/* getreg only */
+#define _IA64_REG_CR_TPR	4162
+#define _IA64_REG_CR_EOI	4163
+#define _IA64_REG_CR_IRR0	4164	/* getreg only */
+#define _IA64_REG_CR_IRR1	4165	/* getreg only */
+#define _IA64_REG_CR_IRR2	4166	/* getreg only */
+#define _IA64_REG_CR_IRR3	4167	/* getreg only */
+#define _IA64_REG_CR_ITV	4168
+#define _IA64_REG_CR_PMV	4169
+#define _IA64_REG_CR_CMCV	4170
+#define _IA64_REG_CR_LRR0	4176
+#define _IA64_REG_CR_LRR1	4177
+
+/* Indirect Registers for getindreg() and setindreg() */
+
+#define _IA64_REG_INDR_CPUID	9000	/* getindreg only */
+#define _IA64_REG_INDR_DBR	9001
+#define _IA64_REG_INDR_IBR	9002
+#define _IA64_REG_INDR_PKR	9003
+#define _IA64_REG_INDR_PMC	9004
+#define _IA64_REG_INDR_PMD	9005
+#define _IA64_REG_INDR_RR	9006
+
+#endif /* _ASM_IA64_IA64REGS_H */
+                                                                                                                                                                                                                                                                    linux-2.6.30.1/arch/ia64/include/asm/idle.h                                                         0000664 0000000 0000000 00000000241 11223244106 0020041 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_IDLE_H
+#define _ASM_IA64_IDLE_H
+
+static inline void enter_idle(void) { }
+static inline void exit_idle(void) { }
+
+#endif /* _ASM_IA64_IDLE_H */
+                                                                                                                                                                                                                                                                                                                                                               linux-2.6.30.1/arch/ia64/include/asm/intel_intrin.h                                                 0000664 0000000 0000000 00000011510 11223244106 0021623 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_INTEL_INTRIN_H
+#define _ASM_IA64_INTEL_INTRIN_H
+/*
+ * Intel Compiler Intrinsics
+ *
+ * Copyright (C) 2002,2003 Jun Nakajima <jun.nakajima@intel.com>
+ * Copyright (C) 2002,2003 Suresh Siddha <suresh.b.siddha@intel.com>
+ * Copyright (C) 2005,2006 Hongjiu Lu <hongjiu.lu@intel.com>
+ *
+ */
+#include <ia64intrin.h>
+
+#define ia64_barrier()		__memory_barrier()
+
+#define ia64_stop()	/* Nothing: As of now stop bit is generated for each
+		 	 * intrinsic
+		 	 */
+
+#define ia64_native_getreg	__getReg
+#define ia64_native_setreg	__setReg
+
+#define ia64_hint		__hint
+#define ia64_hint_pause		__hint_pause
+
+#define ia64_mux1_brcst		_m64_mux1_brcst
+#define ia64_mux1_mix		_m64_mux1_mix
+#define ia64_mux1_shuf		_m64_mux1_shuf
+#define ia64_mux1_alt		_m64_mux1_alt
+#define ia64_mux1_rev		_m64_mux1_rev
+
+#define ia64_mux1(x,v)		_m_to_int64(_m64_mux1(_m_from_int64(x), (v)))
+#define ia64_popcnt		_m64_popcnt
+#define ia64_getf_exp		__getf_exp
+#define ia64_shrp		_m64_shrp
+
+#define ia64_tpa		__tpa
+#define ia64_invala		__invala
+#define ia64_invala_gr		__invala_gr
+#define ia64_invala_fr		__invala_fr
+#define ia64_nop		__nop
+#define ia64_sum		__sum
+#define ia64_native_ssm		__ssm
+#define ia64_rum		__rum
+#define ia64_native_rsm		__rsm
+#define ia64_native_fc 		__fc
+
+#define ia64_ldfs		__ldfs
+#define ia64_ldfd		__ldfd
+#define ia64_ldfe		__ldfe
+#define ia64_ldf8		__ldf8
+#define ia64_ldf_fill		__ldf_fill
+
+#define ia64_stfs		__stfs
+#define ia64_stfd		__stfd
+#define ia64_stfe		__stfe
+#define ia64_stf8		__stf8
+#define ia64_stf_spill		__stf_spill
+
+#define ia64_mf			__mf
+#define ia64_mfa		__mfa
+
+#define ia64_fetchadd4_acq	__fetchadd4_acq
+#define ia64_fetchadd4_rel	__fetchadd4_rel
+#define ia64_fetchadd8_acq	__fetchadd8_acq
+#define ia64_fetchadd8_rel	__fetchadd8_rel
+
+#define ia64_xchg1		_InterlockedExchange8
+#define ia64_xchg2		_InterlockedExchange16
+#define ia64_xchg4		_InterlockedExchange
+#define ia64_xchg8		_InterlockedExchange64
+
+#define ia64_cmpxchg1_rel	_InterlockedCompareExchange8_rel
+#define ia64_cmpxchg1_acq	_InterlockedCompareExchange8_acq
+#define ia64_cmpxchg2_rel	_InterlockedCompareExchange16_rel
+#define ia64_cmpxchg2_acq	_InterlockedCompareExchange16_acq
+#define ia64_cmpxchg4_rel	_InterlockedCompareExchange_rel
+#define ia64_cmpxchg4_acq	_InterlockedCompareExchange_acq
+#define ia64_cmpxchg8_rel	_InterlockedCompareExchange64_rel
+#define ia64_cmpxchg8_acq	_InterlockedCompareExchange64_acq
+
+#define __ia64_set_dbr(index, val)	\
+		__setIndReg(_IA64_REG_INDR_DBR, index, val)
+#define ia64_set_ibr(index, val)	\
+		__setIndReg(_IA64_REG_INDR_IBR, index, val)
+#define ia64_set_pkr(index, val)	\
+		__setIndReg(_IA64_REG_INDR_PKR, index, val)
+#define ia64_set_pmc(index, val)	\
+		__setIndReg(_IA64_REG_INDR_PMC, index, val)
+#define ia64_set_pmd(index, val)	\
+		__setIndReg(_IA64_REG_INDR_PMD, index, val)
+#define ia64_native_set_rr(index, val)	\
+		__setIndReg(_IA64_REG_INDR_RR, index, val)
+
+#define ia64_native_get_cpuid(index)	\
+		__getIndReg(_IA64_REG_INDR_CPUID, index)
+#define __ia64_get_dbr(index)		__getIndReg(_IA64_REG_INDR_DBR, index)
+#define ia64_get_ibr(index)		__getIndReg(_IA64_REG_INDR_IBR, index)
+#define ia64_get_pkr(index)		__getIndReg(_IA64_REG_INDR_PKR, index)
+#define ia64_get_pmc(index)		__getIndReg(_IA64_REG_INDR_PMC, index)
+#define ia64_native_get_pmd(index)	__getIndReg(_IA64_REG_INDR_PMD, index)
+#define ia64_native_get_rr(index)	__getIndReg(_IA64_REG_INDR_RR, index)
+
+#define ia64_srlz_d		__dsrlz
+#define ia64_srlz_i		__isrlz
+
+#define ia64_dv_serialize_data()
+#define ia64_dv_serialize_instruction()
+
+#define ia64_st1_rel		__st1_rel
+#define ia64_st2_rel		__st2_rel
+#define ia64_st4_rel		__st4_rel
+#define ia64_st8_rel		__st8_rel
+
+/* FIXME: need st4.rel.nta intrinsic */
+#define ia64_st4_rel_nta	__st4_rel
+
+#define ia64_ld1_acq		__ld1_acq
+#define ia64_ld2_acq		__ld2_acq
+#define ia64_ld4_acq		__ld4_acq
+#define ia64_ld8_acq		__ld8_acq
+
+#define ia64_sync_i		__synci
+#define ia64_native_thash	__thash
+#define ia64_native_ttag	__ttag
+#define ia64_itcd		__itcd
+#define ia64_itci		__itci
+#define ia64_itrd		__itrd
+#define ia64_itri		__itri
+#define ia64_ptce		__ptce
+#define ia64_ptcl		__ptcl
+#define ia64_native_ptcg	__ptcg
+#define ia64_native_ptcga	__ptcga
+#define ia64_ptri		__ptri
+#define ia64_ptrd		__ptrd
+#define ia64_dep_mi		_m64_dep_mi
+
+/* Values for lfhint in __lfetch and __lfetch_fault */
+
+#define ia64_lfhint_none	__lfhint_none
+#define ia64_lfhint_nt1		__lfhint_nt1
+#define ia64_lfhint_nt2		__lfhint_nt2
+#define ia64_lfhint_nta		__lfhint_nta
+
+#define ia64_lfetch		__lfetch
+#define ia64_lfetch_excl	__lfetch_excl
+#define ia64_lfetch_fault	__lfetch_fault
+#define ia64_lfetch_fault_excl	__lfetch_fault_excl
+
+#define ia64_native_intrin_local_irq_restore(x)		\
+do {							\
+	if ((x) != 0) {					\
+		ia64_native_ssm(IA64_PSR_I);		\
+		ia64_srlz_d();				\
+	} else {					\
+		ia64_native_rsm(IA64_PSR_I);		\
+	}						\
+} while (0)
+
+#define __builtin_trap()	__break(0);
+
+#endif /* _ASM_IA64_INTEL_INTRIN_H */
+                                                                                                                                                                                        linux-2.6.30.1/arch/ia64/include/asm/intrinsics.h                                                   0000664 0000000 0000000 00000016767 11223244106 0021335 0                                                                                                    ustar 00root                            root                            0000000 0000000                                                                                                                                                                        #ifndef _ASM_IA64_INTRINSICS_H
+#define _ASM_IA64_INTRINSICS_H
+
+/*
+ * Compiler-dependent intrinsics.
+ *
+ * Copyright (C) 2002-2003 Hewlett-Packard Co
+ *	David Mosberger-Tang <davidm@hpl.hp.com>
+ */
+
+#ifndef __ASSEMBLY__
+
+#include <linux/types.h>
+/* include compiler specific intrinsics */
+#include <asm/ia64regs.h>
+#ifdef __INTEL_COMPILER
+# include <asm/intel_intrin.h>
+#else
+# include <asm/gcc_intrin.h>
+#endif
+
+#define ia64_native_get_psr_i()	(ia64_native_getreg(_IA64_REG_PSR) & IA64_PSR_I)
+
+#define ia64_native_set_rr0_to_rr4(val0, val1, val2, val3, val4)	\
+do {									\
+	ia64_native_set_rr(0x0000000000000000UL, (val0));		\
+	ia64_native_set_rr(0x2000000000000000UL, (val1));		\
+	ia64_native_set_rr(0x4000000000000000UL, (val2));		\
+	ia64_native_set_rr(0x6000000000000000UL, (val3));		\
+	ia64_native_set_rr(0x8000000000000000UL, (val4));		\
+} while (0)
+
+/*
+ * Force an unresolved reference if someone tries to use
+ * ia64_fetch_and_add() with a bad value.
+ */
+extern unsigned long __bad_size_for_ia64_fetch_and_add (void);
+extern unsigned long __bad_increment_for_ia64_fetch_and_add (void);
+
+#define IA64_FETCHADD(tmp,v,n,sz,sem)						\
+({										\
+	switch (sz) {								\
+	      case 4:								\
+	        tmp = ia64_fetchadd4_##sem((unsigned int *) v, n);		\
+		break;								\
+										\
+	      case 8:								\
+	        tmp = ia64_fetchadd8_##sem((unsigned long *) v, n);		\
+		break;								\
+										\
+	      default:								\
+		__bad_size_for_ia64_fetch_and_add();				\
+	}									\
+})
+
+#define ia64_fetchadd(i,v,sem)								\
+({											\
+	__u64 _tmp;									\
+	volatile __typeof__(*(v)) *_v = (v);						\
+	/* Can't use a switch () here: gcc isn't always smart enough for that... */	\
+	if ((i) == -16)									\
+		IA64_FETCHADD(_tmp, _v, -16, sizeof(*(v)), sem);			\
+	else if ((i) == -8)								\
+		IA64_FETCHADD(_tmp, _v, -8, sizeof(*(v)), sem);				\
+	else if ((i) == -4)								\
+		IA64_FETCHADD(_tmp, _v, -4, sizeof(*(v)), sem);				\
+	else if ((i) == -1)								\
+		IA64_FETCHADD(_tmp, _v, -1, sizeof(*(v)), sem);				\
+	else if ((i) == 1)								\
+		IA64_FETCHADD(_tmp, _v, 1, sizeof(*(v)), sem);				\
+	else if ((i) == 4)								\
+		IA64_FETCHADD(_tmp, _v, 4, sizeof(*(v)), sem);				\
+	else if ((i) == 8)								\
+		IA64_FETCHADD(_tmp, _v, 8, sizeof(*(v)), sem);				\
+	else if ((i) == 16)								\
+		IA64_FETCHADD(_tmp, _v, 16, sizeof(*(v)), sem);				\
+	else										\
+		_tmp = __bad_increment_for_ia64_fetch_and_add();			\
+	(__typeof__(*(v))) (_tmp);	/* return old value */				\
+})
+
+#define ia64_fetch_and_add(i,v)	(ia64_fetchadd(i, v, rel) + (i)) /* return new value */
+
+/*
+ * This function doesn't exist, so you'll get a linker error if
+ * something tries to do an invalid xchg().
+ */
+extern void ia64_xchg_called_with_bad_pointer (void);
+
+#define __xchg(x,ptr,size)						\
+({									\
+	unsigned long __xchg_result;					\
+									\
+	switch (size) {							\
+	      case 1:							\
+		__xchg_result = ia64_xchg1((__u8 *)ptr, x);		\
+		break;							\
+									\
+	      case 2:							\
+		__xchg_result = ia64_xchg2((__u16 *)ptr, x);		\
+		break;							\
+									\
+	      case 4:							\
+		__xchg_result = ia64_xchg4((__u32 *)ptr, x);		\
+		break;							\
+									\
+	      case 8:							\
+		__xchg_result = ia64_xchg8((__u64 *)ptr, x);		\
+		break;							\
+	      default:							\
+		ia64_xchg_called_with_bad_pointer();			\
+	}								\
+	__xchg_result;							\
+})
+
+#define xchg(ptr,x)							     \
+  ((__typeof__(*(ptr))) __xchg ((unsigned long) (x), (ptr), sizeof(*(ptr))))
+
+/*
+ * Atomic compare and exchange.  Compare OLD with MEM, if identical,
+ * store NEW in MEM.  Return the initial value in MEM.  Success is
+ * indicated by comparing RETURN with OLD.
+ */
+
+#define __HAVE_ARCH_CMPXCHG 1
+
+/*
+ * This function doesn't exist, so you'll get a linker error
+ * if something tries to do an invalid cmpxchg().
+ */
+extern long ia64_cmpxchg_called_with_bad_pointer (void);
+
+#define ia64_cmpxchg(sem,ptr,old,new,size)						\
+({											\
+	__u64 _o_, _r_;									\
+											\
+	switch (size) {									\
+	      case 1: _o_ = (__u8 ) (long) (old); break;				\
+	      case 2: _o_ = (__u16) (long) (old); break;				\
+	      case 4: _o_ = (__u32) (long) (old); break;				\
+	      case 8: _o_ = (__u64) (long) (old); break;				\
+	      default: break;								\
+	}										\
+	switch (size) {									\
+	      case 1:									\
+	      	_r_ = ia64_cmpxchg1_##sem((__u8 *) ptr, new, _o_);			\
+		break;									\
+											\
+	      case 2:									\
+	       _r_ = ia64_cmpxchg2_##sem((__u16 *) ptr, new, _o_);			\
+		break;									\
+											\
+	      case 4:									\
+	      	_r_ = ia64_cmpxchg4_##sem((__u32 *) ptr, new, _o_);			\
+		break;									\
+											\
+	      case 8:									\
+		_r_ = ia64_cmpxchg8_##sem((__u64 *) ptr, new, _o_);			\
+		break;									\
+											\
+	      default:									\
+		_r_ = ia64_cmpxchg_called_with_bad_pointer();				\
+		break;									\
+	}										\
+	(__typeof__(old)) _r_;								\
+})
+
+#define cmpxchg_acq(ptr, o, n)	\
+	ia64_cmpxchg(acq, (ptr), (o), (n), sizeof(*(ptr)))
+#define cmpxchg_rel(ptr, o, n)	\
+	ia64_cmpxchg(rel, (ptr), (o), (n), sizeof(*(ptr)))
+
+/* for compatibility with other platforms: */
+#define cmpxchg(ptr, o, n)	cmpxchg_acq((ptr), (o), (n))
+#define cmpxchg64(ptr, o, n)	cmpxchg_acq((ptr), (o), (n))
+
+#define cmpxchg_local		cmpxchg
+#define cmpxchg64_local		cmpxchg64
+
+#ifdef CONFIG_IA64_DEBUG_CMPXCHG
+# define CMPXCHG_BUGCHECK_DECL	int _cmpxchg_bugcheck_count = 128;
+# define CMPXCHG_BUGCHECK(v)							\
+  do {										\
+	if (_cmpxchg_bugcheck_count-- <= 0) {					\
+		void *ip;							\
+		extern int printk(const char *fmt, ...);			\
+		ip = (void *) ia64_getreg(_IA64_REG_IP);			\
+		printk("CMPXCHG_BUGCHECK: stuck at %p on word %p\n", ip, (v));	\
+		break;								\
+	}				

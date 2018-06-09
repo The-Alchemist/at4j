@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/><title>Chapter 9. Zip</title><link href="../at4j_doc-1.1.css" type="text/css" rel="stylesheet" /><meta content="DocBook XSL Stylesheets V1.77.1" name="generator" /><link rel="home" href="index.xhtml" title="At4J Programmer's Guide" /><link rel="up" href="index.xhtml" title="At4J Programmer's Guide" /><link rel="prev" href="ch08.xhtml" title="Chapter 8. Tar" /><link rel="next" href="bi01.xhtml" title="Bibliography" /></head><body><div class="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Chapter 9. Zip</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="ch08.xhtml">Prev</a> </td><th align="center" width="60%"> </th><td align="right" width="20%"> <a accesskey="n" href="bi01.xhtml">Next</a></td></tr></table><hr /></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chap_zip" />Chapter 9. Zip</h1></div></div></div><div class="toc"><p><strong>Table of Contents</strong></p><dl><dt><span class="section"><a href="ch09.xhtml#character_encoding_in_zip_files">Character encoding in Zip files</a></span></dt><dt><span class="section"><a href="ch09.xhtml#zip_features_not_supported_by_at4j">Significant Zip features not supported by At4J</a></span></dt><dt><span class="section"><a href="ch09.xhtml#reading_zip_archives">Reading Zip archives</a></span></dt><dt><span class="section"><a href="ch09.xhtml#extracting_from_zip_archives">Extracting from Zip archives</a></span></dt><dt><span class="section"><a href="ch09.xhtml#creating_zip_archives">Creating Zip archives</a></span></dt><dt><span class="section"><a href="ch09.xhtml#zip_add_support">Adding support for unsupported features</a></span></dt><dd><dl><dt><span class="section"><a href="ch09.xhtml#zip_add_support_comp">Adding a new compression method</a></span></dt><dt><span class="section"><a href="ch09.xhtml#zip_add_support_external_fa">Adding a new external attribute type</a></span></dt><dt><span class="section"><a href="ch09.xhtml#zip_add_support_extra_field">Adding a new extra field type</a></span></dt></dl></dd><dt><span class="section"><a href="ch09.xhtml#standalone_zip_tools">Standalone Zip tools</a></span></dt></dl></div><p>The Zip file format was originally developed in 1989 by Phil Katz for the
+company PKZIP. A Zip archive contains file and directory entries, where each file's
+data is compressed individually. The archive contains a number of Zip entries
+containing metadata on the entry and file data for file entries, followed by a
+<span class="emphasis"><em>central directory</em></span> where some of the metadata for each
+entry is repeated.</p><p>The Zip specification allows for several
+different compression methods, even within the same Zip archive. The At4J
+implementation supports the following:
+</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">Stored (uncompressed)</li><li class="listitem">Deflated (gzip compression)</li><li class="listitem">bzip2 compression</li><li class="listitem">LZMA compression</li></ul></div><p>
+The Deflated and Stored methods are most common and are widely supported by Zip
+software.
+</p><p>Each Zip entry has a metadata record associated with it. It contains
+data such as the entry's absolute location in the archive, its last modification
+time, its <span class="emphasis"><em>external file attributes</em></span> and a comment. (See
+<a class="apilink" title="org.at4j.zip.ZipEntry" href="../api/index.html?org/at4j/zip/ZipEntry.html">ZipEntry</a>.) The format of the external file attributes is
+configurable in order to be able to capture significant attributes from the file
+system containing the files that were added to the archive. Unix external file
+attributes, for instance, contains information on the entry's permission mode 
+(same mode as the <code class="computeroutput">chmod</code> command), such as
+<code class="computeroutput">0644</code> or <code class="computeroutput">0755</code>.</p><p>The entry metadata can be, and often is, extended using
+<span class="emphasis"><em>extra fields</em></span> that contain metadata that does not fit into
+the standard metadata record. This can for instance be timestamps
+with a higher precision than the timestamps in the standard record.</p><p>The Zip archive itself can also have a comment. It is often printed by
+the Zip program when the archive is being unzipped.</p><p>The Zip file format is specified in <a class="xref" href="bi01.xhtml#bib_pkware_appnote" title="PKWARE Zip application note">PKWARE Zip application note</a>
+and in <a class="xref" href="bi01.xhtml#bib_infozip_appnote" title="Info-Zip's Zip application note">Info-Zip's Zip application note</a>. See also the
+<a class="xref" href="bi01.xhtml#bib_wikipedia_article_on_zip" title="Wikipedia article on Zip">Wikipedia article on Zip</a>.</p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="character_encoding_in_zip_files" />Character encoding in Zip files</h2></div></div></div><p>Neither PKWARE's nor Info-Zip's application notes specify which character
+encoding to use for encoding text metadata. Windows (and DOS) programs use
+Codepage 437 to encode file paths, and the platform's default charset 
+(Codepage 1252 in Sweden, for instance) for other text metadata such as comments.
+Unix programs use the platform's default charset (often UTF-8 or ISO-8859-1)
+for all text data. The Unicode path extra field
+(<a class="apilink" title="org.at4j.zip.ef.UnicodePathExtraField" href="../api/index.html?org/at4j/zip/ef/UnicodePathExtraField.html">UnicodePathExtraField</a>) can be, but seldom is, used to store an
+UTF-8-encoded version of an entry's path.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="zip_features_not_supported_by_at4j" />Significant Zip features not supported by At4J</h2></div></div></div><p>The following significant Zip features are not supported:
+</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">Adding symbolic links when building a Zip archive.</li><li class="listitem">Zip archives split over several archive files.</li><li class="listitem">Zip file signing.</li><li class="listitem">Zip file encryption.</li><li class="listitem">Some compression methods.</li><li class="listitem">Some entry external file attribute formats.</li><li class="listitem">Some entry extra fields.</li></ul></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="reading_zip_archives" />Reading Zip archives</h2></div></div></div><p>A Zip archive is read by creating a <a class="apilink" title="org.at4j.zip.ZipFile" href="../api/index.html?org/at4j/zip/ZipFile.html">ZipFile</a> object on the
+Zip file. The <a class="apilink" title="org.at4j.zip.ZipFile" href="../api/index.html?org/at4j/zip/ZipFile.html">ZipFile</a> object contains a <a class="apilink" title="org.at4j.zip.ZipEntry" href="../api/index.html?org/at4j/zip/ZipEntry.html">ZipEntry</a> object
+for each entry in the archive.
+
+</p><div class="example"><a id="ex_reading_data_from_zip_archive" /><p class="title"><strong>Example 9.1. Reading data from a Zip archive</strong></p><div class="example-contents"><pre class="programlisting">// Read data from the Zip file f
+
+// The UTF-8 charset
+<a class="apilink" title="java.nio.charset.Charset" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/nio/charset/Charset.html">Charset</a> utf8 = <a class="apilink" title="java.nio.charset.Charset" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/nio/charset/Charset.html">Charset</a>.forName("utf8");
+
+// Create the Zip file object. Text and file paths in the Zip file are encoded
+// in UTF-8
+<a class="apilink" title="org.at4j.zip.ZipFile" href="../api/index.html?org/at4j/zip/ZipFile.html">ZipFile</a> zf = new <a class="apilink" title="org.at4j.zip.ZipFile" href="../api/index.html?org/at4j/zip/ZipFile.html">ZipFile</a>(f, utf8, utf8);
+try
+{
+  // Print out the names of the child entries of the directory entry /d
+  <a class="apilink" title="org.at4j.zip.ZipDirectoryEntry" href="../api/index.html?org/at4j/zip/ZipDirectoryEntry.html">ZipDirectoryEntry</a> d = (<a class="apilink" title="org.at4j.zip.ZipDirectoryEntry" href="../api/index.html?org/at4j/zip/ZipDirectoryEntry.html">ZipDirectoryEntry</a>) zf.get(new <a class="apilink" title="org.entityfs.el.AbsoluteLocation" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/el/AbsoluteLocation.html">AbsoluteLocation</a>("/d"));
+  System.out.println("Contents of /d: " + d.getChildEntries().keySet());
+
+  // Print out the contents of the file /d/f
+  <a class="apilink" title="org.at4j.zip.ZipFileEntry" href="../api/index.html?org/at4j/zip/ZipFileEntry.html">ZipFileEntry</a> df = (<a class="apilink" title="org.at4j.zip.ZipFileEntry" href="../api/index.html?org/at4j/zip/ZipFileEntry.html">ZipFileEntry</a>) d.getChildEntries().get("f");
+  
+  // Use the EntityFS utility class <a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a> to read the text in the file.
+  System.out.println(<a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a>.readTextFile(df, utf8));
+}
+finally
+{
+  // Close the Zip archive to release all resources associated with it.
+  zf.close();
+}</pre></div></div><p><br class="example-break" /></p><p>External file attributes, compression method metadata and extra fields can
+be accessed through <a class="apilink" title="org.at4j.zip.ZipEntry" href="../api/index.html?org/at4j/zip/ZipEntry.html">ZipEntry</a> objects. External file attributes are
+represented by a <a class="apilink" title="org.at4j.zip.extattrs.ZipExternalFileAttributes" href="../api/index.html?org/at4j/zip/extattrs/ZipExternalFileAttributes.html">ZipExternalFileAttributes</a>-implementing
+object, compression method metadata by a <a class="apilink" title="org.at4j.zip.comp.ZipEntryCompressionMethod" href="../api/index.html?org/at4j/zip/comp/ZipEntryCompressionMethod.html">ZipEntryCompressionMethod</a>
+object and extra fields with a list of <a class="apilink" title="org.at4j.zip.ef.ZipEntryExtraField" href="../api/index.html?org/at4j/zip/ef/ZipEntryExtraField.html">ZipEntryExtraField</a> objects.
+Each extra field is represented by two objects since it occurs both in the Zip
+entry's metadata (the local header) and in the central directory at the end of
+the Zip file. The <code class="computeroutput">isInLocalHeader</code> method of
+an <a class="apilink" title="org.at4j.zip.ef.ZipEntryExtraField" href="../api/index.html?org/at4j/zip/ef/ZipEntryExtraField.html">ZipEntryExtraField</a> object can be used to
+query it about where it got its data from – the local header or the central
+directory.
+
+</p><div class="example"><a id="ex_reading_metadata_from_zip_entry" /><p class="title"><strong>Example 9.2. Reading metadata from a Zip entry</strong></p><div class="example-contents"><pre class="programlisting">// Create a Zip archive object for the archive in the file f
+// The Zip file metadata is encoded using the UTF-8 charset.
+<a class="apilink" title="org.at4j.zip.ZipFile" href="../api/index.html?org/at4j/zip/ZipFile.html">ZipFile</a> zf = new <a class="apilink" title="org.at4j.zip.ZipFile" href="../api/index.html?org/at4j/zip/ZipFile.html">ZipFile</a>(f, <a class="apilink" title="org.at4j.support.nio.charset.Charsets" href="../api/index.html?org/at4j/support/nio/charset/Charsets.html">Charsets</a>.UTF8, <a class="apilink" title="org.at4j.support.nio.charset.Charsets" href="../api/index.html?org/at4j/support/nio/charset/Charsets.html">Charsets</a>.UTF8);
+
+// Print out the archive comment
+System.out.println(zf.getComment());
+
+// Get the file entry /f1
+<a class="apilink" title="org.at4j.zip.ZipFileEntry" href="../api/index.html?org/at4j/zip/ZipFileEntry.html">ZipFileEntry</a> zfe = (<a class="apilink" title="org.at4j.zip.ZipFileEntry" href="../api/index.html?org/at4j/zip/ZipFileEntry.html">ZipFileEntry</a>) zf.get(new <a class="apilink" title="org.entityfs.el.AbsoluteLocation" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/el/AbsoluteLocation.html">AbsoluteLocation</a>("/f1"));
+
+// Print out its comment
+System.out.println(zfe.getComment());
+
+// Print out its compression method
+System.out.println(zfe.getCompressionMethod().getName());
+
+// Print out its Unix permissions mode
+System.out.println(
+  ((<a class="apilink" title="org.at4j.zip.extattrs.UnixExternalFileAttributes" href="../api/index.html?org/at4j/zip/extattrs/UnixExternalFileAttributes.html">UnixExternalFileAttributes</a>) zfe.getExternalFileAttributes()).
+    getEntityMode());
+
+// Print out the value of the last modification time from the extended timestamp
+// extra field from the local file header. Format the data using a
+// <a class="apilink" title="java.text.SimpleDateFormat" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/text/SimpleDateFormat.html">SimpleDateFormat</a> object.
+System.out.println(
+  new <a class="apilink" title="java.text.SimpleDateFormat" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/text/SimpleDateFormat.html">SimpleDateFormat</a>("yyyyMMdd").format(
+    zfe.getExtraField(<a class="apilink" title="org.at4j.zip.ef.ExtendedTimestampExtraField" href="../api/index.html?org/at4j/zip/ef/ExtendedTimestampExtraField.html">ExtendedTimestampExtraField</a>.class, true).
+      getLastModified()));</pre></div></div><p><br class="example-break" /></p><p>The <a class="apilink" title="org.at4j.zip.ZipFile" href="../api/index.html?org/at4j/zip/ZipFile.html">ZipFile</a> object uses a <a class="apilink" title="org.at4j.zip.ZipFileParser" href="../api/index.html?org/at4j/zip/ZipFileParser.html">ZipFileParser</a> object
+to parse the contents of the Zip file. It has a few extension points where
+additional functionality can be plugged in. See <a class="xref" href="ch09.xhtml#zip_add_support" title="Adding support for unsupported features">the section called “Adding support for unsupported features”</a>
+below.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="extracting_from_zip_archives" />Extracting from Zip archives</h2></div></div></div><p>Zip entries can be extracted using the <a class="apilink" title="org.at4j.util.archive.ArchiveExtractor" href="../api/index.html?org/at4j/util/archive/ArchiveExtractor.html">ArchiveExtractor</a>.
+There is no custom extractor for Zip archives.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="creating_zip_archives" />Creating Zip archives</h2></div></div></div><p>A Zip archive is created using a <a class="apilink" title="org.at4j.zip.builder.ZipBuilder" href="../api/index.html?org/at4j/zip/builder/ZipBuilder.html">ZipBuilder</a> object.
+It is configured with a <a class="apilink" title="org.at4j.zip.builder.ZipBuilderSettings" href="../api/index.html?org/at4j/zip/builder/ZipBuilderSettings.html">ZipBuilderSettings</a> object.</p><p>Each added entry is configured with a 
+<a class="apilink" title="org.at4j.zip.builder.ZipEntrySettings" href="../api/index.html?org/at4j/zip/builder/ZipEntrySettings.html">ZipEntrySettings</a> object. It contains properties for the
+compression method to use, for the extra fields to add, for the entry comment
+and for how the external file attributes should be represented. The builder uses
+the strategy described in <a class="xref" href="ch07.xhtml#entry_metadata" title="Determining the metadata for an entry">the section called “Determining the metadata for an entry”</a> to arrive at the
+effective settings for each entry.</p><p>Below is an example that shows how a Zip archive is built using a
+<a class="apilink" title="org.at4j.zip.builder.ZipBuilder" href="../api/index.html?org/at4j/zip/builder/ZipBuilder.html">ZipBuilder</a>.
+
+</p><div class="example"><a id="ex_build_zip" /><p class="title"><strong>Example 9.3. Building a Zip archive</strong></p><div class="example-contents"><pre class="programlisting">// Build the Zip file "myArchive.zip" in the directory targetDir.
+<a class="apilink" title="org.entityfs.RandomlyAccessibleFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/RandomlyAccessibleFile.html">RandomlyAccessibleFile</a> zipFile = <a class="apilink" title="org.entityfs.util.Directories" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Directories.html">Directories</a>.newFile(targetDir, "myArchive.zip");
+
+// Configure the global Zip builder settings.
+
+// Create a factory object for the external attributes metadata
+<a class="apilink" title="org.at4j.zip.extattrs.ZipExternalFileAttributesFactory" href="../api/index.html?org/at4j/zip/extattrs/ZipExternalFileAttributesFactory.html">ZipExternalFileAttributesFactory</a> extAttrsFactory =
+  new <a class="apilink" title="org.at4j.zip.extattrs.UnixExternalFileAttributesFactory" href="../api/index.html?org/at4j/zip/extattrs/UnixExternalFileAttributesFactory.html">UnixExternalFileAttributesFactory</a>(
+    //
+    // Set files to be world readable
+    <a class="apilink" title="org.entityfs.entityattrs.unix.UnixEntityMode" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/entityattrs/unix/UnixEntityMode.html">UnixEntityMode</a>.forCode(0644),
+    //
+    // Set directories to be world executable
+    <a class="apilink" title="org.entityfs.entityattrs.unix.UnixEntityMode" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/entityattrs/unix/UnixEntityMode.html">UnixEntityMode</a>.forCode(0755));
+
+<a class="apilink" title="org.at4j.zip.builder.ZipBuilderSettings" href="../api/index.html?org/at4j/zip/builder/ZipBuilderSettings.html">ZipBuilderSettings</a> settings = new <a class="apilink" title="org.at4j.zip.builder.ZipBuilderSettings" href="../api/index.html?org/at4j/zip/builder/ZipBuilderSettings.html">ZipBuilderSettings</a>().
+  //
+  // Set the default file entry settings.
+  setDefaultFileEntrySettings(
+    new <a class="apilink" title="org.at4j.zip.builder.ZipEntrySettings" href="../api/index.html?org/at4j/zip/builder/ZipEntrySettings.html">ZipEntrySettings</a>().
+      //
+      // Use bzip2 compression for files entries.
+      // NOTE: bzip2 is not supported by all Zip implementations!
+      setCompressionMethod(<a class="apilink" title="org.at4j.zip.comp.BZip2CompressionMethod" href="../api/index.html?org/at4j/zip/comp/BZip2CompressionMethod.html">BZip2CompressionMethod</a>.INSTANCE).
+      //
+      // Use the external attributes factory created above
+      setExternalFileAttributesFactory(extAttrsFactory).
+      //
+      // Add an extra field factory for creating the Unicode path extra field
+      // that stores the entry's path name encoded in UTF-8.
+      addExtraFieldFactory(<a class="apilink" title="org.at4j.zip.ef.UnicodePathExtraFieldFactory" href="../api/index.html?org/at4j/zip/ef/UnicodePathExtraFieldFactory.html">UnicodePathExtraFieldFactory</a>.INSTANCE)).
+  //
+  // Set the default directory entry settings.
+  setDefaultDirectoryEntrySettings(
+    new <a class="apilink" title="org.at4j.zip.builder.ZipEntrySettings" href="../api/index.html?org/at4j/zip/builder/ZipEntrySettings.html">ZipEntrySettings</a>().
+      //
+      // Use the external attributes factory created above.
+      setExternalFileAttributesFactory(extAttrsFactory).
+      //
+      // An extra field factory for creating the Unicode path extra field.
+      addExtraFieldFactory(<a class="apilink" title="org.at4j.zip.ef.UnicodePathExtraFieldFactory" href="../api/index.html?org/at4j/zip/ef/UnicodePathExtraFieldFactory.html">UnicodePathExtraFieldFactory</a>.INSTANCE)).
+  //
+  // Set a Zip file comment.
+  setFileComment("This is myArchive.zip's comment.");
+
+// Create the Zip builder
+<a class="apilink" title="org.at4j.zip.builder.ZipBuilder" href="../api/index.html?org/at4j/zip/builder/ZipBuilder.html">ZipBuilder</a> zb = new <a class="apilink" title="org.at4j.zip.builder.ZipBuilder" href="../api/index.html?org/at4j/zip/builder/ZipBuilder.html">ZipBuilder</a>(zipFile, settings);
+
+// Add a global rule that says that all script files (files ending with .sh)
+// should be world executable.
+zb.addRule(
+  new <a class="apilink" title="org.at4j.archive.builder.ArchiveEntrySettingsRule" href="../api/index.html?org/at4j/archive/builder/ArchiveEntrySettingsRule.html">ArchiveEntrySettingsRule</a>&lt;<a class="apilink" title="org.at4j.zip.builder.ZipEntrySettings" href="../api/index.html?org/at4j/zip/builder/ZipEntrySettings.html">ZipEntrySettings</a>&gt;(
+    new <a class="apilink" title="org.at4j.zip.builder.ZipEntrySettings" href="../api/index.html?org/at4j/zip/builder/ZipEntrySettings.html">ZipEntrySettings</a>().
+      //
+      // This object only has to contain the difference between the default file
+      // settings and the settings for this rule due to the way in which
+      // settings are combined.
+      setExternalFileAttributesFactory(
+        new <a class="apilink" title="org.at4j.zip.extattrs.UnixExternalFileAttributesFactory" href="../api/index.html?org/at4j/zip/extattrs/UnixExternalFileAttributesFactory.html">UnixExternalFileAttributesFactory</a>(
+          //
+          // Files are world executable.
+          <a class="apilink" title="org.entityfs.entityattrs.unix.UnixEntityMode" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/entityattrs/unix/UnixEntityMode.html">UnixEntityMode</a>.forCode(0755),
+          //
+          // Directories are world executable. (No directories will be matched
+          // by the rule's filter, though.)
+          <a class="apilink" title="org.entityfs.entityattrs.unix.UnixEntityMode" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/entityattrs/unix/UnixEntityMode.html">UnixEntityMode</a>.forCode(0755))),
+    //
+    // The filter that determines which entries the rule will be applied to.
+    <a class="apilink" title="org.at4j.archive.builder.FileETAF" href="../api/index.html?org/at4j/archive/builder/FileETAF.html">FileETAF</a>.FILTER.and(
+      new <a class="apilink" title="org.at4j.archive.builder.NameGlobETAF" href="../api/index.html?org/at4j/archive/builder/NameGlobETAF.html">NameGlobETAF</a>("*.sh"))));
+
+// Add the directory hierarchy under the directory src to the location /source
+// in the archive.
+zb.addRecursively(src, new <a class="apilink" title="org.entityfs.el.AbsoluteLocation" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/el/AbsoluteLocation.html">AbsoluteLocation</a>("/source"));
+
+// Close the builder to finish writing the archive.
+zb.close();</pre></div></div><p><br class="example-break" /></p><p>The shortcut method <code class="computeroutput">setCompressionLevel</code>
+on the <a class="apilink" title="org.at4j.zip.builder.ZipBuilder" href="../api/index.html?org/at4j/zip/builder/ZipBuilder.html">ZipBuilder</a> object can be used for setting the
+default compression level for files without having to create a new
+<a class="apilink" title="org.at4j.zip.comp.ZipEntryCompressionMethod" href="../api/index.html?org/at4j/zip/comp/ZipEntryCompressionMethod.html">ZipEntryCompressionMethod</a> object.
+
+</p><div class="example"><a id="ex_build_zip_and_set_compression_level" /><p class="title"><strong>Example 9.4. Build a Zip archive and set the compression level</strong></p><div class="example-contents"><pre class="programlisting">// Build the Zip file "myArchive.zip" in the directory targetDir. Use the best
+// possible (deflate) compression.
+<a class="apilink" title="org.entityfs.RandomlyAccessibleFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/RandomlyAccessibleFile.html">RandomlyAccessibleFile</a> zipFile = <a class="apilink" title="org.entityfs.util.Directories" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Directories.html">Directories</a>.newFile(targetDir, "myArchive.zip");
+
+// Configure the global Zip builder settings.
+
+<a class="apilink" title="org.at4j.zip.builder.ZipBuilderSettings" href="../api/index.html?org/at4j/zip/builder/ZipBuilderSettings.html">ZipBuilderSettings</a> settings = new <a class="apilink" title="org.at4j.zip.builder.ZipBuilderSettings" href="../api/index.html?org/at4j/zip/builder/ZipBuilderSettings.html">ZipBuilderSettings</a>().
+  //
+  // Set maximum compression level for the default file compression method
+  // (deflate)
+  setCompressionLevel(<a class="apilink" title="org.at4j.comp.CompressionLevel" href="../api/index.html?org/at4j/comp/CompressionLevel.html">CompressionLevel</a>.BEST);
+
+// Create the Zip builder
+<a class="apilink" title="org.at4j.zip.builder.ZipBuilder" href="../api/index.html?org/at4j/zip/builder/ZipBuilder.html">ZipBuilder</a> zb = new <a class="apilink" title="org.at4j.zip.builder.ZipBuilder" href="../api/index.html?org/at4j/zip/builder/ZipBuilder.html">ZipBuilder</a>(zipFile, settings);
+
+// Add the directory hierarchy under the directory src to the location /source
+// in the archive.
+zb.addRecursively(src, new <a class="apilink" title="org.entityfs.el.AbsoluteLocation" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/el/AbsoluteLocation.html">AbsoluteLocation</a>("/source"));
+
+// Close the builder to finish writing the archive.
+zb.close();</pre></div></div><p><br class="example-break" /></p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="zip_add_support" />Adding support for unsupported features</h2></div></div></div><p>It is possible to plug in support for new extra field types, new
+compression methods and new external attribute types in the
+<a class="apilink" title="org.at4j.zip.ZipFile" href="../api/index.html?org/at4j/zip/ZipFile.html">ZipFile</a> and <a class="apilink" title="org.at4j.zip.builder.ZipBuilder" href="../api/index.html?org/at4j/zip/builder/ZipBuilder.html">ZipBuilder</a> objects.</p><p>Feature implementations will have to work with raw, binary data read from
+and written to Zip files. They will probably find the number types in the
+<code class="computeroutput">org.at4j.support.lang</code> package and perhaps the
+utilities in the <code class="computeroutput">org.at4j.support.util</code> package
+useful.</p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="zip_add_support_comp" />Adding a new compression method</h3></div></div></div><p>This is how to make <a class="apilink" title="org.at4j.zip.ZipFile" href="../api/index.html?org/at4j/zip/ZipFile.html">ZipFile</a> understand a new compression 
+method:
+</p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem">Implement a new <a class="apilink" title="org.at4j.zip.comp.ZipEntryCompressionMethod" href="../api/index.html?org/at4j/zip/comp/ZipEntryCompressionMethod.html">ZipEntryCompressionMethod</a>
+class.</li><li class="listitem">Implement a new <a class="apilink" title="org.at4j.zip.comp.ZipEntryCompressionMethodFactory" href="../api/index.html?org/at4j/zip/comp/ZipEntryCompressionMethodFactory.html">ZipEntryCompressionMethodFactory</a>
+class.</li><li class="listitem">Create a new <a class="apilink" title="org.at4j.zip.ZipFileParser" href="../api/index.html?org/at4j/zip/ZipFileParser.html">ZipFileParser</a> instance.</li><li class="listitem">Register the new compression method factory in the Zip file parser's
+compression method factory registry.</li></ol></div><p>To use the new compression method with the <a class="apilink" title="org.at4j.zip.builder.ZipBuilder" href="../api/index.html?org/at4j/zip/builder/ZipBuilder.html">ZipBuilder</a>,
+use it with the <a class="apilink" title="org.at4j.zip.builder.ZipEntrySettings" href="../api/index.html?org/at4j/zip/builder/ZipEntrySettings.html">ZipEntrySettings</a> objects for the
+files that should be compressed using the new method, or with the default file
+settings objects if all files should be compressed using it.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="zip_add_support_external_fa" />Adding a new external attribute type</h3></div></div></div><p>This is how to make <a class="apilink" title="org.at4j.zip.ZipFile" href="../api/index.html?org/at4j/zip/ZipFile.html">ZipFile</a> understand a new external
+attribute type:
+</p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem">Implement a new <a class="apilink" title="org.at4j.zip.extattrs.ZipExternalFileAttributes" href="../api/index.html?org/at4j/zip/extattrs/ZipExternalFileAttributes.html">ZipExternalFileAttributes</a>
+class.</li><li class="listitem">Implement a new <a class="apilink" title="org.at4j.zip.extattrs.ZipExternalFileAttributesFactory" href="../api/index.html?org/at4j/zip/extattrs/ZipExternalFileAttributesFactory.html">ZipExternalFileAttributesFactory</a>
+class.</li><li class="listitem">Create a new <a class="apilink" title="org.at4j.zip.ZipFileParser" href="../api/index.html?org/at4j/zip/ZipFileParser.html">ZipFileParser</a> instance.</li><li class="listitem">Register the new external attributes factory in the Zip file parser's
+external attributes factory registry.</li></ol></div><p>To use the new external attributes object with the
+<a class="apilink" title="org.at4j.zip.builder.ZipBuilder" href="../api/index.html?org/at4j/zip/builder/ZipBuilder.html">ZipBuilder</a>, use the factory with the
+<a class="apilink" title="org.at4j.zip.builder.ZipEntrySettings" href="../api/index.html?org/at4j/zip/builder/ZipEntrySettings.html">ZipEntrySettings</a> objects for the entries that should use
+the new attributes, or with the default file and directory settings objects if
+all entries should use them.</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="zip_add_support_extra_field" />Adding a new extra field type</h3></div></div></div><p>This is how to make <a class="apilink" title="org.at4j.zip.ZipFile" href="../api/index.html?org/at4j/zip/ZipFile.html">ZipFile</a> understand a new extra field
+type:
+</p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem">Implement a new <a class="apilink" title="org.at4j.zip.ef.ZipEntryExtraField" href="../api/index.html?org/at4j/zip/ef/ZipEntryExtraField.html">ZipEntryExtraField</a> class.</li><li class="listitem">Implement a new <a class="apilink" title="org.at4j.zip.ef.ZipEntryExtraFieldParser" href="../api/index.html?org/at4j/zip/ef/ZipEntryExtraFieldParser.html">ZipEntryExtraFieldParser</a> class.</li><li class="listitem">Create a new <a class="apilink" title="org.at4j.zip.ZipFileParser" href="../api/index.html?org/at4j/zip/ZipFileParser.html">ZipFileParser</a> instance.</li><li class="listitem">Register the new extra field parser in the Zip file parser's extra
+field parser registry.</li></ol></div><p>This is how to add entries using the new extra fields to a
+<a class="apilink" title="org.at4j.zip.builder.ZipBuilder" href="../api/index.html?org/at4j/zip/builder/ZipBuilder.html">ZipBuilder</a>:
+</p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem">Implement a new <a class="apilink" title="org.at4j.zip.ef.ZipEntryExtraFieldFactory" href="../api/index.html?org/at4j/zip/ef/ZipEntryExtraFieldFactory.html">ZipEntryExtraFieldFactory</a> class.</li><li class="listitem">Use the new extra field factory with the <a class="apilink" title="org.at4j.zip.builder.ZipEntrySettings" href="../api/index.html?org/at4j/zip/builder/ZipEntrySettings.html">ZipEntrySettings</a>
+for the entries that should have the new extra fields, or with the default
+file and directory settings objects if all file and directory entries should have
+them.</li></ol></div><p>
+</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="standalone_zip_tools" />Standalone Zip tools</h2></div></div></div><p>The <a class="apilink" title="org.at4j.zip.prog.Zip" href="../api/index.html?org/at4j/zip/prog/Zip.html">Zip</a> and <a class="apilink" title="org.at4j.zip.prog.Unzip" href="../api/index.html?org/at4j/zip/prog/Unzip.html">Unzip</a> emulates the
+behavior of the <code class="computeroutput">zip</code> and
+<code class="computeroutput">unzip</code> commands.
+See their API documentation for details on how to use them.</p></div></div><div class="navfooter"><hr /><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="ch08.xhtml">Prev</a> </td><td align="center" width="20%"> </td><td align="right" width="40%"> <a accesskey="n" href="bi01.xhtml">Next</a></td></tr><tr><td valign="top" align="left" width="40%">Chapter 8. Tar </td><td align="center" width="20%"><a accesskey="h" href="index.xhtml">Home</a></td><td valign="top" align="right" width="40%"> Bibliography</td></tr></table></div></body></html>

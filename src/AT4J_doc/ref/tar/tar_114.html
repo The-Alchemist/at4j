@@ -1,0 +1,294 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><title>GNU tar</title>
+<!-- base href="http://www.delorie.com/gnu/docs/tar/tar_114.html" -->
+</head><body><center><!-- BEGIN RICH-MEDIA BURST! CODE -->
+<script language="JavaScript">
+rnum=Math.round(Math.random() * 100000);
+
+document.write('<scr'+'ipt src="http://www.burstnet.com/cgi-bin/ads/ad1954a.cgi/v=2.0S/sz=468x60A|728x90A/'+rnum+'/RETURN-CODE/JS/"></scr'+'ipt>');
+
+</script><script style="display: none;" src="tar_114_files/a.html"></script>
+<noscript><a href="http://www.burstnet.com/ads/ad1954a-map.cgi/ns/v=2.0S/sz=468x60A|728x90A/" target="_top">
+<img src="http://www.burstnet.com/cgi-bin/ads/ad1954a.cgi/ns/v=2.0S/sz=468x60A|728x90A/" border="0" alt="Click Here"></a>
+</noscript>
+<!-- END BURST CODE -->
+<table border="0" cellpadding="3" cellspacing="0" width="100%"><tbody><tr><td align="left" bgcolor="#ffcc99" valign="top"><small><font face="itc avant garde gothic,helvetica,arial"><b> &nbsp;
+<a href="http://www.delorie.com/" target="_top">www.delorie.com</a>/<a href="http://www.delorie.com/gnu/" target="_top">gnu</a>/<a href="http://www.delorie.com/gnu/docs/" target="_top">docs</a>/<a href="http://www.delorie.com/gnu/docs/tar/" target="_top">tar</a>/tar_114.html</b></font></small></td>
+<td align="right" bgcolor="#ffcc99" valign="top"><small><font face="itc avant garde gothic,helvetica,arial"><b> &nbsp;
+<a href="http://www.delorie.com/search/">search</a> &nbsp;
+</b></font></small></td>
+</tr></tbody></table><a href="http://www.delorie.com/gnu/docs/tar/bulktrap.html"></a><table align="right" border="0" cellpadding="5" cellspacing="0">
+<tbody><tr><td>&nbsp;</td><td align="center" bgcolor="#ffcc99"><small>
+<a href="http://www.delorie.com/store/books/?gnu"><img src="tar_114_files/book.gif" border="0" height="52" width="50"><br>Buy GNU books!</a><br></small></td></tr>
+<tr><td><br></td></tr></tbody></table>
+
+<big><big><b>GNU tar</b></big></big><p></p></center>
+
+<a name="tar_114.html"></a>
+<table border="0" cellpadding="1" cellspacing="1">
+<tbody><tr><td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_113.html"> &lt; </a>]</td>
+<td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_115.html"> &gt; </a>]</td>
+<td align="left" valign="middle"> &nbsp; </td><td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_109.html"> &lt;&lt; </a>]</td>
+<td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_110.html"> Up </a>]</td>
+<td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_116.html"> &gt;&gt; </a>]</td>
+<td align="left" valign="middle"> &nbsp; </td><td align="left" valign="middle"> &nbsp; </td><td align="left" valign="middle"> &nbsp; </td><td align="left" valign="middle"> &nbsp; </td><td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar.html#SEC_Top">Top</a>]</td>
+<td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_toc.html#SEC_Contents">Contents</a>]</td>
+<td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_139.html">Index</a>]</td>
+<td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_abt.html#SEC_About"> ? </a>]</td>
+</tr></tbody></table>
+<hr size="1">
+<h3> 8.1.4 GNU <code>tar</code> and POSIX <code>tar</code> </h3>
+<!--docid::SEC117::-->
+<p>
+
+GNU <code>tar</code> was based on an early draft of the POSIX 1003.1
+<code>ustar</code> standard.  GNU extensions to <code>tar</code>, such as the
+support for file names longer than 100 characters, use portions of the
+<code>tar</code> header record which were specified in that POSIX draft as
+unused.  Subsequent changes in POSIX have allocated the same parts of
+the header record for other purposes.  As a result, GNU <code>tar</code> is
+incompatible with the current POSIX spec, and with <code>tar</code> programs
+that follow it.
+</p><p>
+
+We plan to reimplement these GNU extensions in a new way which is
+upward compatible with the latest POSIX <code>tar</code> format, but we
+don't know when this will be done.
+</p><p>
+
+In the mean time, there is simply no telling what might happen if you
+read a GNU <code>tar</code> archive, which uses the GNU extensions, using
+some other <code>tar</code> program.  So if you want to read the archive
+with another <code>tar</code> program, be sure to write it using the
+<samp>`--old-archive'</samp> option (<samp>`-o'</samp>).
+</p><p>
+
+@quote-arg
+{is there a way to tell which flavor of tar was used to write a
+particular archive before you try to read it?}
+</p><p>
+
+Traditionally, old <code>tar</code>s have a limit of 100 characters.  GNU
+<code>tar</code> attempted two different approaches to overcome this limit,
+using and extending a format specified by a draft of some P1003.1.
+The first way was not that successful, and involved <tt>`@MaNgLeD@'</tt>
+file names, or such; while a second approach used <tt>`././@LongLink'</tt>
+and other tricks, yielding better success.  In theory, GNU <code>tar</code>
+should be able to handle file names of practically unlimited length.
+So, if GNU <code>tar</code> fails to dump and retrieve files having more
+than 100 characters, then there is a bug in GNU <code>tar</code>, indeed.
+</p><p>
+
+But, being strictly POSIX, the limit was still 100 characters.
+For various other purposes, GNU <code>tar</code> used areas left unassigned
+in the POSIX draft.  POSIX later revised P1003.1 <code>ustar</code> format by
+assigning previously unused header fields, in such a way that the upper
+limit for file name length was raised to 256 characters.  However, the
+actual POSIX limit oscillates between 100 and 256, depending on the
+precise location of slashes in full file name (this is rather ugly).
+Since GNU <code>tar</code> use the same fields for quite other purposes,
+it became incompatible with the latest POSIX standards.
+</p><p>
+
+For longer or non-fitting file names, we plan to use yet another set
+of GNU extensions, but this time, complying with the provisions POSIX
+offers for extending the format, rather than conflicting with it.
+Whenever an archive uses old GNU <code>tar</code> extension format or POSIX
+extensions, would it be for very long file names or other specialities,
+this archive becomes non-portable to other <code>tar</code> implementations.
+In fact, anything can happen.  The most forgiving <code>tar</code>s will
+merely unpack the file using a wrong name, and maybe create another
+file named something like <tt>`@LongName'</tt>, with the true file name
+in it.  <code>tar</code>s not protecting themselves may segment violate!
+</p><p>
+
+Compatibility concerns make all this thing more difficult, as we
+will have to support <em>all</em> these things together, for a while.
+GNU <code>tar</code> should be able to produce and read true POSIX format
+files, while being able to detect old GNU <code>tar</code> formats, besides
+old V7 format, and process them conveniently.  It would take years
+before this whole area stabilizes<small>...</small>
+</p><p>
+
+There are plans to raise this 100 limit to 256, and yet produce POSIX
+conformant archives.  Past 256, I do not know yet if GNU <code>tar</code>
+will go non-POSIX again, or merely refuse to archive the file.
+</p><p>
+
+There are plans so GNU <code>tar</code> support more fully the latest POSIX
+format, while being able to read old V7 format, GNU (semi-POSIX plus
+extension), as well as full POSIX.  One may ask if there is part of
+the POSIX format that we still cannot support.  This simple question
+has a complex answer.  Maybe that, on intimate look, some strong
+limitations will pop up, but until now, nothing sounds too difficult
+(but see below).  I only have these few pages of POSIX telling about
+`Extended tar Format' (P1003.1-1990 -- section 10.1.1), and there are
+references to other parts of the standard I do not have, which should
+normally enforce limitations on stored file names (I suspect things
+like fixing what <kbd>/</kbd> and <kbd><kbd>NUL</kbd></kbd> means).  There are also
+some points which the standard does not make clear, Existing practice
+will then drive what I should do.
+</p><p>
+
+POSIX mandates that, when a file name cannot fit within 100 to
+256 characters (the variance comes from the fact a <kbd>/</kbd> is
+ideally needed as the 156'th character), or a link name cannot
+fit within 100 characters, a warning should be issued and the file
+<em>not</em> be stored.  Unless some <kbd>--posix</kbd> option is given
+(or <code>POSIXLY_CORRECT</code> is set), I suspect that GNU <code>tar</code>
+should disobey this specification, and automatically switch to using
+GNU extensions to overcome file name or link name length limitations.
+</p><p>
+
+There is a problem, however, which I did not intimately studied yet.
+Given a truly POSIX archive with names having more than 100 characters,
+I guess that GNU <code>tar</code> up to 1.11.8 will process it as if it were an
+old V7 archive, and be fooled by some fields which are coded differently.
+So, the question is to decide if the next generation of GNU <code>tar</code>
+should produce POSIX format by default, whenever possible, producing
+archives older versions of GNU <code>tar</code> might not be able to read
+correctly.  I fear that we will have to suffer such a choice one of these
+days, if we want GNU <code>tar</code> to go closer to POSIX.  We can rush it.
+Another possibility is to produce the current GNU <code>tar</code> format
+by default for a few years, but have GNU <code>tar</code> versions from some
+1.<var>POSIX</var> and up able to recognize all three formats, and let older
+GNU <code>tar</code> fade out slowly.  Then, we could switch to producing POSIX
+format by default, with not much harm to those still having (very old at
+that time) GNU <code>tar</code> versions prior to 1.<var>POSIX</var>.
+</p><p>
+
+POSIX format cannot represent very long names, volume headers,
+splitting of files in multi-volumes, sparse files, and incremental
+dumps; these would be all disallowed if <kbd>--posix</kbd> or
+<code>POSIXLY_CORRECT</code>.  Otherwise, if <code>tar</code> is given long
+names, or <samp>`-[VMSgG]'</samp>, then it should automatically go non-POSIX.
+I think this is easily granted without much discussion.
+</p><p>
+
+Another point is that only <code>mtime</code> is stored in POSIX
+archives, while GNU <code>tar</code> currently also store <code>atime</code>
+and <code>ctime</code>.  If we want GNU <code>tar</code> to go closer to POSIX,
+my choice would be to drop <code>atime</code> and <code>ctime</code> support on
+average.  On the other hand, I perceive that full dumps or incremental
+dumps need <code>atime</code> and <code>ctime</code> support, so for those special
+applications, POSIX has to be avoided altogether.
+</p><p>
+
+A few users requested that <kbd>--sparse</kbd> (<kbd>-S</kbd>) be always active by
+default, I think that before replying to them, we have to decide
+if we want GNU <code>tar</code> to go closer to POSIX on average, while
+producing files.  My choice would be to go closer to POSIX in the
+long run.  Besides possible double reading, I do not see any point
+of not trying to save files as sparse when creating archives which
+are neither POSIX nor old-V7, so the actual <kbd>--sparse</kbd> (<kbd>-S</kbd>) would
+become selected by default when producing such archives, whatever
+the reason is.  So, <kbd>--sparse</kbd> (<kbd>-S</kbd>) alone might be redefined to force
+GNU-format archives, and recover its previous meaning from this fact.
+</p><p>
+
+GNU-format as it exists now can easily fool other POSIX <code>tar</code>,
+as it uses fields which POSIX considers to be part of the file name
+prefix.  I wonder if it would not be a good idea, in the long run,
+to try changing GNU-format so any added field (like <code>ctime</code>,
+<code>atime</code>, file offset in subsequent volumes, or sparse file
+descriptions) be wholly and always pushed into an extension block,
+instead of using space in the POSIX header block.  I could manage
+to do that portably between future GNU <code>tar</code>s.  So other POSIX
+<code>tar</code>s might be at least able to provide kind of correct listings
+for the archives produced by GNU <code>tar</code>, if not able to process
+them otherwise.
+</p><p>
+
+Using these projected extensions might induce older <code>tar</code>s to fail.
+We would use the same approach as for POSIX.  I'll put out a <code>tar</code>
+capable of reading POSIXier, yet extended archives, but will not produce
+this format by default, in GNU mode.  In a few years, when newer GNU
+<code>tar</code>s will have flooded out <code>tar</code> 1.11.X and previous, we
+could switch to producing POSIXier extended archives, with no real harm
+to users, as almost all existing GNU <code>tar</code>s will be ready to read
+POSIXier format.  In fact, I'll do both changes at the same time, in a
+few years, and just prepare <code>tar</code> for both changes, without effecting
+them, from 1.<var>POSIX</var>.  (Both changes: 1--using POSIX convention for
+getting over 100 characters; 2--avoiding mangling POSIX headers for GNU
+extensions, using only POSIX mandated extension techniques).
+</p><p>
+
+So, a future <code>tar</code> will have a <kbd>--posix</kbd>
+flag forcing the usage of truly POSIX headers, and so, producing
+archives previous GNU <code>tar</code> will not be able to read.
+So, <em>once</em> pretest will announce that feature, it would be
+particularly useful that users test how exchangeable will be archives
+between GNU <code>tar</code> with <kbd>--posix</kbd> and other POSIX <code>tar</code>.
+</p><p>
+
+In a few years, when GNU <code>tar</code> will produce POSIX headers by
+default, <kbd>--posix</kbd> will have a strong meaning and will disallow
+GNU extensions.  But in the meantime, for a long while, <kbd>--posix</kbd>
+in GNU tar will not disallow GNU extensions like <kbd>--label=<var>archive-label</var></kbd> (<kbd>-V <var>archive-label</var></kbd>),
+<kbd>--multi-volume</kbd> (<kbd>-M</kbd>), <kbd>--sparse</kbd> (<kbd>-S</kbd>), or very long file or link names.
+However, <kbd>--posix</kbd> with GNU extensions will use POSIX
+headers with reserved-for-users extensions to headers, and I will be
+curious to know how well or bad POSIX <code>tar</code>s will react to these.
+</p><p>
+
+GNU <code>tar</code> prior to 1.<var>POSIX</var>, and after 1.<var>POSIX</var> without
+<kbd>--posix</kbd>, generates and checks <samp>`ustar  '</samp>, with two
+suffixed spaces.  This is sufficient for older GNU <code>tar</code> not to
+recognize POSIX archives, and consequently, wrongly decide those archives
+are in old V7 format.  It is a useful bug for me, because GNU <code>tar</code>
+has other POSIX incompatibilities, and I need to segregate GNU <code>tar</code>
+semi-POSIX archives from truly POSIX archives, for GNU <code>tar</code> should
+be somewhat compatible with itself, while migrating closer to latest
+POSIX standards.  So, I'll be very careful about how and when I will do
+the correction.
+</p><p>
+
+<a name="Checksumming"></a>
+</p><hr size="1">
+<table border="0" cellpadding="1" cellspacing="1">
+<tbody><tr><td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_113.html"> &lt; </a>]</td>
+<td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_115.html"> &gt; </a>]</td>
+<td align="left" valign="middle"> &nbsp; </td><td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_109.html"> &lt;&lt; </a>]</td>
+<td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_110.html"> Up </a>]</td>
+<td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_116.html"> &gt;&gt; </a>]</td>
+<td align="left" valign="middle"> &nbsp; </td><td align="left" valign="middle"> &nbsp; </td><td align="left" valign="middle"> &nbsp; </td><td align="left" valign="middle"> &nbsp; </td><td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar.html#SEC_Top">Top</a>]</td>
+<td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_toc.html#SEC_Contents">Contents</a>]</td>
+<td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_139.html">Index</a>]</td>
+<td align="left" valign="middle">[<a href="http://www.delorie.com/gnu/docs/tar/tar_abt.html#SEC_About"> ? </a>]</td>
+</tr></tbody></table>
+
+
+
+<br clear="both"><p></p>
+<a href="http://www.delorie.com/gnu/docs/tar/bulktrap.html"></a><table border="0" cellpadding="3" cellspacing="0" width="100%"><tbody><tr>
+<td align="left" bgcolor="#ffcc99" valign="top"><small><font face="itc avant garde gothic,helvetica,arial"><b> &nbsp;
+<a href="http://www.delorie.com/users/dj/" target="_top">webmaster</a> &nbsp;
+<a href="http://www.delorie.com/donations.html" target="_top">donations</a> &nbsp;
+<a href="http://www.delorie.com/store/books/" target="_top">bookstore</a> &nbsp;
+</b></font></small></td>
+<td align="right" bgcolor="#ffcc99" valign="top"><small><font face="itc avant garde gothic,helvetica,arial"><b> &nbsp;
+<a href="http://www.delorie.com/" target="_top">delorie software</a> &nbsp;
+<a href="http://www.delorie.com/privacy.html" target="_top">privacy</a> &nbsp;
+</b></font></small></td>
+</tr><tr><td align="left" bgcolor="#ffcc99" valign="top"><small><font face="itc avant garde gothic,helvetica,arial"><b> &nbsp;
+<a href="http://www.delorie.com/copyright.html" target="_top">Copyright © 2003</a> &nbsp;
+<a href="http://www.delorie.com/users/fsf/" target="_top">by The Free Software Foundation</a> &nbsp;
+</b></font></small></td>
+<td align="right" bgcolor="#ffcc99" valign="top"><small><font face="itc avant garde gothic,helvetica,arial"><b> &nbsp;
+Updated Jun 2003 &nbsp;
+</b></font></small></td>
+</tr></tbody></table>
+<center><!-- BEGIN RICH-MEDIA BURST! CODE -->
+<script language="JavaScript">
+rnum=Math.round(Math.random() * 100000);
+document.write('<scr'+'ipt src="http://www.burstnet.com/cgi-bin/ads/ba1954a.cgi/v=2.0S/sz=468x60B/'+rnum+'/RETURN-CODE/JS/"></scr'+'ipt>');
+</script><script style="display: none;" src="tar_114_files/a_002.html"></script><noscript><a href="http://www.burstnet.com/ads/ba1954a-map.cgi/ns/v=2.0S/sz=468x60B/" target="_top">
+<img src="http://www.burstnet.com/cgi-bin/ads/ba1954a.cgi/ns/v=2.0S/sz=468x60B/" border="0" alt="Click Here"></a>
+</noscript>
+<!-- END BURST CODE -->
+<br><small><i>Please take a moment to fill out
+this <a href="http://websurvey.burstmedia.com/surveyid1/surveysite.asp?Qhcode=ad1954a&amp;Qhcat=13">visitor survey</a></i></small>
+<br><small><i>You can help support this site by
+visiting the advertisers that sponsor it! (only once each, though)</i></small>
+</center>
+</body></html>

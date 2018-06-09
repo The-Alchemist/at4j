@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/><title>Chapter 6. LZMA compression</title><link href="../at4j_doc-1.1.css" type="text/css" rel="stylesheet" /><meta content="DocBook XSL Stylesheets V1.77.1" name="generator" /><link rel="home" href="index.xhtml" title="At4J Programmer's Guide" /><link rel="up" href="index.xhtml" title="At4J Programmer's Guide" /><link rel="prev" href="ch05.xhtml" title="Chapter 5. gzip compression" /><link rel="next" href="ch07.xhtml" title="Chapter 7. Archives" /></head><body><div class="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Chapter 6. LZMA compression</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="ch05.xhtml">Prev</a> </td><th align="center" width="60%"> </th><td align="right" width="20%"> <a accesskey="n" href="ch07.xhtml">Next</a></td></tr></table><hr /></div><div class="chapter"><div class="titlepage"><div><div><h1 class="title"><a id="chap_lzma" />Chapter 6. LZMA compression</h1></div></div></div><div class="toc"><p><strong>Table of Contents</strong></p><dl><dt><span class="section"><a href="ch06.xhtml#standalone_lzma_tools">Standalone LZMA tools</a></span></dt></dl></div><p>LZMA, the Lempel-Ziv-Markov chain-Algorithm, is a compression algorithm
+that has been under development since 1998. See
+the <a class="xref" href="bi01.xhtml#bib_wikipedia_article_on_lzma" title="Wikipedia article on LZMA">Wikipedia article on LZMA</a>.</p><p>At4J uses Igor Pavlov's LZMA implementation from the
+<a class="xref" href="bi01.xhtml#bib_lzma_sdk_home_page" title="LZMA SDK home page">LZMA SDK</a>. It is built around a
+standalone encoder and a standalone decoder. The encoder reads data from an
+uncompressed stream and writes it to a compressed stream, and the decoder does
+the opposite. This <span class="emphasis"><em>pull</em></span> method of processing data is quite
+unlike the <span class="emphasis"><em>push</em></span> model employed by the Java streams
+API.</p><p>At4J provides stream implementations on top of the encoder and the
+decoder, in effect turning them inside out. To accomplish this, the encoder or
+the decoder is launched in a separate thread that is running as long as the
+stream writing to it or reading from it is open. The compressing stream
+implementation is <a class="apilink" title="org.at4j.comp.lzma.LzmaOutputStream" href="../api/index.html?org/at4j/comp/lzma/LzmaOutputStream.html">LzmaOutputStream</a> and the decompressing
+stream implementation is <a class="apilink" title="org.at4j.comp.lzma.LzmaInputStream" href="../api/index.html?org/at4j/comp/lzma/LzmaInputStream.html">LzmaInputStream</a>.</p><p>Clients are, of course, free to choose between using the LZMA SDK's
+Encoder and Decoder classes, or using At4J's <a class="apilink" title="org.at4j.comp.lzma.LzmaOutputStream" href="../api/index.html?org/at4j/comp/lzma/LzmaOutputStream.html">LzmaOutputStream</a> and
+<a class="apilink" title="org.at4j.comp.lzma.LzmaInputStream" href="../api/index.html?org/at4j/comp/lzma/LzmaInputStream.html">LzmaInputStream</a>.</p><div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Warning</h3><p>LZMA does not seem to work well with the IBM JDK. See the
+At4J test results.</p></div><p>An <a class="apilink" title="org.at4j.comp.lzma.LzmaOutputStream" href="../api/index.html?org/at4j/comp/lzma/LzmaOutputStream.html">LzmaOutputStream</a> is configured using an
+<a class="apilink" title="org.at4j.comp.lzma.LzmaOutputStreamSettings" href="../api/index.html?org/at4j/comp/lzma/LzmaOutputStreamSettings.html">LzmaOutputStreamSettings</a> object. There are several
+configurable parameters. See the <a class="apilink" title="org.at4j.comp.lzma.LzmaOutputStreamSettings" href="../api/index.html?org/at4j/comp/lzma/LzmaOutputStreamSettings.html">LzmaOutputStreamSettings</a>
+documentation for details. By default, the output stream writes its
+configuration before the compressed data. By doing so, an
+<a class="apilink" title="org.at4j.comp.lzma.LzmaInputStream" href="../api/index.html?org/at4j/comp/lzma/LzmaInputStream.html">LzmaInputStream</a> reading from the file does not have to be
+configured manually; it just reads its configuration from the file header. If
+the compressed data does not contain the compression
+settings, the input stream can be configured using an
+<a class="apilink" title="org.at4j.comp.lzma.LzmaInputStreamSettings" href="../api/index.html?org/at4j/comp/lzma/LzmaInputStreamSettings.html">LzmaInputStreamSettings</a> object.</p><p>The example below shows how data is compressed by writing it to an LZMA
+output stream and then decompressed again by reading from an LZMA input stream.
+
+</p><div class="example"><a id="ex_cad_lzma" /><p class="title"><strong>Example 6.1. Compressing and decompressing with LZMA</strong></p><div class="example-contents"><pre class="programlisting">// Data will be compressed to the <a class="apilink" title="java.io.File" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/File.html">File</a> f
+
+String toCompress = "Compress me!";
+
+// Create a new LZMA output stream with the default settings. This will write
+// the compression settings before the compressed data, so that the stream that
+// will read the data later on does not have to be configured manually.
+// This starts a new encoder thread.
+<a class="apilink" title="java.io.OutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/OutputStream.html">OutputStream</a> os = new <a class="apilink" title="org.at4j.comp.lzma.LzmaOutputStream" href="../api/index.html?org/at4j/comp/lzma/LzmaOutputStream.html">LzmaOutputStream</a>(new <a class="apilink" title="java.io.FileOutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/FileOutputStream.html">FileOutputStream</a>(f));
+try
+{
+    os.write(toCompress.getBytes());
+}
+finally
+{
+  // This closes the encoder thread.
+  os.close();
+}
+
+// Read the compressed data
+// This starts a new decoder thread.
+<a class="apilink" title="java.io.InputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/InputStream.html">InputStream</a> is = new <a class="apilink" title="org.at4j.comp.lzma.LzmaInputStream" href="../api/index.html?org/at4j/comp/lzma/LzmaInputStream.html">LzmaInputStream</a>(new <a class="apilink" title="java.io.FileInputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/FileInputStream.html">FileInputStream</a>(f));
+try
+{
+  // Use the EntityFS StreamUtil utility to make our job easier.
+  // This will print "Compress me!"
+  System.out.println(
+    new String(
+      <a class="apilink" title="org.entityfs.support.io.StreamUtil" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/support/io/StreamUtil.html">StreamUtil</a>.readStreamFully(is, 32)));
+}
+finally
+{
+  // This closes the decoder thread.
+  is.close();
+}</pre></div></div><p><br class="example-break" /></p><p>The example below writes LZMA compressed data to a file without writing
+the the compression settings, and then reads the data again using a manually
+configured input stream.
+
+</p><div class="example"><a id="ex_cad_lzma_no_config_in_file" /><p class="title"><strong>Example 6.2. Compressing and decompressing with LZMA using manual configuration</strong></p><div class="example-contents"><pre class="programlisting">// Data will be compressed to the <a class="apilink" title="java.io.File" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/File.html">File</a> f
+
+String toCompress = "Compress me!";
+
+// Create the configuration for the output stream. Set two properties and use
+// the default values for the other properties. 
+<a class="apilink" title="org.at4j.comp.lzma.LzmaOutputStreamSettings" href="../api/index.html?org/at4j/comp/lzma/LzmaOutputStreamSettings.html">LzmaOutputStreamSettings</a> outSettings = new <a class="apilink" title="org.at4j.comp.lzma.LzmaOutputStreamSettings" href="../api/index.html?org/at4j/comp/lzma/LzmaOutputStreamSettings.html">LzmaOutputStreamSettings</a>().
+  // Do not write the configuration to the file
+  setWriteStreamProperties(false).
+  // Use a dictionary size of 2^8 = 256 bytes
+  setDictionarySizeExponent(8);
+  
+// Create a new LZMA output stream with the custom settings.
+<a class="apilink" title="java.io.OutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/OutputStream.html">OutputStream</a> os = new <a class="apilink" title="org.at4j.comp.lzma.LzmaOutputStream" href="../api/index.html?org/at4j/comp/lzma/LzmaOutputStream.html">LzmaOutputStream</a>(new <a class="apilink" title="java.io.FileOutputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/FileOutputStream.html">FileOutputStream</a>(f), outSettings);
+try
+{
+    os.write(toCompress.getBytes());
+}
+finally
+{
+  os.close();
+}
+
+// Create the configuration for the input stream. Configure it using properties
+// from the output stream configuration above.
+<a class="apilink" title="org.at4j.comp.lzma.LzmaInputStreamSettings" href="../api/index.html?org/at4j/comp/lzma/LzmaInputStreamSettings.html">LzmaInputStreamSettings</a> inSettings = new <a class="apilink" title="org.at4j.comp.lzma.LzmaInputStreamSettings" href="../api/index.html?org/at4j/comp/lzma/LzmaInputStreamSettings.html">LzmaInputStreamSettings</a>().
+  setProperties(outSettings.getProperties());
+  
+// Read the compressed data with a manually configured input stream.
+<a class="apilink" title="java.io.InputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/InputStream.html">InputStream</a> is = new <a class="apilink" title="org.at4j.comp.lzma.LzmaInputStream" href="../api/index.html?org/at4j/comp/lzma/LzmaInputStream.html">LzmaInputStream</a>(new <a class="apilink" title="java.io.FileInputStream" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/FileInputStream.html">FileInputStream</a>(f), inSettings);
+try
+{
+  // Use the EntityFS StreamUtil utility to make our job easier.
+  // This will print "Compress me!"
+  System.out.println(
+    new String(
+      <a class="apilink" title="org.entityfs.support.io.StreamUtil" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/support/io/StreamUtil.html">StreamUtil</a>.readStreamFully(is, 32)));
+}
+finally
+{
+  // This closes the decoder thread.
+  is.close();
+}</pre></div></div><p><br class="example-break" /></p><p>The <a class="apilink" title="org.at4j.comp.lzma.LzmaWritableFile" href="../api/index.html?org/at4j/comp/lzma/LzmaWritableFile.html">LzmaWritableFile</a> and
+<a class="apilink" title="org.at4j.comp.lzma.LzmaReadableFile" href="../api/index.html?org/at4j/comp/lzma/LzmaReadableFile.html">LzmaReadableFile</a> objects can transparently
+compress data written to and decompress data read from a file.</p><p>The next example does the same as <a class="xref" href="ch06.xhtml#ex_cad_lzma" title="Example 6.1. Compressing and decompressing with LZMA">Example 6.1, “Compressing and decompressing with LZMA”</a>, except that it
+uses the <a class="apilink" title="org.at4j.comp.lzma.LzmaReadableFile" href="../api/index.html?org/at4j/comp/lzma/LzmaReadableFile.html">LzmaReadableFile</a> and 
+<a class="apilink" title="org.at4j.comp.lzma.LzmaWritableFile" href="../api/index.html?org/at4j/comp/lzma/LzmaWritableFile.html">LzmaWritableFile</a> classes.
+
+</p><div class="example"><a id="ex_cad_lzma_w_rwf" /><p class="title"><strong>Example 6.3. Compressing and decompressing with LZMA using At4J readable and
+writable LZMA files</strong></p><div class="example-contents"><pre class="programlisting">// Data will be compressed to the <a class="apilink" title="java.io.File" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/File.html">File</a> f
+
+String toCompress = "Compress me!";
+
+// Wrap the <a class="apilink" title="java.io.File" href="http://java.sun.com/j2se/1.5.0/docs/api/index.html?java/io/File.html">File</a> in a <a class="apilink" title="org.entityfs.util.io.ReadWritableFileAdapter" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/io/ReadWritableFileAdapter.html">ReadWritableFileAdapter</a> to make it a
+// <a class="apilink" title="org.entityfs.ReadWritableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/ReadWritableFile.html">ReadWritableFile</a>
+<a class="apilink" title="org.entityfs.ReadWritableFile" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/ReadWritableFile.html">ReadWritableFile</a> fa = new <a class="apilink" title="org.entityfs.util.io.ReadWritableFileAdapter" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/io/ReadWritableFileAdapter.html">ReadWritableFileAdapter</a>(f);
+
+// Write the data using the EntityFS utility class <a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a> and a
+// <a class="apilink" title="org.at4j.comp.lzma.LzmaWritableFile" href="../api/index.html?org/at4j/comp/lzma/LzmaWritableFile.html">LzmaWritableFile</a> using its default configuration.
+<a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a>.writeText(new <a class="apilink" title="org.at4j.comp.lzma.LzmaWritableFile" href="../api/index.html?org/at4j/comp/lzma/LzmaWritableFile.html">LzmaWritableFile</a>(fa), toCompress);
+
+// Read the data, again using <a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a>. The data is read from an unconfigured
+// <a class="apilink" title="org.at4j.comp.lzma.LzmaReadableFile" href="../api/index.html?org/at4j/comp/lzma/LzmaReadableFile.html">LzmaReadableFile</a>.
+// This will print out "Compress me!"
+System.out.println(
+  <a class="apilink" title="org.entityfs.util.Files" href="http://entityfs.sourceforge.net/releases/current/api/index.html?org/entityfs/util/Files.html">Files</a>.readTextFile(
+    new <a class="apilink" title="org.at4j.comp.lzma.LzmaReadableFile" href="../api/index.html?org/at4j/comp/lzma/LzmaReadableFile.html">LzmaReadableFile</a>(fa)));</pre></div></div><p><br class="example-break" /></p><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="standalone_lzma_tools" />Standalone LZMA tools</h2></div></div></div><p>The <a class="apilink" title="org.at4j.comp.lzma.prog.Lzma" href="../api/index.html?org/at4j/comp/lzma/prog/Lzma.html">Lzma</a> and <a class="apilink" title="org.at4j.comp.lzma.prog.UnLzma" href="../api/index.html?org/at4j/comp/lzma/prog/UnLzma.html">UnLzma</a> classes have
+runnable main methods that emulate the behavior of the
+<code class="computeroutput">lzma</code> and <code class="computeroutput">unlzma</code>
+commands. See their API documentation for details on how to use them.</p></div></div><div class="navfooter"><hr /><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="ch05.xhtml">Prev</a> </td><td align="center" width="20%"> </td><td align="right" width="40%"> <a accesskey="n" href="ch07.xhtml">Next</a></td></tr><tr><td valign="top" align="left" width="40%">Chapter 5. gzip compression </td><td align="center" width="20%"><a accesskey="h" href="index.xhtml">Home</a></td><td valign="top" align="right" width="40%"> Chapter 7. Archives</td></tr></table></div></body></html>

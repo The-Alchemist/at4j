@@ -1,0 +1,22 @@
+// Parse the Tar archive in the file f
+// The contents of this Tar archive is encoded with UTF-8. Most of its metadata
+// are stored in PAX variables which always are encoded in UTF-8, so if we did
+// not know the archive's encoding beforehand, that would probably not matter.
+org.at4j.tar.TarFile tf = new org.at4j.tar.TarFile(f, java.nio.charset.Charset.forName("utf8"));
+try
+{
+  // The Tar entry for the file räksmörgås.txt (räksmörgås = shrimp sandwich)
+  org.at4j.tar.PaxFileEntry fe = (org.at4j.tar.PaxFileEntry) tf.get(
+    new org.entityfs.el.AbsoluteLocation("/räksmörgås.txt"));
+  
+  // Print out all Pax variable names
+  System.out.println("Pax variables: " + fe.getPaxVariables().keySet());
+  
+  // Print out the value of the ctime variable (file creation time)
+  System.out.println("ctime: " + fe.getPaxVariables().get("ctime"));
+}
+finally
+{
+  // Close the Tar archive to release its associated resources
+  tf.close();
+}

@@ -1,0 +1,26 @@
+Future release:
+* Possibility to use jzlib for deflate compression.
+* Multi-threaded ZipBuilder.
+* Parse encrypted Zip files.
+* Build encrypted Zip files.
+* Parse signed Zip files.
+* Build signed Zip files.
+* If the compressed version of a file is bigger than the uncompressed one, let
+  the StreamFileWriteStrategy use a temporary file to uncompress it and than add
+  it uncompressed to the archive.
+* Implement more Zip compression methods.
+* InfoZipUnixExtraFieldFactory honors ECNtfsAttributes and ECUnixAttributes.
+* Support for appending to tar files.
+* Implement support for more Tar entry types.
+* Symbolic link support for the ZipBuilder and the TarBuilder.
+* tar archive labels (see Gnu tar docs).
+* Some kind of logger for logging warnings.
+* Implement a verbose mode for PrintTarEntryExtractionStrategy
+* Launcher scripts for the runnable classes
+* Self-extracting Jar file
+* PPMd support
+
+Next release:
+* Fix so that BZip2ReadableFile (and probably other bz2 classes as well) does
+  not require the Commons Compress classes unless they are the ones used.
+* Update Copyright notice to 2011

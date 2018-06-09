@@ -1,0 +1,1704 @@
+.
+      </para>
+    </section>
+
+    <section id="card-management-chip-specific">
+      <title>Chip-Specific Data</title>
+      <para>
+      Chip-specific information, e.g. the I/O port address, its
+      resource pointer, or the irq number, is stored in the
+      chip-specific record.
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  struct mychip {
+          ....
+  };
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        In general, there are two ways of allocating the chip record.
+      </para>
+
+      <section id="card-management-chip-specific-snd-card-new">
+        <title>1. Allocating via <function>snd_card_create()</function>.</title>
+        <para>
+          As mentioned above, you can pass the extra-data-length
+	  to the 4th argument of <function>snd_card_create()</function>, i.e.
+
+          <informalexample>
+            <programlisting>
+<![CDATA[
+  err = snd_card_create(index[dev], id[dev], THIS_MODULE,
+                        sizeof(struct mychip), &card);
+]]>
+            </programlisting>
+          </informalexample>
+
+          struct <structname>mychip</structname> is the type of the chip record.
+        </para>
+
+        <para>
+          In return, the allocated record can be accessed as
+
+          <informalexample>
+            <programlisting>
+<![CDATA[
+  struct mychip *chip = card->private_data;
+]]>
+            </programlisting>
+          </informalexample>
+
+          With this method, you don't have to allocate twice.
+          The record is released together with the card instance.
+        </para>
+      </section>
+
+      <section id="card-management-chip-specific-allocate-extra">
+        <title>2. Allocating an extra device.</title>
+
+        <para>
+          After allocating a card instance via
+          <function>snd_card_create()</function> (with
+          <constant>0</constant> on the 4th arg), call
+          <function>kzalloc()</function>. 
+
+          <informalexample>
+            <programlisting>
+<![CDATA[
+  struct snd_card *card;
+  struct mychip *chip;
+  err = snd_card_create(index[dev], id[dev], THIS_MODULE, 0, &card);
+  .....
+  chip = kzalloc(sizeof(*chip), GFP_KERNEL);
+]]>
+            </programlisting>
+          </informalexample>
+        </para>
+
+        <para>
+          The chip record should have the field to hold the card
+          pointer at least, 
+
+          <informalexample>
+            <programlisting>
+<![CDATA[
+  struct mychip {
+          struct snd_card *card;
+          ....
+  };
+]]>
+            </programlisting>
+          </informalexample>
+        </para>
+
+        <para>
+          Then, set the card pointer in the returned chip instance.
+
+          <informalexample>
+            <programlisting>
+<![CDATA[
+  chip->card = card;
+]]>
+            </programlisting>
+          </informalexample>
+        </para>
+
+        <para>
+          Next, initialize the fields, and register this chip
+          record as a low-level device with a specified
+          <parameter>ops</parameter>, 
+
+          <informalexample>
+            <programlisting>
+<![CDATA[
+  static struct snd_device_ops ops = {
+          .dev_free =        snd_mychip_dev_free,
+  };
+  ....
+  snd_device_new(card, SNDRV_DEV_LOWLEVEL, chip, &ops);
+]]>
+            </programlisting>
+          </informalexample>
+
+          <function>snd_mychip_dev_free()</function> is the
+        device-destructor function, which will call the real
+        destructor. 
+        </para>
+
+        <para>
+          <informalexample>
+            <programlisting>
+<![CDATA[
+  static int snd_mychip_dev_free(struct snd_device *device)
+  {
+          return snd_mychip_free(device->device_data);
+  }
+]]>
+            </programlisting>
+          </informalexample>
+
+          where <function>snd_mychip_free()</function> is the real destructor.
+        </para>
+      </section>
+    </section>
+
+    <section id="card-management-registration">
+      <title>Registration and Release</title>
+      <para>
+        After all components are assigned, register the card instance
+      by calling <function>snd_card_register()</function>. Access
+      to the device files is enabled at this point. That is, before
+      <function>snd_card_register()</function> is called, the
+      components are safely inaccessible from external side. If this
+      call fails, exit the probe function after releasing the card via
+      <function>snd_card_free()</function>. 
+      </para>
+
+      <para>
+        For releasing the card instance, you can call simply
+      <function>snd_card_free()</function>. As mentioned earlier, all
+      components are released automatically by this call. 
+      </para>
+
+      <para>
+        As further notes, the destructors (both
+      <function>snd_mychip_dev_free</function> and
+      <function>snd_mychip_free</function>) cannot be defined with
+      the <parameter>__devexit</parameter> prefix, because they may be
+      called from the constructor, too, at the false path. 
+      </para>
+
+      <para>
+      For a device which allows hotplugging, you can use
+      <function>snd_card_free_when_closed</function>.  This one will
+      postpone the destruction until all devices are closed.
+      </para>
+
+    </section>
+
+  </chapter>
+
+
+<!-- ****************************************************** -->
+<!-- PCI Resource Management  -->
+<!-- ****************************************************** -->
+  <chapter id="pci-resource">
+    <title>PCI Resource Management</title>
+
+    <section id="pci-resource-example">
+      <title>Full Code Example</title>
+      <para>
+        In this section, we'll complete the chip-specific constructor,
+      destructor and PCI entries. Example code is shown first,
+      below. 
+
+        <example>
+          <title>PCI Resource Management Example</title>
+          <programlisting>
+<![CDATA[
+  struct mychip {
+          struct snd_card *card;
+          struct pci_dev *pci;
+
+          unsigned long port;
+          int irq;
+  };
+
+  static int snd_mychip_free(struct mychip *chip)
+  {
+          /* disable hardware here if any */
+          .... /* (not implemented in this document) */
+
+          /* release the irq */
+          if (chip->irq >= 0)
+                  free_irq(chip->irq, chip);
+          /* release the I/O ports & memory */
+          pci_release_regions(chip->pci);
+          /* disable the PCI entry */
+          pci_disable_device(chip->pci);
+          /* release the data */
+          kfree(chip);
+          return 0;
+  }
+
+  /* chip-specific constructor */
+  static int __devinit snd_mychip_create(struct snd_card *card,
+                                         struct pci_dev *pci,
+                                         struct mychip **rchip)
+  {
+          struct mychip *chip;
+          int err;
+          static struct snd_device_ops ops = {
+                 .dev_free = snd_mychip_dev_free,
+          };
+
+          *rchip = NULL;
+
+          /* initialize the PCI entry */
+          err = pci_enable_device(pci);
+          if (err < 0)
+                  return err;
+          /* check PCI availability (28bit DMA) */
+          if (pci_set_dma_mask(pci, DMA_BIT_MASK(28)) < 0 ||
+              pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(28)) < 0) {
+                  printk(KERN_ERR "error to set 28bit mask DMA\n");
+                  pci_disable_device(pci);
+                  return -ENXIO;
+          }
+
+          chip = kzalloc(sizeof(*chip), GFP_KERNEL);
+          if (chip == NULL) {
+                  pci_disable_device(pci);
+                  return -ENOMEM;
+          }
+
+          /* initialize the stuff */
+          chip->card = card;
+          chip->pci = pci;
+          chip->irq = -1;
+
+          /* (1) PCI resource allocation */
+          err = pci_request_regions(pci, "My Chip");
+          if (err < 0) {
+                  kfree(chip);
+                  pci_disable_device(pci);
+                  return err;
+          }
+          chip->port = pci_resource_start(pci, 0);
+          if (request_irq(pci->irq, snd_mychip_interrupt,
+                          IRQF_SHARED, "My Chip", chip)) {
+                  printk(KERN_ERR "cannot grab irq %d\n", pci->irq);
+                  snd_mychip_free(chip);
+                  return -EBUSY;
+          }
+          chip->irq = pci->irq;
+
+          /* (2) initialization of the chip hardware */
+          .... /*   (not implemented in this document) */
+
+          err = snd_device_new(card, SNDRV_DEV_LOWLEVEL, chip, &ops);
+          if (err < 0) {
+                  snd_mychip_free(chip);
+                  return err;
+          }
+
+          snd_card_set_dev(card, &pci->dev);
+
+          *rchip = chip;
+          return 0;
+  }        
+
+  /* PCI IDs */
+  static struct pci_device_id snd_mychip_ids[] = {
+          { PCI_VENDOR_ID_FOO, PCI_DEVICE_ID_BAR,
+            PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0, },
+          ....
+          { 0, }
+  };
+  MODULE_DEVICE_TABLE(pci, snd_mychip_ids);
+
+  /* pci_driver definition */
+  static struct pci_driver driver = {
+          .name = "My Own Chip",
+          .id_table = snd_mychip_ids,
+          .probe = snd_mychip_probe,
+          .remove = __devexit_p(snd_mychip_remove),
+  };
+
+  /* module initialization */
+  static int __init alsa_card_mychip_init(void)
+  {
+          return pci_register_driver(&driver);
+  }
+
+  /* module clean up */
+  static void __exit alsa_card_mychip_exit(void)
+  {
+          pci_unregister_driver(&driver);
+  }
+
+  module_init(alsa_card_mychip_init)
+  module_exit(alsa_card_mychip_exit)
+
+  EXPORT_NO_SYMBOLS; /* for old kernels only */
+]]>
+          </programlisting>
+        </example>
+      </para>
+    </section>
+
+    <section id="pci-resource-some-haftas">
+      <title>Some Hafta's</title>
+      <para>
+        The allocation of PCI resources is done in the
+      <function>probe()</function> function, and usually an extra
+      <function>xxx_create()</function> function is written for this
+      purpose.
+      </para>
+
+      <para>
+        In the case of PCI devices, you first have to call
+      the <function>pci_enable_device()</function> function before
+      allocating resources. Also, you need to set the proper PCI DMA
+      mask to limit the accessed I/O range. In some cases, you might
+      need to call <function>pci_set_master()</function> function,
+      too.
+      </para>
+
+      <para>
+        Suppose the 28bit mask, and the code to be added would be like:
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  err = pci_enable_device(pci);
+  if (err < 0)
+          return err;
+  if (pci_set_dma_mask(pci, DMA_BIT_MASK(28)) < 0 ||
+      pci_set_consistent_dma_mask(pci, DMA_BIT_MASK(28)) < 0) {
+          printk(KERN_ERR "error to set 28bit mask DMA\n");
+          pci_disable_device(pci);
+          return -ENXIO;
+  }
+  
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+    </section>
+
+    <section id="pci-resource-resource-allocation">
+      <title>Resource Allocation</title>
+      <para>
+        The allocation of I/O ports and irqs is done via standard kernel
+      functions. Unlike ALSA ver.0.5.x., there are no helpers for
+      that. And these resources must be released in the destructor
+      function (see below). Also, on ALSA 0.9.x, you don't need to
+      allocate (pseudo-)DMA for PCI like in ALSA 0.5.x.
+      </para>
+
+      <para>
+        Now assume that the PCI device has an I/O port with 8 bytes
+        and an interrupt. Then struct <structname>mychip</structname> will have the
+        following fields:
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  struct mychip {
+          struct snd_card *card;
+
+          unsigned long port;
+          int irq;
+  };
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        For an I/O port (and also a memory region), you need to have
+      the resource pointer for the standard resource management. For
+      an irq, you have to keep only the irq number (integer). But you
+      need to initialize this number as -1 before actual allocation,
+      since irq 0 is valid. The port address and its resource pointer
+      can be initialized as null by
+      <function>kzalloc()</function> automatically, so you
+      don't have to take care of resetting them. 
+      </para>
+
+      <para>
+        The allocation of an I/O port is done like this:
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  err = pci_request_regions(pci, "My Chip");
+  if (err < 0) { 
+          kfree(chip);
+          pci_disable_device(pci);
+          return err;
+  }
+  chip->port = pci_resource_start(pci, 0);
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        <!-- obsolete -->
+        It will reserve the I/O port region of 8 bytes of the given
+      PCI device. The returned value, chip-&gt;res_port, is allocated
+      via <function>kmalloc()</function> by
+      <function>request_region()</function>. The pointer must be
+      released via <function>kfree()</function>, but there is a
+      problem with this. This issue will be explained later.
+      </para>
+
+      <para>
+        The allocation of an interrupt source is done like this:
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  if (request_irq(pci->irq, snd_mychip_interrupt,
+                  IRQF_SHARED, "My Chip", chip)) {
+          printk(KERN_ERR "cannot grab irq %d\n", pci->irq);
+          snd_mychip_free(chip);
+          return -EBUSY;
+  }
+  chip->irq = pci->irq;
+]]>
+          </programlisting>
+        </informalexample>
+
+        where <function>snd_mychip_interrupt()</function> is the
+      interrupt handler defined <link
+      linkend="pcm-interface-interrupt-handler"><citetitle>later</citetitle></link>.
+      Note that chip-&gt;irq should be defined
+      only when <function>request_irq()</function> succeeded.
+      </para>
+
+      <para>
+      On the PCI bus, interrupts can be shared. Thus,
+      <constant>IRQF_SHARED</constant> is used as the interrupt flag of
+      <function>request_irq()</function>. 
+      </para>
+
+      <para>
+        The last argument of <function>request_irq()</function> is the
+      data pointer passed to the interrupt handler. Usually, the
+      chip-specific record is used for that, but you can use what you
+      like, too. 
+      </para>
+
+      <para>
+        I won't give details about the interrupt handler at this
+        point, but at least its appearance can be explained now. The
+        interrupt handler looks usually like the following: 
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  static irqreturn_t snd_mychip_interrupt(int irq, void *dev_id)
+  {
+          struct mychip *chip = dev_id;
+          ....
+          return IRQ_HANDLED;
+  }
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        Now let's write the corresponding destructor for the resources
+      above. The role of destructor is simple: disable the hardware
+      (if already activated) and release the resources. So far, we
+      have no hardware part, so the disabling code is not written here. 
+      </para>
+
+      <para>
+        To release the resources, the <quote>check-and-release</quote>
+        method is a safer way. For the interrupt, do like this: 
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  if (chip->irq >= 0)
+          free_irq(chip->irq, chip);
+]]>
+          </programlisting>
+        </informalexample>
+
+        Since the irq number can start from 0, you should initialize
+        chip-&gt;irq with a negative value (e.g. -1), so that you can
+        check the validity of the irq number as above.
+      </para>
+
+      <para>
+        When you requested I/O ports or memory regions via
+	<function>pci_request_region()</function> or
+	<function>pci_request_regions()</function> like in this example,
+	release the resource(s) using the corresponding function,
+	<function>pci_release_region()</function> or
+	<function>pci_release_regions()</function>.
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  pci_release_regions(chip->pci);
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+	When you requested manually via <function>request_region()</function>
+	or <function>request_mem_region</function>, you can release it via
+	<function>release_resource()</function>.  Suppose that you keep
+	the resource pointer returned from <function>request_region()</function>
+	in chip-&gt;res_port, the release procedure looks like:
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  release_and_free_resource(chip->res_port);
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+      Don't forget to call <function>pci_disable_device()</function>
+      before the end.
+      </para>
+
+      <para>
+        And finally, release the chip-specific record.
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  kfree(chip);
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+      Again, remember that you cannot
+      use the <parameter>__devexit</parameter> prefix for this destructor. 
+      </para>
+
+      <para>
+      We didn't implement the hardware disabling part in the above.
+      If you need to do this, please note that the destructor may be
+      called even before the initialization of the chip is completed.
+      It would be better to have a flag to skip hardware disabling
+      if the hardware was not initialized yet.
+      </para>
+
+      <para>
+      When the chip-data is assigned to the card using
+      <function>snd_device_new()</function> with
+      <constant>SNDRV_DEV_LOWLELVEL</constant> , its destructor is 
+      called at the last.  That is, it is assured that all other
+      components like PCMs and controls have already been released.
+      You don't have to stop PCMs, etc. explicitly, but just
+      call low-level hardware stopping.
+      </para>
+
+      <para>
+        The management of a memory-mapped region is almost as same as
+        the management of an I/O port. You'll need three fields like
+        the following: 
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  struct mychip {
+          ....
+          unsigned long iobase_phys;
+          void __iomem *iobase_virt;
+  };
+]]>
+          </programlisting>
+        </informalexample>
+
+        and the allocation would be like below:
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  if ((err = pci_request_regions(pci, "My Chip")) < 0) {
+          kfree(chip);
+          return err;
+  }
+  chip->iobase_phys = pci_resource_start(pci, 0);
+  chip->iobase_virt = ioremap_nocache(chip->iobase_phys,
+                                      pci_resource_len(pci, 0));
+]]>
+          </programlisting>
+        </informalexample>
+        
+        and the corresponding destructor would be:
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  static int snd_mychip_free(struct mychip *chip)
+  {
+          ....
+          if (chip->iobase_virt)
+                  iounmap(chip->iobase_virt);
+          ....
+          pci_release_regions(chip->pci);
+          ....
+  }
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+    </section>
+
+    <section id="pci-resource-device-struct">
+      <title>Registration of Device Struct</title>
+      <para>
+	At some point, typically after calling <function>snd_device_new()</function>,
+	you need to register the struct <structname>device</structname> of the chip
+	you're handling for udev and co.  ALSA provides a macro for compatibility with
+	older kernels.  Simply call like the following:
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  snd_card_set_dev(card, &pci->dev);
+]]>
+          </programlisting>
+        </informalexample>
+	so that it stores the PCI's device pointer to the card.  This will be
+	referred by ALSA core functions later when the devices are registered.
+      </para>
+      <para>
+	In the case of non-PCI, pass the proper device struct pointer of the BUS
+	instead.  (In the case of legacy ISA without PnP, you don't have to do
+	anything.)
+      </para>
+    </section>
+
+    <section id="pci-resource-entries">
+      <title>PCI Entries</title>
+      <para>
+        So far, so good. Let's finish the missing PCI
+      stuff. At first, we need a
+      <structname>pci_device_id</structname> table for this
+      chipset. It's a table of PCI vendor/device ID number, and some
+      masks. 
+      </para>
+
+      <para>
+        For example,
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  static struct pci_device_id snd_mychip_ids[] = {
+          { PCI_VENDOR_ID_FOO, PCI_DEVICE_ID_BAR,
+            PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0, },
+          ....
+          { 0, }
+  };
+  MODULE_DEVICE_TABLE(pci, snd_mychip_ids);
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        The first and second fields of
+      the <structname>pci_device_id</structname> structure are the vendor and
+      device IDs. If you have no reason to filter the matching
+      devices, you can leave the remaining fields as above. The last
+      field of the <structname>pci_device_id</structname> struct contains
+      private data for this entry. You can specify any value here, for
+      example, to define specific operations for supported device IDs.
+      Such an example is found in the intel8x0 driver. 
+      </para>
+
+      <para>
+        The last entry of this list is the terminator. You must
+      specify this all-zero entry. 
+      </para>
+
+      <para>
+        Then, prepare the <structname>pci_driver</structname> record:
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  static struct pci_driver driver = {
+          .name = "My Own Chip",
+          .id_table = snd_mychip_ids,
+          .probe = snd_mychip_probe,
+          .remove = __devexit_p(snd_mychip_remove),
+  };
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        The <structfield>probe</structfield> and
+      <structfield>remove</structfield> functions have already
+      been defined in the previous sections.
+      The <structfield>remove</structfield> function should
+      be defined with the 
+      <function>__devexit_p()</function> macro, so that it's not
+      defined for built-in (and non-hot-pluggable) case. The
+      <structfield>name</structfield> 
+      field is the name string of this device. Note that you must not
+      use a slash <quote>/</quote> in this string. 
+      </para>
+
+      <para>
+        And at last, the module entries:
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  static int __init alsa_card_mychip_init(void)
+  {
+          return pci_register_driver(&driver);
+  }
+
+  static void __exit alsa_card_mychip_exit(void)
+  {
+          pci_unregister_driver(&driver);
+  }
+
+  module_init(alsa_card_mychip_init)
+  module_exit(alsa_card_mychip_exit)
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        Note that these module entries are tagged with
+      <parameter>__init</parameter> and 
+      <parameter>__exit</parameter> prefixes, not
+      <parameter>__devinit</parameter> nor
+      <parameter>__devexit</parameter>.
+      </para>
+
+      <para>
+        Oh, one thing was forgotten. If you have no exported symbols,
+        you need to declare it in 2.2 or 2.4 kernels (it's not necessary in 2.6 kernels).
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  EXPORT_NO_SYMBOLS;
+]]>
+          </programlisting>
+        </informalexample>
+
+        That's all!
+      </para>
+    </section>
+  </chapter>
+
+
+<!-- ****************************************************** -->
+<!-- PCM Interface  -->
+<!-- ****************************************************** -->
+  <chapter id="pcm-interface">
+    <title>PCM Interface</title>
+
+    <section id="pcm-interface-general">
+      <title>General</title>
+      <para>
+        The PCM middle layer of ALSA is quite powerful and it is only
+      necessary for each driver to implement the low-level functions
+      to access its hardware.
+      </para>
+
+      <para>
+        For accessing to the PCM layer, you need to include
+      <filename>&lt;sound/pcm.h&gt;</filename> first. In addition,
+      <filename>&lt;sound/pcm_params.h&gt;</filename> might be needed
+      if you access to some functions related with hw_param. 
+      </para>
+
+      <para>
+        Each card device can have up to four pcm instances. A pcm
+      instance corresponds to a pcm device file. The limitation of
+      number of instances comes only from the available bit size of
+      the Linux's device numbers. Once when 64bit device number is
+      used, we'll have more pcm instances available. 
+      </para>
+
+      <para>
+        A pcm instance consists of pcm playback and capture streams,
+      and each pcm stream consists of one or more pcm substreams. Some
+      soundcards support multiple playback functions. For example,
+      emu10k1 has a PCM playback of 32 stereo substreams. In this case, at
+      each open, a free substream is (usually) automatically chosen
+      and opened. Meanwhile, when only one substream exists and it was
+      already opened, the successful open will either block
+      or error with <constant>EAGAIN</constant> according to the
+      file open mode. But you don't have to care about such details in your
+      driver. The PCM middle layer will take care of such work.
+      </para>
+    </section>
+
+    <section id="pcm-interface-example">
+      <title>Full Code Example</title>
+      <para>
+      The example code below does not include any hardware access
+      routines but shows only the skeleton, how to build up the PCM
+      interfaces.
+
+        <example>
+          <title>PCM Example Code</title>
+          <programlisting>
+<![CDATA[
+  #include <sound/pcm.h>
+  ....
+
+  /* hardware definition */
+  static struct snd_pcm_hardware snd_mychip_playback_hw = {
+          .info = (SNDRV_PCM_INFO_MMAP |
+                   SNDRV_PCM_INFO_INTERLEAVED |
+                   SNDRV_PCM_INFO_BLOCK_TRANSFER |
+                   SNDRV_PCM_INFO_MMAP_VALID),
+          .formats =          SNDRV_PCM_FMTBIT_S16_LE,
+          .rates =            SNDRV_PCM_RATE_8000_48000,
+          .rate_min =         8000,
+          .rate_max =         48000,
+          .channels_min =     2,
+          .channels_max =     2,
+          .buffer_bytes_max = 32768,
+          .period_bytes_min = 4096,
+          .period_bytes_max = 32768,
+          .periods_min =      1,
+          .periods_max =      1024,
+  };
+
+  /* hardware definition */
+  static struct snd_pcm_hardware snd_mychip_capture_hw = {
+          .info = (SNDRV_PCM_INFO_MMAP |
+                   SNDRV_PCM_INFO_INTERLEAVED |
+                   SNDRV_PCM_INFO_BLOCK_TRANSFER |
+                   SNDRV_PCM_INFO_MMAP_VALID),
+          .formats =          SNDRV_PCM_FMTBIT_S16_LE,
+          .rates =            SNDRV_PCM_RATE_8000_48000,
+          .rate_min =         8000,
+          .rate_max =         48000,
+          .channels_min =     2,
+          .channels_max =     2,
+          .buffer_bytes_max = 32768,
+          .period_bytes_min = 4096,
+          .period_bytes_max = 32768,
+          .periods_min =      1,
+          .periods_max =      1024,
+  };
+
+  /* open callback */
+  static int snd_mychip_playback_open(struct snd_pcm_substream *substream)
+  {
+          struct mychip *chip = snd_pcm_substream_chip(substream);
+          struct snd_pcm_runtime *runtime = substream->runtime;
+
+          runtime->hw = snd_mychip_playback_hw;
+          /* more hardware-initialization will be done here */
+          ....
+          return 0;
+  }
+
+  /* close callback */
+  static int snd_mychip_playback_close(struct snd_pcm_substream *substream)
+  {
+          struct mychip *chip = snd_pcm_substream_chip(substream);
+          /* the hardware-specific codes will be here */
+          ....
+          return 0;
+
+  }
+
+  /* open callback */
+  static int snd_mychip_capture_open(struct snd_pcm_substream *substream)
+  {
+          struct mychip *chip = snd_pcm_substream_chip(substream);
+          struct snd_pcm_runtime *runtime = substream->runtime;
+
+          runtime->hw = snd_mychip_capture_hw;
+          /* more hardware-initialization will be done here */
+          ....
+          return 0;
+  }
+
+  /* close callback */
+  static int snd_mychip_capture_close(struct snd_pcm_substream *substream)
+  {
+          struct mychip *chip = snd_pcm_substream_chip(substream);
+          /* the hardware-specific codes will be here */
+          ....
+          return 0;
+
+  }
+
+  /* hw_params callback */
+  static int snd_mychip_pcm_hw_params(struct snd_pcm_substream *substream,
+                               struct snd_pcm_hw_params *hw_params)
+  {
+          return snd_pcm_lib_malloc_pages(substream,
+                                     params_buffer_bytes(hw_params));
+  }
+
+  /* hw_free callback */
+  static int snd_mychip_pcm_hw_free(struct snd_pcm_substream *substream)
+  {
+          return snd_pcm_lib_free_pages(substream);
+  }
+
+  /* prepare callback */
+  static int snd_mychip_pcm_prepare(struct snd_pcm_substream *substream)
+  {
+          struct mychip *chip = snd_pcm_substream_chip(substream);
+          struct snd_pcm_runtime *runtime = substream->runtime;
+
+          /* set up the hardware with the current configuration
+           * for example...
+           */
+          mychip_set_sample_format(chip, runtime->format);
+          mychip_set_sample_rate(chip, runtime->rate);
+          mychip_set_channels(chip, runtime->channels);
+          mychip_set_dma_setup(chip, runtime->dma_addr,
+                               chip->buffer_size,
+                               chip->period_size);
+          return 0;
+  }
+
+  /* trigger callback */
+  static int snd_mychip_pcm_trigger(struct snd_pcm_substream *substream,
+                                    int cmd)
+  {
+          switch (cmd) {
+          case SNDRV_PCM_TRIGGER_START:
+                  /* do something to start the PCM engine */
+                  ....
+                  break;
+          case SNDRV_PCM_TRIGGER_STOP:
+                  /* do something to stop the PCM engine */
+                  ....
+                  break;
+          default:
+                  return -EINVAL;
+          }
+  }
+
+  /* pointer callback */
+  static snd_pcm_uframes_t
+  snd_mychip_pcm_pointer(struct snd_pcm_substream *substream)
+  {
+          struct mychip *chip = snd_pcm_substream_chip(substream);
+          unsigned int current_ptr;
+
+          /* get the current hardware pointer */
+          current_ptr = mychip_get_hw_pointer(chip);
+          return current_ptr;
+  }
+
+  /* operators */
+  static struct snd_pcm_ops snd_mychip_playback_ops = {
+          .open =        snd_mychip_playback_open,
+          .close =       snd_mychip_playback_close,
+          .ioctl =       snd_pcm_lib_ioctl,
+          .hw_params =   snd_mychip_pcm_hw_params,
+          .hw_free =     snd_mychip_pcm_hw_free,
+          .prepare =     snd_mychip_pcm_prepare,
+          .trigger =     snd_mychip_pcm_trigger,
+          .pointer =     snd_mychip_pcm_pointer,
+  };
+
+  /* operators */
+  static struct snd_pcm_ops snd_mychip_capture_ops = {
+          .open =        snd_mychip_capture_open,
+          .close =       snd_mychip_capture_close,
+          .ioctl =       snd_pcm_lib_ioctl,
+          .hw_params =   snd_mychip_pcm_hw_params,
+          .hw_free =     snd_mychip_pcm_hw_free,
+          .prepare =     snd_mychip_pcm_prepare,
+          .trigger =     snd_mychip_pcm_trigger,
+          .pointer =     snd_mychip_pcm_pointer,
+  };
+
+  /*
+   *  definitions of capture are omitted here...
+   */
+
+  /* create a pcm device */
+  static int __devinit snd_mychip_new_pcm(struct mychip *chip)
+  {
+          struct snd_pcm *pcm;
+          int err;
+
+          err = snd_pcm_new(chip->card, "My Chip", 0, 1, 1, &pcm);
+          if (err < 0) 
+                  return err;
+          pcm->private_data = chip;
+          strcpy(pcm->name, "My Chip");
+          chip->pcm = pcm;
+          /* set operators */
+          snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_PLAYBACK,
+                          &snd_mychip_playback_ops);
+          snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_CAPTURE,
+                          &snd_mychip_capture_ops);
+          /* pre-allocation of buffers */
+          /* NOTE: this may fail */
+          snd_pcm_lib_preallocate_pages_for_all(pcm, SNDRV_DMA_TYPE_DEV,
+                                                snd_dma_pci_data(chip->pci),
+                                                64*1024, 64*1024);
+          return 0;
+  }
+]]>
+          </programlisting>
+        </example>
+      </para>
+    </section>
+
+    <section id="pcm-interface-constructor">
+      <title>Constructor</title>
+      <para>
+        A pcm instance is allocated by the <function>snd_pcm_new()</function>
+      function. It would be better to create a constructor for pcm,
+      namely, 
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  static int __devinit snd_mychip_new_pcm(struct mychip *chip)
+  {
+          struct snd_pcm *pcm;
+          int err;
+
+          err = snd_pcm_new(chip->card, "My Chip", 0, 1, 1, &pcm);
+          if (err < 0) 
+                  return err;
+          pcm->private_data = chip;
+          strcpy(pcm->name, "My Chip");
+          chip->pcm = pcm;
+	  ....
+          return 0;
+  }
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        The <function>snd_pcm_new()</function> function takes four
+      arguments. The first argument is the card pointer to which this
+      pcm is assigned, and the second is the ID string. 
+      </para>
+
+      <para>
+        The third argument (<parameter>index</parameter>, 0 in the
+      above) is the index of this new pcm. It begins from zero. If
+      you create more than one pcm instances, specify the
+      different numbers in this argument. For example,
+      <parameter>index</parameter> = 1 for the second PCM device.  
+      </para>
+
+      <para>
+        The fourth and fifth arguments are the number of substreams
+      for playback and capture, respectively. Here 1 is used for
+      both arguments. When no playback or capture substreams are available,
+      pass 0 to the corresponding argument.
+      </para>
+
+      <para>
+        If a chip supports multiple playbacks or captures, you can
+      specify more numbers, but they must be handled properly in
+      open/close, etc. callbacks.  When you need to know which
+      substream you are referring to, then it can be obtained from
+      struct <structname>snd_pcm_substream</structname> data passed to each callback
+      as follows: 
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  struct snd_pcm_substream *substream;
+  int index = substream->number;
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        After the pcm is created, you need to set operators for each
+        pcm stream. 
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_PLAYBACK,
+                  &snd_mychip_playback_ops);
+  snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_CAPTURE,
+                  &snd_mychip_capture_ops);
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+
+      <para>
+        The operators are defined typically like this:
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  static struct snd_pcm_ops snd_mychip_playback_ops = {
+          .open =        snd_mychip_pcm_open,
+          .close =       snd_mychip_pcm_close,
+          .ioctl =       snd_pcm_lib_ioctl,
+          .hw_params =   snd_mychip_pcm_hw_params,
+          .hw_free =     snd_mychip_pcm_hw_free,
+          .prepare =     snd_mychip_pcm_prepare,
+          .trigger =     snd_mychip_pcm_trigger,
+          .pointer =     snd_mychip_pcm_pointer,
+  };
+]]>
+          </programlisting>
+        </informalexample>
+
+        All the callbacks are described in the
+        <link linkend="pcm-interface-operators"><citetitle>
+        Operators</citetitle></link> subsection.
+      </para>
+
+      <para>
+        After setting the operators, you probably will want to
+        pre-allocate the buffer. For the pre-allocation, simply call
+        the following: 
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  snd_pcm_lib_preallocate_pages_for_all(pcm, SNDRV_DMA_TYPE_DEV,
+                                        snd_dma_pci_data(chip->pci),
+                                        64*1024, 64*1024);
+]]>
+          </programlisting>
+        </informalexample>
+
+        It will allocate a buffer up to 64kB as default.
+      Buffer management details will be described in the later section <link
+      linkend="buffer-and-memory"><citetitle>Buffer and Memory
+      Management</citetitle></link>. 
+      </para>
+
+      <para>
+        Additionally, you can set some extra information for this pcm
+        in pcm-&gt;info_flags.
+        The available values are defined as
+        <constant>SNDRV_PCM_INFO_XXX</constant> in
+        <filename>&lt;sound/asound.h&gt;</filename>, which is used for
+        the hardware definition (described later). When your soundchip
+        supports only half-duplex, specify like this: 
+
+        <informalexample>
+          <programlisting>
+<![CDATA[
+  pcm->info_flags = SNDRV_PCM_INFO_HALF_DUPLEX;
+]]>
+          </programlisting>
+        </informalexample>
+      </para>
+    </section>
+
+    <section id="pcm-interface-destructor">
+      <title>... And the Destructor?</title>
+      <para>
+        The destructor for a pcm instance is not always
+      necessary. Since the pcm device will be released by the middle
+      layer code automatically, you don't have to call the destructor
+      explicitly.
+      </para>
+
+      <para>
+        The destructor would be necessary if you created
+        special records internally and needed to release them. In such a
+        case, set the destructor function to
+        pcm-&gt;private_free: 
+
+        <example>
+          <title>PCM Instance with a Destructor</title>
+          <programlisting>
+<![CDATA[
+  static void mychip_pcm_free(struct snd_pcm *pcm)
+  {
+          struct mychip *chip = snd_pcm_chip(pcm);
+          /* free your own data */
+          kfree(chip->my_private_pcm_data);
+          /* do what you like else */
+          ....
+  }
+
+  static int __devinit snd_mychip_new_pcm(struct mychip *chip)
+  {
+          struct snd_pcm *pcm;
+          ....
+          /* allocate your own data */
+          chip->my_private_pcm_data = kmalloc(...);
+          /* set the destructor */
+          pcm->private_data = chip;
+          pcm->private_free = mychip_pcm_free;
+          ....
+  }
+]]>
+          </programlisting>
+        </example>
+      </para>
+    </section>
+
+    <section id="pcm-interface-runtime">
+      <title>Runtime Pointer - The Chest of PCM Information</title>
+	<para>
+	  When the PCM substream is opened, a PCM runtime instance is
+	allocated and assigned to the substream. This pointer is
+	accessible via <constant>substream-&gt;runtime</constant>.
+	This runtime pointer holds most information you need
+	to control the PCM: the copy of hw_params and sw_params configurations, the buffer
+	pointers, mmap records, spinlocks, etc.
+	</para>
+
+	<para>
+	The definition of runtime instance is found in
+	<filename>&lt;sound/pcm.h&gt;</filename>.  Here are
+       the contents of this file:
+          <informalexample>
+            <programlisting>
+<![CDATA[
+struct _snd_pcm_runtime {
+	/* -- Status -- */
+	struct snd_pcm_substream *trigger_master;
+	snd_timestamp_t trigger_tstamp;	/* trigger timestamp */
+	int overrange;
+	snd_pcm_uframes_t avail_max;
+	snd_pcm_uframes_t hw_ptr_base;	/* Position at buffer restart */
+	snd_pcm_uframes_t hw_ptr_interrupt; /* Position at interrupt time*/
+
+	/* -- HW params -- */
+	snd_pcm_access_t access;	/* access mode */
+	snd_pcm_format_t format;	/* SNDRV_PCM_FORMAT_* */
+	snd_pcm_subformat_t subformat;	/* subformat */
+	unsigned int rate;		/* rate in Hz */
+	unsigned int channels;		/* channels */
+	snd_pcm_uframes_t period_size;	/* period size */
+	unsigned int periods;		/* periods */
+	snd_pcm_uframes_t buffer_size;	/* buffer size */
+	unsigned int tick_time;		/* tick time */
+	snd_pcm_uframes_t min_align;	/* Min alignment for the format */
+	size_t byte_align;
+	unsigned int frame_bits;
+	unsigned int sample_bits;
+	unsigned int info;
+	unsigned int rate_num;
+	unsigned int rate_den;
+
+	/* -- SW params -- */
+	struct timespec tstamp_mode;	/* mmap timestamp is updated */
+  	unsigned int period_step;
+	unsigned int sleep_min;		/* min ticks to sleep */
+	snd_pcm_uframes_t start_threshold;
+	snd_pcm_uframes_t stop_threshold;
+	snd_pcm_uframes_t silence_threshold; /* Silence filling happens when
+						noise is nearest than this */
+	snd_pcm_uframes_t silence_size;	/* Silence filling size */
+	snd_pcm_uframes_t boundary;	/* pointers wrap point */
+
+	snd_pcm_uframes_t silenced_start;
+	snd_pcm_uframes_t silenced_size;
+
+	snd_pcm_sync_id_t sync;		/* hardware synchronization ID */
+
+	/* -- mmap -- */
+	volatile struct snd_pcm_mmap_status *status;
+	volatile struct snd_pcm_mmap_control *control;
+	atomic_t mmap_count;
+
+	/* -- locking / scheduling -- */
+	spinlock_t lock;
+	wait_queue_head_t sleep;
+	struct timer_list tick_timer;
+	struct fasync_struct *fasync;
+
+	/* -- private section -- */
+	void *private_data;
+	void (*private_free)(struct snd_pcm_runtime *runtime);
+
+	/* -- hardware description -- */
+	struct snd_pcm_hardware hw;
+	struct snd_pcm_hw_constraints hw_constraints;
+
+	/* -- interrupt callbacks -- */
+	void (*transfer_ack_begin)(struct snd_pcm_substream *substream);
+	void (*transfer_ack_end)(struct snd_pcm_substream *substream);
+
+	/* -- timer -- */
+	unsigned int timer_resolution;	/* timer resolution */
+
+	/* -- DMA -- */           
+	unsigned char *dma_area;	/* DMA area */
+	dma_addr_t dma_addr;		/* physical bus address (not accessible from main CPU) */
+	size_t dma_bytes;		/* size of DMA area */
+
+	struct snd_dma_buffer *dma_buffer_p;	/* allocated buffer */
+
+#if defined(CONFIG_SND_PCM_OSS) || defined(CONFIG_SND_PCM_OSS_MODULE)
+	/* -- OSS things -- */
+	struct snd_pcm_oss_runtime oss;
+#endif
+};
+]]>
+            </programlisting>
+          </informalexample>
+	</para>
+
+	<para>
+	  For the operators (callbacks) of each sound driver, most of
+	these records are supposed to be read-only.  Only the PCM
+	middle-layer changes / updates them.  The exceptions are
+	the hardware description (hw), interrupt callbacks
+	(transfer_ack_xxx), DMA buffer information, and the private
+	data.  Besides, if you use the standard buffer allocation
+	method via <function>snd_pcm_lib_malloc_pages()</function>,
+	you don't need to set the DMA buffer information by yourself.
+	</para>
+
+	<para>
+	In the sections below, important records are explained.
+	</para>
+
+	<section id="pcm-interface-runtime-hw">
+	<title>Hardware Description</title>
+	<para>
+	  The hardware descriptor (struct <structname>snd_pcm_hardware</structname>)
+	contains the definitions of the fundamental hardware
+	configuration.  Above all, you'll need to define this in
+	<link linkend="pcm-interface-operators-open-callback"><citetitle>
+	the open callback</citetitle></link>.
+	Note that the runtime instance holds the copy of the
+	descriptor, not the pointer to the existing descriptor.  That
+	is, in the open callback, you can modify the copied descriptor
+	(<constant>runtime-&gt;hw</constant>) as you need.  For example, if the maximum
+	number of channels is 1 only on some chip models, you can
+	still use the same hardware descriptor and change the
+	channels_max later:
+          <informalexample>
+            <programlisting>
+<![CDATA[
+          struct snd_pcm_runtime *runtime = substream->runtime;
+          ...
+          runtime->hw = snd_mychip_playback_hw; /* common definition */
+          if (chip->model == VERY_OLD_ONE)
+                  runtime->hw.channels_max = 1;
+]]>
+            </programlisting>
+          </informalexample>
+	</para>
+
+	<para>
+	  Typically, you'll have a hardware descriptor as below:
+          <informalexample>
+            <programlisting>
+<![CDATA[
+  static struct snd_pcm_hardware snd_mychip_playback_hw = {
+          .info = (SNDRV_PCM_INFO_MMAP |
+                   SNDRV_PCM_INFO_INTERLEAVED |
+                   SNDRV_PCM_INFO_BLOCK_TRANSFER |
+                   SNDRV_PCM_INFO_MMAP_VALID),
+          .formats =          SNDRV_PCM_FMTBIT_S16_LE,
+          .rates =            SNDRV_PCM_RATE_8000_48000,
+          .rate_min =         8000,
+          .rate_max =         48000,
+          .channels_min =     2,
+          .channels_max =     2,
+          .buffer_bytes_max = 32768,
+          .period_bytes_min = 4096,
+          .period_bytes_max = 32768,
+          .periods_min =      1,
+          .periods_max =      1024,
+  };
+]]>
+            </programlisting>
+          </informalexample>
+        </para>
+
+        <para>
+	<itemizedlist>
+	<listitem><para>
+          The <structfield>info</structfield> field contains the type and
+        capabilities of this pcm. The bit flags are defined in
+        <filename>&lt;sound/asound.h&gt;</filename> as
+        <constant>SNDRV_PCM_INFO_XXX</constant>. Here, at least, you
+        have to specify whether the mmap is supported and which
+        interleaved format is supported.
+        When the is supported, add the
+        <constant>SNDRV_PCM_INFO_MMAP</constant> flag here. When the
+        hardware supports the interleaved or the non-interleaved
+        formats, <constant>SNDRV_PCM_INFO_INTERLEAVED</constant> or
+        <constant>SNDRV_PCM_INFO_NONINTERLEAVED</constant> flag must
+        be set, respectively. If both are supported, you can set both,
+        too. 
+        </para>
+
+        <para>
+          In the above example, <constant>MMAP_VALID</constant> and
+        <constant>BLOCK_TRANSFER</constant> are specified for the OSS mmap
+        mode. Usually both are set. Of course,
+        <constant>MMAP_VALID</constant> is set only if the mmap is
+        really supported. 
+        </para>
+
+        <para>
+          The other possible flags are
+        <constant>SNDRV_PCM_INFO_PAUSE</constant> and
+        <constant>SNDRV_PCM_INFO_RESUME</constant>. The
+        <constant>PAUSE</constant> bit means that the pcm supports the
+        <quote>pause</quote> operation, while the
+        <constant>RESUME</constant> bit means that the pcm supports
+        the full <quote>suspend/resume</quote> operation.
+	If the <constant>PAUSE</constant> flag is set,
+	the <structfield>trigger</structfield> callback below
+        must handle the corresponding (pause push/release) commands.
+	The suspend/resume trigger commands can be defined even without
+	the <constant>RESUME</constant> flag.  See <link
+	linkend="power-management"><citetitle>
+	Power Management</citetitle></link> section for details.
+        </para>
+
+	<para>
+	  When the PCM substreams can be synchronized (typically,
+	synchronized start/stop of a playback and a capture streams),
+	you can give <constant>SNDRV_PCM_INFO_SYNC_START</constant>,
+	too.  In this case, you'll need to check the linked-list of
+	PCM substreams in the trigger callback.  This will be
+	described in the later section.
+	</para>
+	</listitem>
+
+	<listitem>
+        <para>
+          <structfield>formats</structfield> field contains the bit-flags
+        of supported formats (<constant>SNDRV_PCM_FMTBIT_XXX</constant>).
+        If the hardware supports more than one format, give all or'ed
+        bits.  In the example above, the signed 16bit little-endian
+        format is specified.
+        </para>
+	</listitem>
+
+	<listitem>
+        <para>
+        <structfield>rates</structfield> field contains the bit-flags of
+        supported rates (<constant>SNDRV_PCM_RATE_XXX</constant>).
+        When the chip supports continuous rates, pass
+        <constant>CONTINUOUS</constant> bit additionally.
+        The pre-defined rate bits are provided only for typical
+	rates. If your chip supports unconventional rates, you need to add
+        the <constant>KNOT</constant> bit and set up the hardware
+        constraint manually (explained later).
+        </para>
+	</listitem>
+
+	<listitem>
+	<para>
+	<structfield>rate_min</structfield> and
+	<structfield>rate_max</structfield> define the minimum and
+	maximum sample rate.  This should correspond somehow to
+	<structfield>rates</structfield> bits.
+	</para>
+	</listitem>
+
+	<listitem>
+	<para>
+	<structfield>channel_min</structfield> and
+	<structfield>channel_max</structfield> 
+	define, as you might already expected, the minimum and maximum
+	number of channels.
+	</para>
+	</listitem>
+
+	<listitem>
+	<para>
+	<structfield>buffer_bytes_max</structfield> defines the
+	maximum buffer size in bytes.  There is no
+	<structfield>buffer_bytes_min</structfield> field, since
+	it can be calculated from the minimum period size and the
+	minimum number of periods.
+	Meanwhile, <structfield>period_bytes_min</structfield> and
+	define the minimum and maximum size of the period in bytes.
+	<structfield>periods_max</structfield> and
+	<structfield>periods_min</structfield> define the maximum and
+	minimum number of periods in the buffer.
+        </para>
+
+	<para>
+	The <quote>period</quote> is a term that corresponds to
+	a fragment in the OSS world. The period defines the size at
+	which a PCM interrupt is generated. This size strongly
+	depends on the hardware. 
+	Generally, the smaller period size will give you more
+	interrupts, that is, more controls. 
+	In the case of capture, this size defines the input latency.
+	On the other hand, the whole buffer size defines the
+	output latency for the playback direction.
+	</para>
+	</listitem>
+
+	<listitem>
+	<para>
+	There is also a field <structfield>fifo_size</structfield>.
+	This specifies the size of the hardware FIFO, but currently it
+	is neither used in the driver nor in the alsa-lib.  So, you
+	can ignore this field.
+	</para>
+	</listitem>
+	</itemizedlist>
+	</para>
+	</section>
+
+	<section id="pcm-interface-runtime-config">
+	<title>PCM Configurations</title>
+	<para>
+	Ok, let's go back again to the PCM runtime records.
+	The most frequently referred records in the runtime instance are
+	the PCM configurations.
+	The PCM configurations are stored in the runtime instance
+	after the application sends <type>hw_params</type> data via
+	alsa-lib.  There are many fields copied from hw_params and
+	sw_params structs.  For example,
+	<structfield>format</structfield> holds the format type
+	chosen by the application.  This field contains the enum value
+	<constant>SNDRV_PCM_FORMAT_XXX</constant>.
+	</para>
+
+	<para>
+	One thing to be noted is that the configured buffer and period
+	sizes are stored in <quote>frames</quote> in the runtime.
+        In the ALSA world, 1 frame = channels * samples-size.
+	For conversion between frames and bytes, you can use the
+	<function>frames_to_bytes()</function> and
+          <function>bytes_to_frames()</function> helper functions. 
+          <informalexample>
+            <programlisting>
+<![CDATA[
+  period_bytes = frames_to_bytes(runtime, runtime->period_size);
+]]>
+            </programlisting>
+          </informalexample>
+        </para>
+
+	<para>
+	Also, many software parameters (sw_params) are
+	stored in frames, too.  Please check the type of the field.
+	<type>snd_pcm_uframes_t</type> is for the frames as unsigned
+	integer while <type>snd_pcm_sframes_t</type> is for the frames
+	as signed integer.
+	</para>
+	</section>
+
+	<section id="pcm-interface-runtime-dma">
+	<title>DMA Buffer Information</title>
+	<para>
+	The DMA buffer is defined by the following four fields,
+	<structfield>dma_area</structfield>,
+	<structfield>dma_addr</structfield>,
+	<structfield>dma_bytes</structfield> and
+	<structfield>dma_private</structfield>.
+	The <structfield>dma_area</structfield> holds the buffer
+	pointer (the logical address).  You can call
+	<function>memcpy</function> from/to 
+	this pointer.  Meanwhile, <structfield>dma_addr</structfield>
+	holds the physical address of the buffer.  This field is
+	specified only when the buffer is a linear buffer.
+	<structfield>dma_bytes</structfield> holds the size of buffer
+	in bytes.  <structfield>dma_private</structfield> is used for
+	the ALSA DMA allocator.
+	</para>
+
+	<para>
+	If you use a standard ALSA function,
+	<function>snd_pcm_lib_malloc_pages()</function>, for
+	allocating the buffer, these fields are set by the ALSA middle
+	layer, and you should <emphasis>not</emphasis> change them by
+	yourself.  You can read them but not write them.
+	On the other hand, if you want to allocate the buffer by
+	yourself, you'll need to manage it in hw_params callback.
+	At least, <structfield>dma_bytes</structfield> is mandatory.
+	<structfield>dma_area</structfield> is necessary when the
+	buffer is mmapped.  If your driver doesn't support mmap, this
+	field is not necessary.  <structfield>dma_addr</structfield>
+	is also optional.  You can use
+	<structfield>dma_private</structfield> as you like, too.
+	</para>
+	</section>
+
+	<section id="pcm-interface-runtime-status">
+	<title>Running Status</title>
+	<para>
+	The running status can be referred via <constant>runtime-&gt;status</constant>.
+	This is the pointer to the struct <structname>snd_pcm_mmap_status</structname>
+	record.  For example, you can get the current DMA hardware
+	pointer via <constant>runtime-&gt;status-&gt;hw_ptr</constant>.
+	</para>
+
+	<para>
+	The DMA application pointer can be referred via
+	<constant>runtime-&gt;control</constant>, which points to the
+	struct <structname>snd_pcm_mmap_control</structname> record.
+	However, accessing directly to this value is not recommended.
+	</para>
+	</section>
+
+	<section id="pcm-interface-runtime-private">
+	<title>Private Data</title> 
+	<para>
+	You can allocate a record for the substream and store it in
+	<constant>runtime-&gt;private_data</constant>.  Usually, this
+	is done in
+	<link linkend="pcm-interface-operators-open-callback"><citetitle>
+	the open callback</citetitle></link>.
+	Don't mix this with <constant>pcm-&gt;private_data</constant>.
+	The <constant>pcm-&gt;private_data</constant> usually points to the
+	chip instance assigned statically at the creation of PCM, while the 
+	<constant>runtime-&gt;private_data</constant> points to a dynamic
+	data structure created at the PCM open callback.
+
+          <informalexample>
+            <programlisting>
+<![CDATA[
+  static int snd_xxx_open(struct snd_pcm_substream *substream)
+  {
+          struct my_pcm_data *data;
+          ....
+          data = kmalloc(sizeof(*data), GFP_KERNEL);
+          substream->runtime->private_data = data;
+          ....
+  }
+]]>
+            </programlisting>
+          </informalexample>
+        </para>
+
+        <para>
+          The allocated object must be released in
+	<link linkend="pcm-interface-operators-open-callback"><citetitle>
+	the close callback</citetitle></link>.
+        </para>
+	</section>
+
+	<section id="pcm-interface-runtime-intr">
+	<title>Interrupt Callbacks</title>
+	<para>
+	The field <structfield>transfer_ack_begin</structfield> and
+	<structfield>transfer_ack_end</structfield> are called at
+	the beginning and at the end of
+	<function>snd_pcm_period_elapsed()</function>, respectively. 
+	</para>
+	</section>
+
+    </section>
+
+    <section id="pcm-interface-operators">
+      <title>Operators</title>
+      <para>
+        OK, now let me give details about each pcm callback
+      (<parameter>ops</parameter>). In general, every callback 

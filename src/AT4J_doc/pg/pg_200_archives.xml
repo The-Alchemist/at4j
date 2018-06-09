@@ -1,0 +1,105 @@
+<chapter id="chap_archives">
+<title>Archives</title>
+<para>An <emphasis>archive</emphasis> is a collection of files and directories, 
+stored as archive <emphasis>entries</emphasis> in a single file. The archive often also
+stores some kind of metadata for each entry, such as its owner or its latest modification
+time.</para>
+
+<para>&At4J; supports reading and creating Zip and Tar archives.</para>
+
+<section id="reading_archives">
+<title>Reading archives</title>
+<para>A program can access files and directories in an archive by creating an org.at4j.archive.Archive object, such as
+org.at4j.zip.ZipFile or org.at4j.tar.TarFile on the archive file. The archive
+contains a set of org.at4j.archive.ArchiveEntry:s containing data on each 
+archive entry, each with its unique org.entityfs.el.AbsoluteLocation in the
+archive. Entries may be org.at4j.archive.ArchiveFileEntry:s,
+org.at4j.archive.ArchiveDirectoryEntry:s or
+org.at4j.archive.ArchiveSymbolicLinkEntry:s. An org.at4j.archive.ArchiveFileEntry
+is a org.entityfs.ReadableFile, and an org.at4j.archive.ArchiveDirectoryEntry
+has a map of child entries with their names as keys. org.at4j.archive.Archive
+objects implement
+java.io.Map&lt;org.entityfs.el.AbsoluteLocation, org.at4j.archive.ArchiveEntry&gt;,
+(read only) which makes it easy to access individual entries.</para>
+
+<para>Entries in Zip and Tar archives
+differ in what kind of metadata they store, so each archive format has its own
+org.at4j.archive.ArchiveEntry implementations. See <xref linkend="chap_tar"/>
+and <xref linkend="chap_zip"/> for examples.</para>
+
+<para>Since an org.at4j.archive.Archive object keeps the backing archive file
+open, it must be closed when the program is done using it.</para>
+</section>
+
+<section id="extracting_from_archives">
+<title>Extracting entries</title>
+<para>Entries can be extracted and copied to a org.entityfs.FileSystem by
+manually traversing through the entries in an org.at4j.archive.Archive object or
+by using the org.at4j.util.archive.ArchiveExtractor.
+
+<example id="ex_archive_extractor">
+<title>Extracting files from a Zip file using the archive extractor</title>
+<programlisting>&ex_archive_extractor;</programlisting>
+</example></para>
+
+<para>The org.at4j.util.archive.ArchiveExtractor's extraction process can be
+fine-tuned by giving it a custom org.at4j.util.archive.ExtractSpecification
+object.</para>
+
+<para>For some archive formats (Tar), there are customized archive extractors
+(org.at4j.tar.TarExtractor) that may be faster than the
+org.at4j.util.archive.ArchiveExtractor.
+</para>
+</section>
+
+<section id="creating_archives">
+<title>Creating archives</title>
+<para>An archive file is created by creating a new archive format-specific
+org.at4j.archive.builder.ArchiveBuilder object, for instance a org.at4j.zip.builder.ZipBuilder,
+and then adding entries to it. See the following chapters for examples.</para>
+
+<para>An archive builder may or may not be a org.at4j.archive.builder.StreamAddCapableArchiveBuilder.
+A stream add capable builder has methods for adding data read from an input stream
+as a file entry in the archive.</para>
+
+<section id="entry_metadata">
+<title>Determining the metadata for an entry</title>
+<para>The metadata added to each entry is determined by its effective
+org.at4j.archive.builder.ArchiveEntrySettings object
+(org.at4j.zip.builder.ZipEntrySettings, org.at4j.tar.builder.TarEntrySettings, etc). Entry
+settings can be defined in three different scopes:
+<orderedlist>
+<listitem>Settings from <emphasis>rules</emphasis> specified for a single add operation (highest
+precedence). A rule is a settings object paired with a
+org.entityfs.support.Filter&lt;org.at4j.archive.builder.EntryToArchive&gt;
+(org.at4j.archive.builder.EntityToArchiveFilter) filter to determine which
+entries it should be applied to.</listitem>
+<listitem>Settings from the archive builder's list of global rules.</listitem>
+<listitem>Default settings for each entry type (files or directories).</listitem>
+</orderedlist>
+The archive builder arrives at the effective settings for each entry by:
+<simplelist type="horiz" columns="2">
+<member>1.</member><member>Combine the default file or directory settings with the settings
+from the first applicable global rule.</member>>
+<member>2.</member><member>Combine the settings created by the previous step with the settings
+from the second applicable global rule.</member>
+<member><literallayout>3 &ndash; <emphasis>n - 1</emphasis>.</literallayout></member>
+<member>&hellip;</member>
+<member><emphasis>n</emphasis>.</member><member>Combine the settings created by the previous step with the
+settings from the last applicable global rule.</member>
+<member><literallayout><emphasis>n + 1</emphasis>.</literallayout></member>
+<member>Combine the settings created by the previous step with
+the settings from the first applicable rule for the add operation.</member>
+<member><literallayout><emphasis>n + 2</emphasis> &ndash; <emphasis>n + m - 1</emphasis>.</literallayout></member>
+<member>&hellip;</member>
+<member><literallayout><emphasis>n + m</emphasis>.</literallayout></member>
+<member>Combine the settings created by the previous step with
+the settings from the last applicable rule for the add operation.</member>
+</simplelist>
+When combining settings object <emphasis>A</emphasis> with settings object
+<emphasis>B</emphasis>, a new settings object <emphasis>C</emphasis> is created
+that contains the values of properties from <emphasis>A</emphasis>, overridden
+by the values for the properties that are are set in <emphasis>B</emphasis>.</para>
+</section> 
+</section>
+</chapter>

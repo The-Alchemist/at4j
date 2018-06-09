@@ -1,0 +1,21 @@
+// Data will be compressed to the java.io.File f
+
+String toCompress = "Compress me!";
+
+// Wrap the java.io.File in a org.entityfs.util.io.ReadWritableFileAdapter to make it a
+// org.entityfs.ReadWritableFile
+org.entityfs.ReadWritableFile fa = new org.entityfs.util.io.ReadWritableFileAdapter(f);
+
+// Write the data using the EntityFS utility class org.entityfs.util.Files and a
+// org.at4j.comp.bzip2.BZip2WritableFile. Use maximum compression (9).
+org.at4j.comp.bzip2.BZip2WritableFileSettings writeSettings = new org.at4j.comp.bzip2.BZip2WritableFileSettings().
+  setBlockSize(9);
+
+org.entityfs.util.Files.writeText(new org.at4j.comp.bzip2.BZip2WritableFile(fa, writeSettings), toCompress);
+
+// Read the data, again using org.entityfs.util.Files. The data is read from a
+// org.at4j.comp.bzip2.BZip2ReadableFile.
+// This will print out "Compress me!"
+System.out.println(
+  org.entityfs.util.Files.readTextFile(
+    new org.at4j.comp.bzip2.BZip2ReadableFile(fa)));

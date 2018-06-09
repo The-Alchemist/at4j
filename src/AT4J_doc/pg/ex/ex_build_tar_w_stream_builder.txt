@@ -1,0 +1,36 @@
+// Build the Tar file "myArchive.tar.bz2" in the directory targetDir.
+// Use a org.at4j.comp.bzip2.BZip2WritableFile to compress the archive while it is created.
+org.entityfs.WritableFile tarFile = new org.at4j.comp.bzip2.BZip2WritableFile(
+  org.entityfs.util.Directories.newFile(targetDir, "myArchive.tar.bz2"));
+
+// Configure global Tar builder settings.
+// Use the default Tar entry strategy (org.at4j.tar.builder.GnuTarEntryStrategy).
+org.at4j.tar.builder.TarBuilderSettings settings = new org.at4j.tar.builder.TarBuilderSettings().
+  //
+  // Files are not world readable
+  setDefaultFileEntrySettings(
+    new org.at4j.tar.builder.TarEntrySettings().
+      setEntityMode(org.entityfs.entityattrs.unix.UnixEntityMode.forCode(0640)));
+
+// Create the Tar builder
+org.at4j.tar.builder.TarStreamBuilder builder = new org.at4j.tar.builder.TarStreamBuilder(tarFile, settings);
+
+// Add two files
+builder.add(
+  new org.entityfs.util.NamedReadableFileAdapter(
+    new org.entityfs.util.CharSequenceReadableFile("The contents of this file are secret!"),
+    "secret.txt"),
+  org.entityfs.el.AbsoluteLocation.ROOT_DIR);
+
+builder.add(
+  new org.entityfs.util.NamedReadableFileAdapter(
+    new org.entityfs.util.CharSequenceReadableFile("The contents of this file are public!"),
+    "public.txt"),
+  org.entityfs.el.AbsoluteLocation.ROOT_DIR,
+  //
+  // Use custom settings for this file
+  new org.at4j.tar.builder.TarEntrySettings().
+    setEntityMode(org.entityfs.entityattrs.unix.UnixEntityMode.forCode(0644)));
+
+// Close the builder to finish the file.
+builder.close();

@@ -1,0 +1,13 @@
+Release 1.0.1, 2009.03.19
+================================================================================
+AT4J is a set of tools for working with data compression and file archives from
+Java. It supports reading and creating Zip and Tar files, as well as several
+types of compression algorithms via third party libraries.
+
+This release fixes two bugs that made the TarExtractor and the ArchiveExtractor
+not work properly on locking file systems. EntityFS and the Apache Commons
+Compress bzip2 dependencies are updated to their latest versions.
+
+Read more about EntityFS on http://www.entityfs.org  
+Read more about Schmant on http://www.schmant.org
+Read more about At4J on http://www.at4j.org

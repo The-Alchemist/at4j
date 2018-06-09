@@ -1,0 +1,1 @@
+LZMA is in the public domain. See http://www.7-zip.org/sdk.html

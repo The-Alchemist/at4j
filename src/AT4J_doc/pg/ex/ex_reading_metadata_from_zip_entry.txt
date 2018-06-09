@@ -1,0 +1,28 @@
+// Create a Zip archive object for the archive in the file f
+// The Zip file metadata is encoded using the UTF-8 charset.
+org.at4j.zip.ZipFile zf = new org.at4j.zip.ZipFile(f, org.at4j.support.nio.charset.Charsets.UTF8, org.at4j.support.nio.charset.Charsets.UTF8);
+
+// Print out the archive comment
+System.out.println(zf.getComment());
+
+// Get the file entry /f1
+org.at4j.zip.ZipFileEntry zfe = (org.at4j.zip.ZipFileEntry) zf.get(new org.entityfs.el.AbsoluteLocation("/f1"));
+
+// Print out its comment
+System.out.println(zfe.getComment());
+
+// Print out its compression method
+System.out.println(zfe.getCompressionMethod().getName());
+
+// Print out its Unix permissions mode
+System.out.println(
+  ((org.at4j.zip.extattrs.UnixExternalFileAttributes) zfe.getExternalFileAttributes()).
+    getEntityMode());
+
+// Print out the value of the last modification time from the extended timestamp
+// extra field from the local file header. Format the data using a
+// java.text.SimpleDateFormat object.
+System.out.println(
+  new java.text.SimpleDateFormat("yyyyMMdd").format(
+    zfe.getExtraField(org.at4j.zip.ef.ExtendedTimestampExtraField.class, true).
+      getLastModified()));

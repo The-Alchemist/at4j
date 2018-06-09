@@ -1,0 +1,2 @@
+TODO: bzip2 manual tests. (Test bzip:ing and unbzip:ing a tar file containing
+the linux kernel distribution.)

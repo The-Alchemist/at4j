@@ -1,0 +1,74 @@
+<chapter id="chap_compression">
+<title>Data compression</title>
+<para>&At4J; has an implementation of bzip2 and provides other data compression
+algorithms through third party libraries. All
+compression methods use Java's streams metaphor&mdash;data is compressed by
+writing to an java.io.OutputStream and decompressed by reading from an
+java.io.InputStream. The example below shows how data is compressed and then
+decompressed using bzip2 compression.
+
+<example id="ex_cad">
+<title>Compressing and decompressing with bzip2</title>
+<programlisting>&ex_cad;</programlisting>
+</example>
+</para>
+
+<section id="compression_utilities">
+<title>Utilities</title>
+<para><ulink url="&lEntityFS;">EntityFS</ulink> has some utility classes that
+makes the I/O programming less verbose. The example below does the same as the
+example above, but uses the org.entityfs.support.io.StreamUtil class for reading
+data from the decompressing stream.
+
+<example id="ex_cad_entityfs">
+<title>Compressing and decompressing with bzip2 using EntityFS utilities</title>
+<programlisting>&ex_cad_using_entityfs_utilities;</programlisting>
+</example>
+</para>
+
+<para>
+The following EntityFS classes are useful when working with files and streams:
+<table id="tbl_entityfs_classes">
+<title>Useful EntityFS classes</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Class</entry>
+<entry>Description</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry>org.entityfs.util.Files</entry>
+<entry>Support for reading from and writing to files.</entry>
+</row>
+<row>
+<entry>org.entityfs.support.io.StreamUtil</entry>
+<entry>Support for reading from and writing to streams.</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+</para>
+</section>
+
+<section id="which_compression_method_is_best">
+<title>Which compression method is best?</title>
+<para>The answer is, of course: <emphasis>it depends</emphasis>. The performance
+characteristics of the different compression methods are investigated in
+<xref linkend="bib_test_report"/>. The table below summarizes the characteristics
+of the different compression methods:
+<table id="tbl_compression_methods">
+<title>Compression methods</title>
+<tgroup cols="4">
+<thead>
+<row><entry>Method</entry><entry>Compression</entry><entry>Speed</entry><entry>Software support</entry></row>
+</thead>
+<tbody>
+<row><entry>gzip</entry><entry>fair</entry><entry>fast</entry><entry>ubiquitous</entry></row>
+<row><entry>bzip2</entry><entry>good</entry><entry>slow</entry><entry>widespread</entry></row>
+<row><entry>LZMA</entry><entry>very good</entry><entry>slower</entry><entry>scarce</entry></row>
+</tbody>
+</tgroup></table>
+</para></section>
+</chapter>

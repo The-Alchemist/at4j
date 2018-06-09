@@ -1,0 +1,77 @@
+// Build the Zip file "myArchive.zip" in the directory targetDir.
+org.entityfs.RandomlyAccessibleFile zipFile = org.entityfs.util.Directories.newFile(targetDir, "myArchive.zip");
+
+// Configure the global Zip builder settings.
+
+// Create a factory object for the external attributes metadata
+org.at4j.zip.extattrs.ZipExternalFileAttributesFactory extAttrsFactory =
+  new org.at4j.zip.extattrs.UnixExternalFileAttributesFactory(
+    //
+    // Set files to be world readable
+    org.entityfs.entityattrs.unix.UnixEntityMode.forCode(0644),
+    //
+    // Set directories to be world executable
+    org.entityfs.entityattrs.unix.UnixEntityMode.forCode(0755));
+
+org.at4j.zip.builder.ZipBuilderSettings settings = new org.at4j.zip.builder.ZipBuilderSettings().
+  //
+  // Set the default file entry settings.
+  setDefaultFileEntrySettings(
+    new org.at4j.zip.builder.ZipEntrySettings().
+      //
+      // Use bzip2 compression for files entries.
+      // NOTE: bzip2 is not supported by all Zip implementations!
+      setCompressionMethod(org.at4j.zip.comp.BZip2CompressionMethod.INSTANCE).
+      //
+      // Use the external attributes factory created above
+      setExternalFileAttributesFactory(extAttrsFactory).
+      //
+      // Add an extra field factory for creating the Unicode path extra field
+      // that stores the entry's path name encoded in UTF-8.
+      addExtraFieldFactory(org.at4j.zip.ef.UnicodePathExtraFieldFactory.INSTANCE)).
+  //
+  // Set the default directory entry settings.
+  setDefaultDirectoryEntrySettings(
+    new org.at4j.zip.builder.ZipEntrySettings().
+      //
+      // Use the external attributes factory created above.
+      setExternalFileAttributesFactory(extAttrsFactory).
+      //
+      // An extra field factory for creating the Unicode path extra field.
+      addExtraFieldFactory(org.at4j.zip.ef.UnicodePathExtraFieldFactory.INSTANCE)).
+  //
+  // Set a Zip file comment.
+  setFileComment("This is myArchive.zip's comment.");
+
+// Create the Zip builder
+org.at4j.zip.builder.ZipBuilder zb = new org.at4j.zip.builder.ZipBuilder(zipFile, settings);
+
+// Add a global rule that says that all script files (files ending with .sh)
+// should be world executable.
+zb.addRule(
+  new org.at4j.archive.builder.ArchiveEntrySettingsRule&lt;org.at4j.zip.builder.ZipEntrySettings&gt;(
+    new org.at4j.zip.builder.ZipEntrySettings().
+      //
+      // This object only has to contain the difference between the default file
+      // settings and the settings for this rule due to the way in which
+      // settings are combined.
+      setExternalFileAttributesFactory(
+        new org.at4j.zip.extattrs.UnixExternalFileAttributesFactory(
+          //
+          // Files are world executable.
+          org.entityfs.entityattrs.unix.UnixEntityMode.forCode(0755),
+          //
+          // Directories are world executable. (No directories will be matched
+          // by the rule's filter, though.)
+          org.entityfs.entityattrs.unix.UnixEntityMode.forCode(0755))),
+    //
+    // The filter that determines which entries the rule will be applied to.
+    org.at4j.archive.builder.FileETAF.FILTER.and(
+      new org.at4j.archive.builder.NameGlobETAF("*.sh"))));
+
+// Add the directory hierarchy under the directory src to the location /source
+// in the archive.
+zb.addRecursively(src, new org.entityfs.el.AbsoluteLocation("/source"));
+
+// Close the builder to finish writing the archive.
+zb.close();

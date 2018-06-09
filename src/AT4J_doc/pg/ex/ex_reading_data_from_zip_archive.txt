@@ -1,0 +1,25 @@
+// Read data from the Zip file f
+
+// The UTF-8 charset
+java.nio.charset.Charset utf8 = java.nio.charset.Charset.forName("utf8");
+
+// Create the Zip file object. Text and file paths in the Zip file are encoded
+// in UTF-8
+org.at4j.zip.ZipFile zf = new org.at4j.zip.ZipFile(f, utf8, utf8);
+try
+{
+  // Print out the names of the child entries of the directory entry /d
+  org.at4j.zip.ZipDirectoryEntry d = (org.at4j.zip.ZipDirectoryEntry) zf.get(new org.entityfs.el.AbsoluteLocation("/d"));
+  System.out.println("Contents of /d: " + d.getChildEntries().keySet());
+
+  // Print out the contents of the file /d/f
+  org.at4j.zip.ZipFileEntry df = (org.at4j.zip.ZipFileEntry) d.getChildEntries().get("f");
+  
+  // Use the EntityFS utility class org.entityfs.util.Files to read the text in the file.
+  System.out.println(org.entityfs.util.Files.readTextFile(df, utf8));
+}
+finally
+{
+  // Close the Zip archive to release all resources associated with it.
+  zf.close();
+}
